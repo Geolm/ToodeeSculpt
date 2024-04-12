@@ -31,7 +31,8 @@ struct command
 {
   enum command_type type;
   enum sdf_modifier modifier;
-  uint16_t pad;
+  uint8_t clip_index;
+  uint8_t pad;
   
   float2 p0, p1;
   float radius, value;
