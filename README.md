@@ -13,3 +13,7 @@ Except from maintaining the list of draw, the CPU is not involved in the renderi
 ### SDF operators
 
 ## WebGPU native
+
+### Why this API?
+
+WebGPU is a clean, not overly too complicated API (looking at you vulkan) than run on all platform and supports compute shaders, indirect draw/dispatch that are needed for gpu-driven pipeline.
