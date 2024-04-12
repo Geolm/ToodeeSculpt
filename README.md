@@ -6,6 +6,37 @@ Except from maintaining the list of draw, the CPU is not involved in the renderi
 
 ### Draw commands
 
+Draw commands are stored in an array, order is important.
+
+```C
+enum command_type
+{
+  sdf_box,
+  sdf_disc,
+  sdf_line,
+  sdf_arc,
+  start_combination,
+  end_combination
+};
+
+enum sdf_modifier
+{
+  modifier_none,
+  modifier_round,
+  modifier_onion
+};
+
+struct command
+{
+  uint8_t type;
+  uint8_t modifier;
+  
+  float2 p0, p1;
+  uint32_t color;
+};
+
+```
+
 ### Tiles binning
 
 ### Rasterization
@@ -13,6 +44,26 @@ Except from maintaining the list of draw, the CPU is not involved in the renderi
 ### SDF operators
 
 We support 3 operators : union, substraction and intersection with 2 flavors : sharp or smooth. See this [article](https://iquilezles.org/articles/smin/) by Inigo Quilez if you want to learn about smooth minimum.
+
+```C
+
+float opUnion( float d1, float d2 )
+{
+    return min(d1,d2);
+}
+float opSubtraction( float d1, float d2 )
+{
+    return max(-d1,d2);
+}
+float opIntersection( float d1, float d2 )
+{
+    return max(d1,d2);
+}
+float opXor(float d1, float d2 )
+{
+    return max(min(d1,d2),-max(d1,d2));
+}
+```
 
 ## WebGPU native
 
