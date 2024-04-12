@@ -9,7 +9,7 @@ Except from maintaining the list of draw, the CPU is not involved in the renderi
 Draw commands are stored in an array, order is important.
 
 ```C
-enum command_type
+enum command_type : uint8_t
 {
   sdf_box,
   sdf_disc,
@@ -19,19 +19,22 @@ enum command_type
   end_combination
 };
 
-enum sdf_modifier
+enum sdf_modifier : uint8_t
 {
   modifier_none,
   modifier_round,
   modifier_onion
 };
 
+// 32 bytes command
 struct command
 {
-  uint8_t type;
-  uint8_t modifier;
+  enum command_type type;
+  enum sdf_modifier modifier;
+  uint16_t pad;
   
   float2 p0, p1;
+  float radius, value;
   uint32_t color;
 };
 
