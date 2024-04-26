@@ -4,39 +4,36 @@
 
 Except from maintaining the list of draw, the CPU is not involved in the rendering. All the tile binnning and rasterization is done on the GPU via compute and pixel shaders.
 
-### Draw commands
+### Type of command
+* sdf_box : oriented bounding box
+* sdf_disc : circle can be achieved modifier (see below)
+* sdf_line
+* sdf_arc
+* start_combination : allow multiple shape to be combined with operator (see below)
+* end_combination
 
-Draw commands are stored in an array, order is important.
 
-```C
-enum command_type : uint8_t
-{
-  sdf_box,
-  sdf_disc,
-  sdf_line,
-  sdf_arc,
-  start_combination,
-  end_combination
-};
+### Distance field modifier
+* modifier_none
+* modifier_round : add a distance bias to SDF, make shape "round" 
+* modifier_outline : allow to draw circle, rectangle, etc... from solid shapes
 
-enum sdf_modifier : uint8_t
-{
-  modifier_none,
-  modifier_round,
-  modifier_onion
-};
 
-// 32 bytes command
+### Command 
+
+* 
+
+```
 struct command
 {
   enum command_type type;
   enum sdf_modifier modifier;
   uint8_t clip_index;
   uint8_t pad;
-  
-  float2 p0, p1;
-  float radius, value;
   uint32_t color;
+
+  uint32_t data_index;      // command data are stored in a separate buffer of float
+  uint32_t next_command;    // linked-list point to the next command
 };
 
 ```
@@ -68,9 +65,3 @@ float opXor(float d1, float d2 )
     return max(min(d1,d2),-max(d1,d2));
 }
 ```
-
-## WebGPU native
-
-### Why this API?
-
-WebGPU is a clean, not overly too complicated API (looking at you vulkan) that runs on all platforms and supports compute shaders and indirect draw/dispatch needed for a gpu-driven pipeline.
