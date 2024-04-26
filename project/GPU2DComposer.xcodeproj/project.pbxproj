@@ -7,7 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FBB60DE32BDC03E50029473C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FBB60DE22BDC03E50029473C /* main.cpp */; };
+		FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D122BDC04BC00BC4892 /* main.cpp */; };
+		FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D162BDC05DA00BC4892 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
+		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
+		FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */; };
+		FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D1D2BDC068100BC4892 /* Metal.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +27,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FB3F5D122BDC04BC00BC4892 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		FB3F5D162BDC05DA00BC4892 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		FB3F5D1C2BDC068000BC4892 /* Metal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Metal.hpp; sourceTree = "<group>"; };
+		FB3F5D1D2BDC068100BC4892 /* Metal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Metal.cpp; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
-		FBB60DE22BDC03E50029473C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,17 +41,42 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */,
+				FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */,
+				FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FB3F5D132BDC04BC00BC4892 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				FB3F5D1D2BDC068100BC4892 /* Metal.cpp */,
+				FB3F5D1C2BDC068000BC4892 /* Metal.hpp */,
+				FB3F5D122BDC04BC00BC4892 /* main.cpp */,
+			);
+			name = src;
+			path = ../src;
+			sourceTree = "<group>";
+		};
+		FB3F5D152BDC05DA00BC4892 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */,
+				FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */,
+				FB3F5D162BDC05DA00BC4892 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		FBB60DD62BDC03E50029473C = {
 			isa = PBXGroup;
 			children = (
-				FBB60DE12BDC03E50029473C /* GPU2DComposer */,
+				FB3F5D132BDC04BC00BC4892 /* src */,
 				FBB60DE02BDC03E50029473C /* Products */,
+				FB3F5D152BDC05DA00BC4892 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -52,14 +86,6 @@
 				FBB60DDF2BDC03E50029473C /* GPU2DComposer */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		FBB60DE12BDC03E50029473C /* GPU2DComposer */ = {
-			isa = PBXGroup;
-			children = (
-				FBB60DE22BDC03E50029473C /* main.cpp */,
-			);
-			path = GPU2DComposer;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -119,7 +145,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FBB60DE32BDC03E50029473C /* main.cpp in Sources */,
+				FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */,
+				FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -227,6 +254,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
