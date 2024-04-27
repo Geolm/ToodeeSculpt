@@ -21,22 +21,18 @@ Except from maintaining the list of draw, the CPU is not involved in the renderi
 
 ### Command 
 
-* 
+A command contains
+* the type of command
+* the SDF modifier
+* the clip index that points to an entry in the clip array
+* a 32bits color
+* an index to the float data needed by the command (points coordinates, radius, etc...)
+* an index to the next command (if 0xffffff it's the end of the linked-list)
 
-```
-struct command
-{
-  enum command_type type;
-  enum sdf_modifier modifier;
-  uint8_t clip_index;
-  uint8_t pad;
-  uint32_t color;
+### Global arrays
 
-  uint32_t data_index;      // command data are stored in a separate buffer of float
-  uint32_t next_command;    // linked-list point to the next command
-};
-
-```
+* commands data (a big array of float)
+* clipping rectangle array
 
 ### Tiles binning
 
