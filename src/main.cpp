@@ -1,15 +1,10 @@
-//
-//  main.cpp
-//  GPU2DComposer
-//
-//  Created by Guillaume MOYA on 2024-04-26.
-//
 
-#include <iostream>
+#include "metal.hpp"
 
+// ---------------------------------------------------------------------------------------------------------------------------
 int main(int argc, const char * argv[]) 
 {
-    // insert code here...
-    std::cout << "Hello, World!\n";
+//    MTL::Device* device = MTL::CreateSystemDefaultDevice();
+
     return 0;
 }

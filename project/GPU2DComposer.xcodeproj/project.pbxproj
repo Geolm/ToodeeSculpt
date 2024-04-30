@@ -12,6 +12,7 @@
 		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
 		FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */; };
 		FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D1D2BDC068100BC4892 /* Metal.cpp */; };
+		FB585CCF2BE076AD007EA09F /* tile_bin.metal in Sources */ = {isa = PBXBuildFile; fileRef = FB585CCE2BE076AD007EA09F /* tile_bin.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,6 +34,7 @@
 		FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		FB3F5D1C2BDC068000BC4892 /* Metal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Metal.hpp; sourceTree = "<group>"; };
 		FB3F5D1D2BDC068100BC4892 /* Metal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Metal.cpp; sourceTree = "<group>"; };
+		FB585CCE2BE076AD007EA09F /* tile_bin.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = tile_bin.metal; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -53,6 +55,7 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FB585CCE2BE076AD007EA09F /* tile_bin.metal */,
 				FB3F5D1D2BDC068100BC4892 /* Metal.cpp */,
 				FB3F5D1C2BDC068000BC4892 /* Metal.hpp */,
 				FB3F5D122BDC04BC00BC4892 /* main.cpp */,
@@ -146,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */,
+				FB585CCF2BE076AD007EA09F /* tile_bin.metal in Sources */,
 				FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
