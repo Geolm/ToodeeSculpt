@@ -25,7 +25,7 @@ struct tile_data
 {
     device uint32_t* head;
     device uint32_t* next;
-    uint32_t num_next; 
+    uint32_t num_next;          // should be clear to zero each frame start
 };
 
 kernel void bin(constant bin_arguments& input [[buffer(0)]],
@@ -37,11 +37,12 @@ kernel void bin(constant bin_arguments& input [[buffer(0)]],
 
     // grow the bounding box for anti-aliasing
 
-    // loop through draw commands
+    // loop through draw commands in reverse order (because of the linked list)
     //
+    //      extract command data depending of the type
     //      quick aabb_tile vs aabb command
     //      test precise aabb_tile vs command shape
     //      if intersection
-    //          interlock_increment output.num_next
-    //          interlock_exchange output.head[tile_index] = new_next;
+    //          get a slot with interlock_increment output.num_next
+    //          update output.head[tile_index] to grow the linked-list
 }
