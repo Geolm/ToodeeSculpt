@@ -7,7 +7,7 @@
 class DynamicBuffer
 {
 public:
-    void Init(MTL::Device* device, NS::UInteger length, MTL::ResourceOptions options);
+    void Init(MTL::Device* device, NS::UInteger length);
     MTL::Buffer* GetBuffer(uint32_t currentFrameIndex) {return m_Buffers[GetIndex(currentFrameIndex)];}
     NS::UInteger GetLength() const {return m_Buffers[0]->length();}
     void* Map(uint32_t currentFrameIndex);
@@ -23,11 +23,11 @@ private:
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------
-inline void DynamicBuffer::Init(MTL::Device* device, NS::UInteger length, MTL::ResourceOptions options)
+inline void DynamicBuffer::Init(MTL::Device* device, NS::UInteger length)
 {
     for(uint32_t i=0; i<DynamicBuffer::MaxInflightBuffers; ++i)
     {
-        m_Buffers[i] = device->newBuffer(length, options);
+        m_Buffers[i] = device->newBuffer(length, MTL::ResourceStorageModeShared);
         assert(m_Buffers[i] != nullptr);
     }
 }
