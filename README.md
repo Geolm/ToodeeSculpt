@@ -8,38 +8,30 @@
 * anti-aliasing based on sdf (no multisampling)
 * boolean operation to combine shapes
 
-## Type of command
-* sdf_box : oriented bounding box
-* sdf_disc : circle can be achieved modifier (see below)
-* sdf_line
-* sdf_arc
-* start_combination : allow multiple shape to be combined with operator (see below)
-* end_combination
+## Implementation details
 
+### Supported shapes
+* oriented bounding box
+* disc, circle can be achieved modifier (see below)
+* capsule
+* arc
+  
+### Distance field modifier
+* round modifier : add a distance bias to SDF, make shape "round" 
+* outline modifier: allow to draw circle, rectangle, etc... from solid shapes
 
-## Distance field modifier
-* modifier_none
-* modifier_round : add a distance bias to SDF, make shape "round" 
-* modifier_outline : allow to draw circle, rectangle, etc... from solid shapes
+### Commands
 
-## Command 
+Draw commands are store in a buffer and set to the GPU
 
-A command contains
+A command contains:
 * the type of command
 * the SDF modifier
 * the clip index that points to an entry in the clip array
 * a 32bits color
+* some float data (center, radius, points... number of float is depending on the shapes)
 
-## Global arrays
-
-* commands data (a big array of float)
-* clipping rectangle array
-
-## Tiles binning
-
-## Rasterization
-
-## SDF operators
+### SDF operators
 
 We support 3 operators : union, substraction and intersection with 2 flavors : sharp or smooth. See this [article](https://iquilezles.org/articles/smin/) by Inigo Quilez if you want to learn about smooth minimum.
 
@@ -58,3 +50,15 @@ float opIntersection( float d1, float d2 )
     return max(d1,d2);
 }
 ```
+
+## Renderer
+
+### Step 1 : Tiles binning
+
+The windows is divided in tiles (32x32 for example). A compute shader generates a linked list of draw commands for each tile by testing intersection between shapes and the tile aabb.
+
+### Step 2 : Draw indirect preparation
+
+### Step 3 : Rasterization
+
+
