@@ -2,7 +2,7 @@ enum command_type
 {
     sdf_box = 0,
     sdf_disc = 1,
-    sdf_line = 2,
+    sdf_capsule = 2,
     sdf_arc = 3,
     start_combination = 16,
     end_combination = 17
@@ -31,4 +31,10 @@ struct draw_command
     uint8_t op;
     uint32_t color;
     uint32_t data_index;
+};
+
+struct aabb
+{
+    float2 min;
+    float2 max;
 };

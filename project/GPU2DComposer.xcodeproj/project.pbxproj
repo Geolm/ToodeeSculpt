@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FB3C530D2BE2702700240FA8 /* tile_bin.metal in Sources */ = {isa = PBXBuildFile; fileRef = FB3C530B2BE2702700240FA8 /* tile_bin.metal */; };
 		FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D122BDC04BC00BC4892 /* main.cpp */; };
 		FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D162BDC05DA00BC4892 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
@@ -29,13 +28,13 @@
 
 /* Begin PBXFileReference section */
 		FB3C530A2BE2702700240FA8 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
-		FB3C530B2BE2702700240FA8 /* tile_bin.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = tile_bin.metal; sourceTree = "<group>"; };
 		FB3F5D122BDC04BC00BC4892 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		FB3F5D162BDC05DA00BC4892 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		FB3F5D1C2BDC068000BC4892 /* Metal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Metal.hpp; sourceTree = "<group>"; };
 		FB3F5D1D2BDC068100BC4892 /* Metal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Metal.cpp; sourceTree = "<group>"; };
+		FB41C0542BE5754900927906 /* binning.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = binning.metal; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBBE2BA02BE1C0A20086F6C7 /* DynamicBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DynamicBuffer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -57,8 +56,8 @@
 		FB3C530C2BE2702700240FA8 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				FB41C0542BE5754900927906 /* binning.metal */,
 				FB3C530A2BE2702700240FA8 /* common.h */,
-				FB3C530B2BE2702700240FA8 /* tile_bin.metal */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -161,7 +160,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */,
-				FB3C530D2BE2702700240FA8 /* tile_bin.metal in Sources */,
 				FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
