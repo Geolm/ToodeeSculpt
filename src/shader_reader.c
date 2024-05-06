@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #define IS_QUOTE(x) ((x=='\"')||(x=='<')||(x=='>'))
+#define INCLUDE_TAG "#include"
 
 //----------------------------------------------------------------------------------------------------------------------------
 char* read_shader(const char* filename)
@@ -75,7 +76,7 @@ char* read_shader_include(const char* include_path, const char* filename)
         // no fancy lexer or parser : we just look for #include string as the code is assumed to be a (simple) shader 
         // if we can open the included file we remplace the include statement with the code of the included file
         // otherwise we don't do anything
-        char* include = strstr(buffer, "#include");
+        char* include = strstr(buffer, INCLUDE_TAG);
         char* current = include;
 
         while (include != NULL)
@@ -105,7 +106,7 @@ char* read_shader_include(const char* include_path, const char* filename)
 
             free(include_full);
 
-            include = strstr(current, "#include");
+            include = strstr(current, INCLUDE_TAG);
             current = include;
         }
     }

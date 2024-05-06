@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D122BDC04BC00BC4892 /* main.cpp */; };
+		FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D122BDC04BC00BC4892 /* main.mm */; };
 		FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D162BDC05DA00BC4892 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
 		FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */; };
 		FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D1D2BDC068100BC4892 /* Metal.cpp */; };
+		FBA5CD102BE957C200398435 /* MetalApp.mm in Sources */ = {isa = PBXBuildFile; fileRef = FBA5CD0E2BE957C200398435 /* MetalApp.mm */; };
+		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
 		FBD5496A2BE8686800822696 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FBD549692BE8686800822696 /* shader_reader.c */; };
 /* End PBXBuildFile section */
 
@@ -29,7 +31,7 @@
 
 /* Begin PBXFileReference section */
 		FB3C530A2BE2702700240FA8 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
-		FB3F5D122BDC04BC00BC4892 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		FB3F5D122BDC04BC00BC4892 /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		FB3F5D162BDC05DA00BC4892 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
@@ -37,6 +39,10 @@
 		FB3F5D1D2BDC068100BC4892 /* Metal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Metal.cpp; sourceTree = "<group>"; };
 		FB41C0542BE5754900927906 /* binning.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = binning.metal; sourceTree = "<group>"; };
 		FBA5CD0D2BE931EB00398435 /* collision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = collision.h; sourceTree = "<group>"; };
+		FBA5CD0E2BE957C200398435 /* MetalApp.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalApp.mm; sourceTree = "<group>"; };
+		FBA5CD0F2BE957C200398435 /* MetalApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MetalApp.h; sourceTree = "<group>"; };
+		FBA5CD112BE9612D00398435 /* libglfw.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.dylib; path = ../src/GLFW/libglfw.3.dylib; sourceTree = "<group>"; };
+		FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBBE2BA02BE1C0A20086F6C7 /* DynamicBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DynamicBuffer.h; sourceTree = "<group>"; };
 		FBD549682BE8686800822696 /* shader_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_reader.h; sourceTree = "<group>"; };
@@ -48,6 +54,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */,
 				FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */,
 				FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */,
 				FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */,
@@ -61,8 +68,8 @@
 			isa = PBXGroup;
 			children = (
 				FBA5CD0D2BE931EB00398435 /* collision.h */,
-				FB41C0542BE5754900927906 /* binning.metal */,
 				FB3C530A2BE2702700240FA8 /* common.h */,
+				FB41C0542BE5754900927906 /* binning.metal */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -70,13 +77,15 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FBA5CD0F2BE957C200398435 /* MetalApp.h */,
+				FBA5CD0E2BE957C200398435 /* MetalApp.mm */,
 				FBD549692BE8686800822696 /* shader_reader.c */,
 				FBD549682BE8686800822696 /* shader_reader.h */,
 				FB3C530C2BE2702700240FA8 /* shaders */,
 				FBBE2BA02BE1C0A20086F6C7 /* DynamicBuffer.h */,
 				FB3F5D1D2BDC068100BC4892 /* Metal.cpp */,
 				FB3F5D1C2BDC068000BC4892 /* Metal.hpp */,
-				FB3F5D122BDC04BC00BC4892 /* main.cpp */,
+				FB3F5D122BDC04BC00BC4892 /* main.mm */,
 			);
 			name = src;
 			path = ../src;
@@ -85,6 +94,8 @@
 		FB3F5D152BDC05DA00BC4892 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */,
+				FBA5CD112BE9612D00398435 /* libglfw.3.dylib */,
 				FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */,
 				FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */,
 				FB3F5D162BDC05DA00BC4892 /* Foundation.framework */,
@@ -167,8 +178,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBD5496A2BE8686800822696 /* shader_reader.c in Sources */,
-				FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */,
+				FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */,
 				FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */,
+				FBA5CD102BE957C200398435 /* MetalApp.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -227,6 +239,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"HEADER_SEARCH_PATHS[arch=*]" = /opt/homebrew/Cellar/glfw/3.4/include;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -283,6 +296,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"HEADER_SEARCH_PATHS[arch=*]" = /opt/homebrew/Cellar/glfw/3.4/include;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -295,6 +309,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -303,6 +321,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
