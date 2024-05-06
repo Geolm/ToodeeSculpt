@@ -32,9 +32,3 @@ struct draw_command
     uint32_t color;
     uint32_t data_index;
 };
-
-struct aabb
-{
-    float2 min;
-    float2 max;
-};

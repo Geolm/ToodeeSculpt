@@ -12,6 +12,7 @@
 		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
 		FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */; };
 		FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D1D2BDC068100BC4892 /* Metal.cpp */; };
+		FBD5496A2BE8686800822696 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FBD549692BE8686800822696 /* shader_reader.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,8 +36,11 @@
 		FB3F5D1C2BDC068000BC4892 /* Metal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Metal.hpp; sourceTree = "<group>"; };
 		FB3F5D1D2BDC068100BC4892 /* Metal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Metal.cpp; sourceTree = "<group>"; };
 		FB41C0542BE5754900927906 /* binning.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = binning.metal; sourceTree = "<group>"; };
+		FBA5CD0D2BE931EB00398435 /* collision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = collision.h; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBBE2BA02BE1C0A20086F6C7 /* DynamicBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DynamicBuffer.h; sourceTree = "<group>"; };
+		FBD549682BE8686800822696 /* shader_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_reader.h; sourceTree = "<group>"; };
+		FBD549692BE8686800822696 /* shader_reader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader_reader.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +60,7 @@
 		FB3C530C2BE2702700240FA8 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				FBA5CD0D2BE931EB00398435 /* collision.h */,
 				FB41C0542BE5754900927906 /* binning.metal */,
 				FB3C530A2BE2702700240FA8 /* common.h */,
 			);
@@ -65,6 +70,8 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FBD549692BE8686800822696 /* shader_reader.c */,
+				FBD549682BE8686800822696 /* shader_reader.h */,
 				FB3C530C2BE2702700240FA8 /* shaders */,
 				FBBE2BA02BE1C0A20086F6C7 /* DynamicBuffer.h */,
 				FB3F5D1D2BDC068100BC4892 /* Metal.cpp */,
@@ -159,6 +166,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBD5496A2BE8686800822696 /* shader_reader.c in Sources */,
 				FB3F5D142BDC04BC00BC4892 /* main.cpp in Sources */,
 				FB3F5D1E2BDC068100BC4892 /* Metal.cpp in Sources */,
 			);
