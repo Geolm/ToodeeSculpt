@@ -11,10 +11,12 @@
 ## Implementation details
 
 ### Supported shapes
-* oriented bounding box
+* oriented box
 * disc, circle can be achieved modifier (see below)
 * capsule
 * arc
+* triangle
+* debug text
   
 ### Distance field modifier
 * round modifier : add a distance bias to SDF, make shape "round" 
