@@ -5,7 +5,7 @@
 #define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3native.h>
 
-#include "metal.hpp"
+#include "Metal.hpp"
 
 #import <QuartzCore/CAMetalLayer.h>
 

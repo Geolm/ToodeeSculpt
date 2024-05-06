@@ -35,11 +35,15 @@ void MetalApp::InitWindow(const char* windowName, unsigned int window_width, uns
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
+    
+    int width, height;
+    glfwGetFramebufferSize(m_Window, &width, &height);
 
     m_MetalWindow = glfwGetCocoaWindow(m_Window);
     m_MetalLayer = [CAMetalLayer layer];
     m_MetalLayer.device = (__bridge id<MTLDevice>)m_Device;
     m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    m_MetalLayer.drawableSize = CGSizeMake(width, height);
     m_MetalWindow.contentView.layer = m_MetalLayer;
     m_MetalWindow.contentView.wantsLayer = YES;
 }
