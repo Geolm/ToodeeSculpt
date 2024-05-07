@@ -11,10 +11,11 @@
 		FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D162BDC05DA00BC4892 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
 		FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */; };
+		FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB6C496F2BE9BFAE00F2926D /* MetalLayerHelper.mm */; };
+		FB6C49742BE9C15600F2926D /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB6C49722BE9C15600F2926D /* App.cpp */; };
 		FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13A2BE977D2004B4083 /* Renderer.cpp */; };
 		FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13C2BE977D2004B4083 /* shader_reader.c */; };
 		FB90E1432BE977DC004B4083 /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E1412BE977DC004B4083 /* log.c */; };
-		FBA5CD102BE957C200398435 /* MetalApp.mm in Sources */ = {isa = PBXBuildFile; fileRef = FBA5CD0E2BE957C200398435 /* MetalApp.mm */; };
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
 /* End PBXBuildFile section */
 
@@ -38,6 +39,10 @@
 		FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		FB3F5D1C2BDC068000BC4892 /* Metal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Metal.hpp; sourceTree = "<group>"; };
 		FB41C0542BE5754900927906 /* binning.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = binning.metal; sourceTree = "<group>"; };
+		FB6C496F2BE9BFAE00F2926D /* MetalLayerHelper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalLayerHelper.mm; sourceTree = "<group>"; };
+		FB6C49702BE9BFAE00F2926D /* MetalLayerHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MetalLayerHelper.h; sourceTree = "<group>"; };
+		FB6C49722BE9C15600F2926D /* App.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = App.cpp; sourceTree = "<group>"; };
+		FB6C49732BE9C15600F2926D /* App.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = App.h; sourceTree = "<group>"; };
 		FB90E1392BE977D2004B4083 /* DynamicBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicBuffer.h; sourceTree = "<group>"; };
 		FB90E13A2BE977D2004B4083 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Renderer.cpp; sourceTree = "<group>"; };
 		FB90E13B2BE977D2004B4083 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
@@ -46,8 +51,6 @@
 		FB90E1412BE977DC004B4083 /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
 		FB90E1422BE977DC004B4083 /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
 		FBA5CD0D2BE931EB00398435 /* collision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = collision.h; sourceTree = "<group>"; };
-		FBA5CD0E2BE957C200398435 /* MetalApp.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalApp.mm; sourceTree = "<group>"; };
-		FBA5CD0F2BE957C200398435 /* MetalApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MetalApp.h; sourceTree = "<group>"; };
 		FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -80,14 +83,16 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FB6C49722BE9C15600F2926D /* App.cpp */,
+				FB6C49732BE9C15600F2926D /* App.h */,
 				FB90E1412BE977DC004B4083 /* log.c */,
 				FB90E1422BE977DC004B4083 /* log.h */,
-				FB90E13E2BE977D2004B4083 /* renderer */,
-				FBA5CD0F2BE957C200398435 /* MetalApp.h */,
-				FBA5CD0E2BE957C200398435 /* MetalApp.mm */,
-				FB3C530C2BE2702700240FA8 /* shaders */,
-				FB3F5D1C2BDC068000BC4892 /* Metal.hpp */,
 				FB3F5D122BDC04BC00BC4892 /* main.mm */,
+				FB3F5D1C2BDC068000BC4892 /* Metal.hpp */,
+				FB6C49702BE9BFAE00F2926D /* MetalLayerHelper.h */,
+				FB6C496F2BE9BFAE00F2926D /* MetalLayerHelper.mm */,
+				FB90E13E2BE977D2004B4083 /* renderer */,
+				FB3C530C2BE2702700240FA8 /* shaders */,
 			);
 			name = src;
 			path = ../src;
@@ -190,11 +195,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */,
 				FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */,
 				FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */,
+				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,
 				FB90E1432BE977DC004B4083 /* log.c in Sources */,
 				FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */,
-				FBA5CD102BE957C200398435 /* MetalApp.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

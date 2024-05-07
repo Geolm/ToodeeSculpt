@@ -1,31 +1,21 @@
-#include "MetalApp.h"
+#include "MetalLayerHelper.h"
 
-void MetalApp::Init(const char* windowName, unsigned int window_width, unsigned int window_height)
+//----------------------------------------------------------------------------------------------------------------------------
+void MetalLayerHelper::Init(const char* windowName, unsigned int window_width, unsigned int window_height)
 {
-    InitDevice();
+    m_Device = MTL::CreateSystemDefaultDevice();
     InitWindow(windowName, window_width, window_height);
 }
 
-void MetalApp::Run() 
-{
-    while (!glfwWindowShouldClose(m_Window)) 
-    {
-        glfwPollEvents();
-    }
-}
-
-void MetalApp::Cleanup() 
+//----------------------------------------------------------------------------------------------------------------------------
+void MetalLayerHelper::Terminate() 
 {
     glfwTerminate();
     m_Device->release();
 }
 
-void MetalApp::InitDevice() 
-{
-    m_Device = MTL::CreateSystemDefaultDevice();
-}
-
-void MetalApp::InitWindow(const char* windowName, unsigned int window_width, unsigned int window_height)
+//----------------------------------------------------------------------------------------------------------------------------
+void MetalLayerHelper::InitWindow(const char* windowName, unsigned int window_width, unsigned int window_height)
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

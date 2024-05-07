@@ -1,18 +1,21 @@
 
-#include "MetalApp.h"
-
+#include "MetalLayerHelper.h"
+#include "App.h"
 
 
 // ---------------------------------------------------------------------------------------------------------------------------
 int main(int argc, const char * argv[]) 
 {
-    MetalApp app;
+    MetalLayerHelper helper;
+    App app;
     
-    app.Init("GPU2dComposer", 1980, 1080);
-    app.Run();
-    app.Cleanup();
+    helper.Init("DistCraft", 1980, 1080);
     
-
+    app.Init(helper.GetDevice(), helper.GetGLFWWindow());
+    app.Loop();
+    app.Terminate();
+    
+    helper.Terminate();
 
     return 0;
 }

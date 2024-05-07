@@ -9,17 +9,19 @@
 
 #import <QuartzCore/CAMetalLayer.h>
 
-class MetalApp
+class MetalLayerHelper
 {
 public:
     void Init(const char* windowName, unsigned int window_width, unsigned int window_height);
-    void Run();
-    void Cleanup();
+    void Terminate();
+
+    MTL::Device* GetDevice() {return m_Device;}
+    GLFWwindow* GetGLFWWindow() {return m_Window;}
 
 private:
-    void InitDevice();
     void InitWindow(const char* windowName, unsigned int window_width, unsigned int window_height);
 
+private:
     MTL::Device* m_Device;
     GLFWwindow* m_Window;
     NSWindow* m_MetalWindow;
