@@ -4,6 +4,7 @@
 #include "../Metal.hpp"
 
 #include "Renderer.h"
+#include "log.h"
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Init(MTL::Device* device)
@@ -14,7 +15,10 @@ void Renderer::Init(MTL::Device* device)
     m_CommandQueue = device->newCommandQueue();
 
     if (m_CommandQueue == nullptr)
+    {
+        log_fatal("can't create a command queue");
         exit(EXIT_FAILURE);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
