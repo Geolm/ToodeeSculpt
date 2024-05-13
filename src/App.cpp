@@ -23,5 +23,5 @@ void App::Update(CA::MetalDrawable* drawable)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Terminate()
 {
-
+    m_Renderer.Terminate();
 }

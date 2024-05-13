@@ -9,11 +9,16 @@ class Renderer
 public:
     void Init(MTL::Device* device);
     void Draw(CA::MetalDrawable* drawable);
+    void Terminate();
 
 private:
-    MTL::Device* m_Device;
-    MTL::CommandQueue* m_CommandQueue;
-    MTL::CommandBuffer* m_CommandBuffer;
-    MTL::Library* m_Library;
+    void BuildComputePSO();
+    MTL::Library* BuildShader(const char* path, const char* name);
+
+private:
+    MTL::Device* m_pDevice;
+    MTL::CommandQueue* m_pCommandQueue;
+    MTL::CommandBuffer* m_pCommandBuffer;
+    MTL::ComputePipelineState* m_pBinningPSO;
 };
 

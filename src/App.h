@@ -8,7 +8,6 @@ class App
 {
 public:
     void Init(MTL::Device* device, GLFWwindow* window);
-    
     void Update(CA::MetalDrawable* drawable);
     void Terminate();
 
