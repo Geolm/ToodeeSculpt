@@ -1,19 +1,19 @@
 #pragma once
 
-#include "Metal.hpp"
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>
+#include "Renderer/Renderer.h"
+
+struct GLFWwindow;
 
 class App
 {
 public:
     void Init(MTL::Device* device, GLFWwindow* window);
-    void Loop();
+    
+    void Update(CA::MetalDrawable* drawable);
     void Terminate();
 
 private:
     MTL::Device* m_Device;
+    Renderer m_Renderer;
     GLFWwindow* m_Window;
 };

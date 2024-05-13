@@ -12,7 +12,16 @@ int main(int argc, const char * argv[])
     helper.Init("DistCraft", 1980, 1080);
     
     app.Init(helper.GetDevice(), helper.GetGLFWWindow());
-    app.Loop();
+
+    while (!glfwWindowShouldClose(helper.GetGLFWWindow()))
+    {
+        NS::AutoreleasePool* pPool   = NS::AutoreleasePool::alloc()->init();
+        app.Update(helper.GetDrawble());
+        pPool->release();
+        
+        glfwPollEvents();
+    }
+    
     app.Terminate();
     
     helper.Terminate();

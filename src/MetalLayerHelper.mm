@@ -37,3 +37,9 @@ void MetalLayerHelper::InitWindow(const char* windowName, unsigned int window_wi
     m_MetalWindow.contentView.layer = m_MetalLayer;
     m_MetalWindow.contentView.wantsLayer = YES;
 }
+
+//----------------------------------------------------------------------------------------------------------------------------
+CA::MetalDrawable* MetalLayerHelper::GetDrawble()
+{
+    return (__bridge CA::MetalDrawable*)[m_MetalLayer nextDrawable];
+}
