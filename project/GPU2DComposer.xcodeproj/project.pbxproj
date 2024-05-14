@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB28233A2BF2D8A7009FC4FD /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = FB2823352BF2D8A7009FC4FD /* log.c */; };
 		FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D122BDC04BC00BC4892 /* main.mm */; };
 		FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D162BDC05DA00BC4892 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
@@ -15,7 +16,6 @@
 		FB6C49742BE9C15600F2926D /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB6C49722BE9C15600F2926D /* App.cpp */; };
 		FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13A2BE977D2004B4083 /* Renderer.cpp */; };
 		FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13C2BE977D2004B4083 /* shader_reader.c */; };
-		FB90E1432BE977DC004B4083 /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E1412BE977DC004B4083 /* log.c */; };
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
 /* End PBXBuildFile section */
 
@@ -32,6 +32,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FB2823352BF2D8A7009FC4FD /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
+		FB2823362BF2D8A7009FC4FD /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
+		FB2823372BF2D8A7009FC4FD /* PushArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PushArray.h; sourceTree = "<group>"; };
+		FB2823382BF2D8A7009FC4FD /* random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = random.h; sourceTree = "<group>"; };
 		FB3C530A2BE2702700240FA8 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		FB3F5D122BDC04BC00BC4892 /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		FB3F5D162BDC05DA00BC4892 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -48,8 +52,6 @@
 		FB90E13B2BE977D2004B4083 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
 		FB90E13C2BE977D2004B4083 /* shader_reader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader_reader.c; sourceTree = "<group>"; };
 		FB90E13D2BE977D2004B4083 /* shader_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_reader.h; sourceTree = "<group>"; };
-		FB90E1412BE977DC004B4083 /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
-		FB90E1422BE977DC004B4083 /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
 		FBA5CD0D2BE931EB00398435 /* collision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = collision.h; sourceTree = "<group>"; };
 		FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,6 +72,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FB2823392BF2D8A7009FC4FD /* system */ = {
+			isa = PBXGroup;
+			children = (
+				FB2823352BF2D8A7009FC4FD /* log.c */,
+				FB2823362BF2D8A7009FC4FD /* log.h */,
+				FB2823372BF2D8A7009FC4FD /* PushArray.h */,
+				FB2823382BF2D8A7009FC4FD /* random.h */,
+			);
+			path = system;
+			sourceTree = "<group>";
+		};
 		FB3C530C2BE2702700240FA8 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
@@ -83,10 +96,9 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FB2823392BF2D8A7009FC4FD /* system */,
 				FB6C49722BE9C15600F2926D /* App.cpp */,
 				FB6C49732BE9C15600F2926D /* App.h */,
-				FB90E1412BE977DC004B4083 /* log.c */,
-				FB90E1422BE977DC004B4083 /* log.h */,
 				FB3F5D122BDC04BC00BC4892 /* main.mm */,
 				FB3F5D1C2BDC068000BC4892 /* Metal.hpp */,
 				FB6C49702BE9BFAE00F2926D /* MetalLayerHelper.h */,
@@ -195,11 +207,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB28233A2BF2D8A7009FC4FD /* log.c in Sources */,
 				FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */,
 				FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */,
 				FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */,
 				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,
-				FB90E1432BE977DC004B4083 /* log.c in Sources */,
 				FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

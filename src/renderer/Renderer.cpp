@@ -4,15 +4,27 @@
 #include "../Metal.hpp"
 
 #include "Renderer.h"
-#include "log.h"
+#include "../system/log.h"
 #include "shader_reader.h"
+
+#define SAFE_RELEASE(p) if (p!=nullptr) p->release();
+
+//----------------------------------------------------------------------------------------------------------------------------
+Renderer::Renderer() :
+    m_pDevice(nullptr),
+    m_pBinningPSO(nullptr),
+    m_pCommandBuffer(nullptr),
+    m_pCommandQueue(nullptr),
+    m_FrameIndex(0)
+{
+
+}
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Init(MTL::Device* device)
 {
     assert(device!=nullptr);
     m_pDevice = device;
-    //m_Library = device->newDefaultLibrary();
     m_pCommandQueue = device->newCommandQueue();
 
     if (m_pCommandQueue == nullptr)
@@ -22,6 +34,9 @@ void Renderer::Init(MTL::Device* device)
     }
 
     BuildComputePSO();
+
+    m_CommandsBuffer.Init(m_pDevice, sizeof(draw_command) * Renderer::MAX_COMMANDS);
+    m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * Renderer::MAX_DRAWDATA);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -31,42 +46,51 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
     if (shader_buffer == NULL)
     {
         log_fatal("can't find shader %s%s", path, name);
-        exit(EXIT_FAILURE);
+        return nullptr;
     }
 
     NS::Error* pError = nullptr;
     MTL::Library* pLibrary = m_pDevice->newLibrary( NS::String::string(shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
-    if (pLibrary == nullptr)
-    {
-        log_error("%s", pError->localizedDescription()->utf8String());
-        exit(EXIT_FAILURE);
-    }
 
     free(shader_buffer);
+
+    if (pLibrary == nullptr)
+        log_error("%s", pError->localizedDescription()->utf8String());
+    
     return pLibrary;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::BuildComputePSO()
 {
+    SAFE_RELEASE(m_pBinningPSO);
+
     MTL::Library* pComputeLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "binning.metal");
-    MTL::Function* pBinningFunction = pComputeLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
-
-    NS::Error* pError = nullptr;
-    m_pBinningPSO = m_pDevice->newComputePipelineState(pBinningFunction, &pError);
-
-    if (m_pBinningPSO == nullptr)
+    if (pComputeLibrary != nullptr)
     {
-        log_error( "%s", pError->localizedDescription()->utf8String() );
-        exit(EXIT_FAILURE);
-    }
+        MTL::Function* pBinningFunction = pComputeLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
 
-    pComputeLibrary->release();
-    pBinningFunction->release();
+        NS::Error* pError = nullptr;
+        m_pBinningPSO = m_pDevice->newComputePipelineState(pBinningFunction, &pError);
+
+        if (m_pBinningPSO == nullptr)
+            log_error( "%s", pError->localizedDescription()->utf8String());
+
+        pComputeLibrary->release();
+        pBinningFunction->release();
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::Draw(CA::MetalDrawable* pDrawable)
+void Renderer::BeginFrame()
+{
+    m_FrameIndex++;
+    m_Commands.Set(m_CommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
+    m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * Renderer::MAX_DRAWDATA);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::Flush(CA::MetalDrawable* pDrawable)
 {
     m_pCommandBuffer = m_pCommandQueue->commandBuffer();
 
@@ -88,9 +112,18 @@ void Renderer::Draw(CA::MetalDrawable* pDrawable)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void Renderer::EndFrame()
+{
+    m_CommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
+    m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Terminate()
 {
-    m_pBinningPSO->release();
-    m_pCommandQueue->release();
+    m_CommandsBuffer.Terminate();
+    m_DrawDataBuffer.Terminate();
+    SAFE_RELEASE(m_pBinningPSO);
+    SAFE_RELEASE(m_pCommandQueue);
 }
 

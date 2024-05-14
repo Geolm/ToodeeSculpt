@@ -17,7 +17,10 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Update(CA::MetalDrawable* drawable)
 {
-    m_Renderer.Draw(drawable);
+    m_Renderer.BeginFrame();
+    
+    m_Renderer.EndFrame();
+    m_Renderer.Flush(drawable);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
