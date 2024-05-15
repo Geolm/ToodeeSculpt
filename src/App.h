@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Renderer.h"
+#include "renderer/Renderer.h"
 
 struct GLFWwindow;
 

@@ -23,6 +23,7 @@ public:
 
 private:
     void BuildComputePSO();
+    void BinCommands();
     MTL::Library* BuildShader(const char* path, const char* name);
 
 private:
@@ -37,6 +38,8 @@ private:
 
     DynamicBuffer m_CommandsBuffer;
     DynamicBuffer m_DrawDataBuffer;
+    MTL::Buffer* m_pCountersBuffer;
+    MTL::Fence* m_pClearCountersFence;
 
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;
@@ -58,9 +61,8 @@ inline void Renderer::DrawCircle(float x, float y, float radius, float width, ui
         cmd->clip_index = (uint8_t) m_CurrentClipIndex;
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
-        cmd->modifier = modifier_outline;
         cmd->op = op_none;
-        cmd->type = sdf_disc;
+        cmd->type = shape_circle;
 
         float* data = m_DrawData.NewMultiple(4);
         if (data != nullptr)

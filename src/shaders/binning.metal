@@ -7,28 +7,23 @@ struct bin_arguments
     constant draw_command* commands [[id(0)]];
     constant float* draw_data[[id(1)]];
     uint32_t num_commands;
+    uint32_t max_nodes;
     uint16_t num_tile_width;
     uint16_t num_tile_height;
     float tile_size;
     float aa_width;
 };
 
-struct tile_node
-{
-    uint32_t command_index;
-    uint32_t next;
-};
-
 struct tile_data
 {
-    device tile_node* head;
-    device tile_node* next;
-    uint32_t num_next;          // should be clear to zero each frame start
+    device tile_node* head; 
+    device tile_node* nodes;
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant bin_arguments& input [[buffer(0)]],
                 device tile_data& output [[buffer(1)]],
+                device counters& counter [[buffer(2)]],
                 ushort2 index [[thread_position_in_grid]])
 {
     uint16_t tile_index = index.y * input.num_tile_width + index.x;
@@ -50,7 +45,7 @@ kernel void bin(constant bin_arguments& input [[buffer(0)]],
 
         switch(cmd.type)
         {
-            case sdf_box :
+            case shape_rect_filled :
             {
                 float2 p0 = float2(input.draw_data[index], input.draw_data[index+1]);
                 float2 p1 = float2(input.draw_data[index+2], input.draw_data[index+3]);
@@ -58,7 +53,7 @@ kernel void bin(constant bin_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_obb(tile_enlarge_aabb, p0, p1, width);
                 break;
             }
-            case sdf_disc :
+            case shape_circle_filled :
             {
                 float2 center = float2(input.draw_data[index], input.draw_data[index+1]);
                 float radius = input.draw_data[index+2];

@@ -37,6 +37,8 @@ void Renderer::Init(MTL::Device* device)
 
     m_CommandsBuffer.Init(m_pDevice, sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * Renderer::MAX_DRAWDATA);
+    m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
+    m_pClearCountersFence = m_pDevice->newFence();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -90,6 +92,23 @@ void Renderer::BeginFrame()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void Renderer::EndFrame()
+{
+    m_CommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
+    m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::BinCommands()
+{
+    
+    MTL::BlitCommandEncoder* pBlitEncoder = m_pCommandBuffer->blitCommandEncoder();
+    pBlitEncoder->fillBuffer(m_pCountersBuffer, NS::Range(0, sizeof(counters)), 0);
+    pBlitEncoder->updateFence(m_pClearCountersFence);
+    pBlitEncoder->endEncoding();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Flush(CA::MetalDrawable* pDrawable)
 {
     m_pCommandBuffer = m_pCommandQueue->commandBuffer();
@@ -112,17 +131,12 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::EndFrame()
-{
-    m_CommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
-    m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Terminate()
 {
     m_CommandsBuffer.Terminate();
     m_DrawDataBuffer.Terminate();
+    SAFE_RELEASE(m_pCountersBuffer);
+    SAFE_RELEASE(m_pClearCountersFence);
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pCommandQueue);
 }
