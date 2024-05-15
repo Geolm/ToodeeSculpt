@@ -10,8 +10,11 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 {
     m_Device = device;
     m_Window = window;
+    
+    int width, height;
+    glfwGetFramebufferSize(m_Window, &width, &height);
 
-    m_Renderer.Init(m_Device);
+    m_Renderer.Init(m_Device, (uint32_t) width, (uint32_t) height);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

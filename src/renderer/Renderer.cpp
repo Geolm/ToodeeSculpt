@@ -15,13 +15,14 @@ Renderer::Renderer() :
     m_pBinningPSO(nullptr),
     m_pCommandBuffer(nullptr),
     m_pCommandQueue(nullptr),
+    m_pHead(nullptr),
     m_FrameIndex(0)
 {
 
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::Init(MTL::Device* device)
+void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
 {
     assert(device!=nullptr);
     m_pDevice = device;
@@ -34,11 +35,24 @@ void Renderer::Init(MTL::Device* device)
     }
 
     BuildComputePSO();
+    Resize(width, height);
 
     m_CommandsBuffer.Init(m_pDevice, sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * Renderer::MAX_DRAWDATA);
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
-    m_pClearCountersFence = m_pDevice->newFence();
+    m_pClearBuffersFence = m_pDevice->newFence();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::Resize(uint32_t width, uint32_t height)
+{
+    m_ViewportWidth = width;
+    m_ViewportHeight = height;
+    m_NumTilesWidth = (width + TILE_SIZE - 1) / TILE_SIZE;
+    m_NumTilesHeight = (height + TILE_SIZE - 1) / TILE_SIZE;
+
+    SAFE_RELEASE(m_pHead);
+    m_pHead = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(tile_node), MTL::ResourceStorageModePrivate);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -101,11 +115,25 @@ void Renderer::EndFrame()
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::BinCommands()
 {
-    
+    // clear buffers
     MTL::BlitCommandEncoder* pBlitEncoder = m_pCommandBuffer->blitCommandEncoder();
-    pBlitEncoder->fillBuffer(m_pCountersBuffer, NS::Range(0, sizeof(counters)), 0);
-    pBlitEncoder->updateFence(m_pClearCountersFence);
+    pBlitEncoder->fillBuffer(m_pCountersBuffer, NS::Range(0, m_pCountersBuffer->length()), 0);
+    pBlitEncoder->fillBuffer(m_pHead, NS::Range(0, m_pHead->length()), 0xff);
+    pBlitEncoder->updateFence(m_pClearBuffersFence);
     pBlitEncoder->endEncoding();
+
+    // run binning shader
+    /*
+    MTL::ComputeCommandEncoder* pComputeEncoder = m_pCommandBuffer->computeCommandEncoder();
+    pComputeEncoder->waitForFence(m_pClearBuffersFence);
+    pComputeEncoder->setComputePipelineState(m_pBinningPSO);
+
+    
+    MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
+    MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
+
+    pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
+    pComputeEncoder->endEncoding();*/
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -123,6 +151,8 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
     MTL::RenderCommandEncoder* renderCommandEncoder = m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
     renderCommandEncoder->endEncoding();
 
+    BinCommands();
+
     m_pCommandBuffer->presentDrawable(pDrawable);
     m_pCommandBuffer->commit();
     m_pCommandBuffer->waitUntilCompleted();
@@ -136,8 +166,9 @@ void Renderer::Terminate()
     m_CommandsBuffer.Terminate();
     m_DrawDataBuffer.Terminate();
     SAFE_RELEASE(m_pCountersBuffer);
-    SAFE_RELEASE(m_pClearCountersFence);
+    SAFE_RELEASE(m_pClearBuffersFence);
     SAFE_RELEASE(m_pBinningPSO);
+    SAFE_RELEASE(m_pHead);
     SAFE_RELEASE(m_pCommandQueue);
 }
 

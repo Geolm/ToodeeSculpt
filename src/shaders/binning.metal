@@ -22,7 +22,7 @@ struct tile_data
 
 // ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant bin_arguments& input [[buffer(0)]],
-                device tile_data& output [[buffer(1)]],
+                device tile_data& tiles [[buffer(1)]],
                 device counters& counter [[buffer(2)]],
                 ushort2 index [[thread_position_in_grid]])
 {

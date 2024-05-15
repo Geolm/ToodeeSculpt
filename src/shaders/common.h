@@ -43,3 +43,5 @@ struct counters
     uint32_t num_nodes;  // should be clear to zero each frame start
     uint32_t pad[3];
 };
+
+#define TILE_SIZE (32)

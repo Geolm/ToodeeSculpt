@@ -10,7 +10,8 @@ class Renderer
 {
 public:
     Renderer();
-    void Init(MTL::Device* device);
+    void Init(MTL::Device* device, uint32_t width, uint32_t height);
+    void Resize(uint32_t width, uint32_t height);
     void BeginFrame();
     void Flush(CA::MetalDrawable* drawable);
     void EndFrame();
@@ -39,13 +40,18 @@ private:
     DynamicBuffer m_CommandsBuffer;
     DynamicBuffer m_DrawDataBuffer;
     MTL::Buffer* m_pCountersBuffer;
-    MTL::Fence* m_pClearCountersFence;
+    MTL::Fence* m_pClearBuffersFence;
+    MTL::Buffer* m_pHead;
 
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;
 
     uint32_t m_FrameIndex;
     uint32_t m_CurrentClipIndex;
+    uint32_t m_ViewportWidth;
+    uint32_t m_ViewportHeight;
+    uint32_t m_NumTilesWidth;
+    uint32_t m_NumTilesHeight;
 };
 
 inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}
