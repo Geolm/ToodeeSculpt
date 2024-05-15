@@ -1,3 +1,10 @@
+#define TILE_SIZE (32)
+#define MAX_NODES_COUNT (1<<16)
+
+#ifndef __METAL_VERSION__
+#define constant
+#endif
+
 enum command_type
 {
     shape_rect = 0,
@@ -44,4 +51,14 @@ struct counters
     uint32_t pad[3];
 };
 
-#define TILE_SIZE (32)
+struct bin_arguments
+{
+    constant draw_command* commands;
+    constant float* draw_data;
+    uint32_t num_commands;
+    uint32_t max_nodes;
+    uint16_t num_tile_width;
+    uint16_t num_tile_height;
+    float tile_size;
+    float aa_width;
+};

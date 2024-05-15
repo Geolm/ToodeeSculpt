@@ -9,49 +9,52 @@
 class Renderer
 {
 public:
-    Renderer();
     void Init(MTL::Device* device, uint32_t width, uint32_t height);
     void Resize(uint32_t width, uint32_t height);
     void BeginFrame();
     void Flush(CA::MetalDrawable* drawable);
     void EndFrame();
     void Terminate();
-
+    
     // Shapes
     inline void DrawCircle(float x, float y, float radius, float width, uint32_t color);
     void DrawBox(float x, float y, float radius, uint32_t color);
     void DrawRectangle(float x_min, float y_min, float x_max, float y_max, float width, uint32_t color);
-
+    
 private:
     void BuildComputePSO();
     void BinCommands();
     MTL::Library* BuildShader(const char* path, const char* name);
-
+    
 private:
     enum {MAX_COMMANDS = 2<<10};
     enum {MAX_DRAWDATA = Renderer::MAX_COMMANDS * 4};
-
+    
 private:
     MTL::Device* m_pDevice;
     MTL::CommandQueue* m_pCommandQueue;
     MTL::CommandBuffer* m_pCommandBuffer;
     MTL::ComputePipelineState* m_pBinningPSO;
-
-    DynamicBuffer m_CommandsBuffer;
+    
+    DynamicBuffer m_DrawCommandsBuffer;
     DynamicBuffer m_DrawDataBuffer;
-    MTL::Buffer* m_pCountersBuffer;
-    MTL::Fence* m_pClearBuffersFence;
-    MTL::Buffer* m_pHead;
-
+    MTL::Buffer* m_pCountersBuffer {nullptr};
+    MTL::Fence* m_pClearBuffersFence {nullptr};
+    MTL::Buffer* m_pHead {nullptr};
+    MTL::Buffer* m_pNodes {nullptr};
+    DynamicBuffer m_BinningArg;
+    
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;
-
-    uint32_t m_FrameIndex;
+    
+    uint32_t m_FrameIndex {0};
     uint32_t m_CurrentClipIndex;
     uint32_t m_ViewportWidth;
     uint32_t m_ViewportHeight;
     uint32_t m_NumTilesWidth;
     uint32_t m_NumTilesHeight;
+    uint32_t m_NumDrawCommands;
+    float m_AAWidth {1.f};
 };
 
 inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}

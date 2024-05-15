@@ -10,18 +10,6 @@
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 
 //----------------------------------------------------------------------------------------------------------------------------
-Renderer::Renderer() :
-    m_pDevice(nullptr),
-    m_pBinningPSO(nullptr),
-    m_pCommandBuffer(nullptr),
-    m_pCommandQueue(nullptr),
-    m_pHead(nullptr),
-    m_FrameIndex(0)
-{
-
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
 {
     assert(device!=nullptr);
@@ -37,9 +25,10 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     BuildComputePSO();
     Resize(width, height);
 
-    m_CommandsBuffer.Init(m_pDevice, sizeof(draw_command) * Renderer::MAX_COMMANDS);
+    m_DrawCommandsBuffer.Init(m_pDevice, sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * Renderer::MAX_DRAWDATA);
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
+    m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     m_pClearBuffersFence = m_pDevice->newFence();
 }
 
@@ -92,6 +81,11 @@ void Renderer::BuildComputePSO()
         if (m_pBinningPSO == nullptr)
             log_error( "%s", pError->localizedDescription()->utf8String());
 
+        MTL::ArgumentEncoder* argumentEncoder = pBinningFunction->newArgumentEncoder(0);
+
+        m_BinningArg.Init(m_pDevice, argumentEncoder->encodedLength());
+
+        argumentEncoder->release();
         pComputeLibrary->release();
         pBinningFunction->release();
     }
@@ -101,14 +95,15 @@ void Renderer::BuildComputePSO()
 void Renderer::BeginFrame()
 {
     m_FrameIndex++;
-    m_Commands.Set(m_CommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
+    m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * Renderer::MAX_DRAWDATA);
+    m_NumDrawCommands = 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::EndFrame()
 {
-    m_CommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
+    m_DrawCommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
     m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
 }
 
@@ -123,17 +118,31 @@ void Renderer::BinCommands()
     pBlitEncoder->endEncoding();
 
     // run binning shader
-    /*
     MTL::ComputeCommandEncoder* pComputeEncoder = m_pCommandBuffer->computeCommandEncoder();
     pComputeEncoder->waitForFence(m_pClearBuffersFence);
     pComputeEncoder->setComputePipelineState(m_pBinningPSO);
 
+    bin_arguments* args = (bin_arguments*) m_BinningArg.Map(m_FrameIndex);
+    args->aa_width = m_AAWidth;
+    args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
+    args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
+    args->max_nodes = MAX_NODES_COUNT;
+    args->num_commands = m_NumDrawCommands;
+    args->num_tile_height = m_NumTilesHeight;
+    args->num_tile_width = m_NumTilesWidth;
+    args->tile_size = TILE_SIZE;
+    m_BinningArg.Unmap(m_FrameIndex, 0, sizeof(bin_arguments));
+
+    pComputeEncoder->setBuffer(m_BinningArg.GetBuffer(m_FrameIndex), 0, 0);
+    pComputeEncoder->setBuffer(m_pHead, 0, 1);
+    pComputeEncoder->setBuffer(m_pNodes, 0, 2);
+    pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 3);
     
     MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
     MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
 
     pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
-    pComputeEncoder->endEncoding();*/
+    pComputeEncoder->endEncoding();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -163,12 +172,14 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Terminate()
 {
-    m_CommandsBuffer.Terminate();
+    m_DrawCommandsBuffer.Terminate();
     m_DrawDataBuffer.Terminate();
+    m_BinningArg.Terminate();
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pHead);
+    SAFE_RELEASE(m_pNodes);
     SAFE_RELEASE(m_pCommandQueue);
 }
 

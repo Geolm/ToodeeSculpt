@@ -2,28 +2,11 @@
 #include "common.h"
 #include "collision.h"
 
-struct bin_arguments
-{
-    constant draw_command* commands [[id(0)]];
-    constant float* draw_data[[id(1)]];
-    uint32_t num_commands;
-    uint32_t max_nodes;
-    uint16_t num_tile_width;
-    uint16_t num_tile_height;
-    float tile_size;
-    float aa_width;
-};
-
-struct tile_data
-{
-    device tile_node* head; 
-    device tile_node* nodes;
-};
-
 // ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant bin_arguments& input [[buffer(0)]],
-                device tile_data& tiles [[buffer(1)]],
-                device counters& counter [[buffer(2)]],
+                device tile_node& head [[buffer(1)]],
+                device tile_node& nodes [[buffer(2)]],
+                device counters& counter [[buffer(3)]],
                 ushort2 index [[thread_position_in_grid]])
 {
     uint16_t tile_index = index.y * input.num_tile_width + index.x;
