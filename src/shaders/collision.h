@@ -9,8 +9,8 @@ float2 skew(float2 v) {return float2(-v.y, v.x);}
 // ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_aabb_disc(aabb box, float2 center, float sq_radius)
 {
-    float2 nearest_point = metal::clamp(center.xy, box.min, box.max);
-    return metal::distance_squared(nearest_point, center) < sq_radius;
+    float2 nearest_point = clamp(center.xy, box.min, box.max);
+    return distance_squared(nearest_point, center) < sq_radius;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ bool intersection_aabb_obb(aabb box, float2 p0, float2 p1, float width)
 {
     float2 dir = p1 - p0;
     float2 center = (p0 + p1) * .5f;
-    float height = metal::length(dir);
+    float height = length(dir);
     float2 axis_j = dir / height; 
     float2 axis_i = skew(axis_j);
 
@@ -51,18 +51,18 @@ bool intersection_aabb_obb(aabb box, float2 p0, float2 p1, float width)
     v[3] = box.max;
 
     // sat : aabb vertices vs obb axis
-    float4 distances = float4(metal::dot(axis_i, v[0]), metal::dot(axis_i, v[1]), metal::dot(axis_i, v[2]), metal::dot(axis_i, v[3]));
-    distances -= metal::dot(center, axis_i);
+    float4 distances = float4(dot(axis_i, v[0]), dot(axis_i, v[1]), dot(axis_i, v[2]), dot(axis_i, v[3]));
+    distances -= dot(center, axis_i);
 
     float threshold = width * .5f;
-    if (metal::all(distances > threshold) || metal::all(distances < -threshold))
+    if (all(distances > threshold) || all(distances < -threshold))
         return false;
     
-    distances = float4(metal::dot(axis_j, v[0]), metal::dot(axis_j, v[1]), metal::dot(axis_j, v[2]), metal::dot(axis_j, v[3]));
-    distances -= metal::dot(center, axis_j);
+    distances = float4(dot(axis_j, v[0]), dot(axis_j, v[1]), dot(axis_j, v[2]), dot(axis_j, v[3]));
+    distances -= dot(center, axis_j);
 
     threshold = height * .5f;
-    if (metal::all(distances > threshold) || metal::all(distances < -threshold))
+    if (all(distances > threshold) || all(distances < -threshold))
         return false;
 
     return true;

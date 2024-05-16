@@ -1,8 +1,11 @@
 #define TILE_SIZE (32)
-#define MAX_NODES_COUNT (1<<16)
+#define MAX_NODES_COUNT (1<<17)
 
 #ifndef __METAL_VERSION__
 #define constant
+#define atomic_uint uint32_t
+#else
+using namespace metal;
 #endif
 
 enum command_type
@@ -47,7 +50,7 @@ struct tile_node
 
 struct counters
 {
-    uint32_t num_nodes;  // should be clear to zero each frame start
+    atomic_uint num_nodes;  // should be clear to zero each frame start
     uint32_t pad[3];
 };
 

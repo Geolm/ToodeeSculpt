@@ -97,7 +97,6 @@ void Renderer::BeginFrame()
     m_FrameIndex++;
     m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * Renderer::MAX_DRAWDATA);
-    m_NumDrawCommands = 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -105,11 +104,15 @@ void Renderer::EndFrame()
 {
     m_DrawCommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
     m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
+    m_NumDrawCommands = m_Commands.GetNumElements();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::BinCommands()
 {
+    if (m_pBinningPSO == nullptr)
+        return;
+
     // clear buffers
     MTL::BlitCommandEncoder* pBlitEncoder = m_pCommandBuffer->blitCommandEncoder();
     pBlitEncoder->fillBuffer(m_pCountersBuffer, NS::Range(0, m_pCountersBuffer->length()), 0);
@@ -137,6 +140,8 @@ void Renderer::BinCommands()
     pComputeEncoder->setBuffer(m_pHead, 0, 1);
     pComputeEncoder->setBuffer(m_pNodes, 0, 2);
     pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 3);
+    pComputeEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
+    pComputeEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     
     MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
     MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);

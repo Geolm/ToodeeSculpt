@@ -18,8 +18,7 @@ public:
     
     // Shapes
     inline void DrawCircle(float x, float y, float radius, float width, uint32_t color);
-    void DrawBox(float x, float y, float radius, uint32_t color);
-    void DrawRectangle(float x_min, float y_min, float x_max, float y_max, float width, uint32_t color);
+    inline void DrawCircleFilled(float x, float y, float radius, uint32_t color);
     
 private:
     void BuildComputePSO();
@@ -81,3 +80,22 @@ inline void Renderer::DrawCircle(float x, float y, float radius, float width, ui
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::DrawCircleFilled(float x, float y, float radius, uint32_t color)
+{
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = m_CurrentClipIndex;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_circle_filled;
+
+        float* data = m_DrawData.NewMultiple(3);
+        if (data != nullptr)
+            write_float(data,  x, y, radius);
+        else
+            m_Commands.RemoveLast();
+    }
+}

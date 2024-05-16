@@ -4,8 +4,8 @@
 
 // ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant bin_arguments& input [[buffer(0)]],
-                device tile_node& head [[buffer(1)]],
-                device tile_node& nodes [[buffer(2)]],
+                device tile_node* head [[buffer(1)]],
+                device tile_node* nodes [[buffer(2)]],
                 device counters& counter [[buffer(3)]],
                 ushort2 index [[thread_position_in_grid]])
 {
@@ -22,27 +22,43 @@ kernel void bin(constant bin_arguments& input [[buffer(0)]],
     // loop through draw commands in reverse order (because of the linked list)
     for(uint32_t i=input.num_commands; i-- > 0; )
     {
-        const draw_command cmd = input.commands[i];
-        uint32_t index = cmd.data_index;
-        bool to_be_added = false;
+        uint32_t data_index = input.commands[i].data_index;
+        bool to_be_added;
 
-        switch(cmd.type)
+        switch(input.commands[i].type)
         {
             case shape_rect_filled :
             {
-                float2 p0 = float2(input.draw_data[index], input.draw_data[index+1]);
-                float2 p1 = float2(input.draw_data[index+2], input.draw_data[index+3]);
-                float width = input.draw_data[index+4];
+                float2 p0 = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
+                float2 p1 = float2(input.draw_data[data_index+2], input.draw_data[data_index+3]);
+                float width = input.draw_data[data_index+4];
                 to_be_added = intersection_aabb_obb(tile_enlarge_aabb, p0, p1, width);
                 break;
             }
             case shape_circle_filled :
             {
-                float2 center = float2(input.draw_data[index], input.draw_data[index+1]);
-                float radius = input.draw_data[index+2];
+                float2 center = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
+                float radius = input.draw_data[data_index+2];
                 float sq_radius = radius * radius;
                 to_be_added = intersection_aabb_disc(tile_enlarge_aabb, center, sq_radius);
                 break;
+            }
+            default : to_be_added = false;
+        }
+
+        if (to_be_added)
+        {
+        
+            // allocate one node
+            uint new_node_index = atomic_fetch_add_explicit(&counter.num_nodes, 1, memory_order_relaxed);
+
+            // avoid access beyond the end of the buffer
+            if (new_node_index<input.max_nodes)
+            {
+                // insert in the linked list the new node
+                nodes[new_node_index] = head[tile_index];
+                head[tile_index].command_index = i;
+                head[tile_index].next = new_node_index;
             }
         }
     }
