@@ -32,6 +32,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FB2646BE2BF7F630009B2403 /* rasterizer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = rasterizer.metal; sourceTree = "<group>"; };
+		FB2646BF2BF7F630009B2403 /* sdf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sdf.h; sourceTree = "<group>"; };
 		FB2823352BF2D8A7009FC4FD /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
 		FB2823362BF2D8A7009FC4FD /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
 		FB2823372BF2D8A7009FC4FD /* PushArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PushArray.h; sourceTree = "<group>"; };
@@ -86,6 +88,8 @@
 		FB3C530C2BE2702700240FA8 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				FB2646BE2BF7F630009B2403 /* rasterizer.metal */,
+				FB2646BF2BF7F630009B2403 /* sdf.h */,
 				FBA5CD0D2BE931EB00398435 /* collision.h */,
 				FB3C530A2BE2702700240FA8 /* common.h */,
 				FB41C0542BE5754900927906 /* binning.metal */,

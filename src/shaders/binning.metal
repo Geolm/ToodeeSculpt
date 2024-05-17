@@ -4,7 +4,7 @@
 
 // ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
-                device bin_output& output [[buffer(1)]],
+                device tiles_data& output [[buffer(1)]],
                 device counters& counter [[buffer(2)]],
                 device output_command_buffer& indirect_draw [[buffer(3)]],
                 ushort2 index [[thread_position_in_grid]])
@@ -84,6 +84,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
 
         cmd.set_vertex_buffer(&input, 0);
         cmd.set_vertex_buffer(output.tile_indices, 1);
+        cmd.set_fragment_buffer(&input, 0);
         cmd.draw_primitives(primitive_type::triangle_strip, 0, 4, num_tiles, 0);
     }
 }

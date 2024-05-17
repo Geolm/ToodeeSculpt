@@ -31,8 +31,8 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     MTL::IndirectCommandBufferDescriptor* pIcbDesc = MTL::IndirectCommandBufferDescriptor::alloc()->init();
     pIcbDesc->setCommandTypes(MTL::IndirectCommandTypeDraw);
     pIcbDesc->setInheritBuffers(false);
-    pIcbDesc->setMaxVertexBufferBindCount(1);
-    pIcbDesc->setMaxFragmentBufferBindCount(0);
+    pIcbDesc->setMaxVertexBufferBindCount(2);
+    pIcbDesc->setMaxFragmentBufferBindCount(1);
     pIcbDesc->setInheritPipelineState(true);
     m_pIndirectCommandBuffer = m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
     pIcbDesc->release();
@@ -155,13 +155,14 @@ void Renderer::BinCommands()
     args->num_tile_height = m_NumTilesHeight;
     args->num_tile_width = m_NumTilesWidth;
     args->tile_size = TILE_SIZE;
+    args->screen_div = (float2) {.x = 1.f / (float)m_ViewportWidth, 1.f / (float) m_ViewportHeight};
     m_BinInputArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
 
-    bin_output* output = (bin_output*) m_BinOutputArg.Map(m_FrameIndex);
+    tiles_data* output = (tiles_data*) m_BinOutputArg.Map(m_FrameIndex);
     output->head = (tile_node*) m_pHead->gpuAddress();
     output->nodes = (tile_node*) m_pNodes->gpuAddress();
     output->tile_indices = (uint16_t*) m_pTileIndices->gpuAddress();
-    m_BinOutputArg.Unmap(m_FrameIndex, 0, sizeof(bin_output));
+    m_BinOutputArg.Unmap(m_FrameIndex, 0, sizeof(tiles_data));
 
     pComputeEncoder->setBuffer(m_BinInputArg.GetBuffer(m_FrameIndex), 0, 0);
     pComputeEncoder->setBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);

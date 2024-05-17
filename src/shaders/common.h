@@ -76,7 +76,7 @@ struct draw_cmd_arguments
     float2 screen_div;
 };
 
-struct bin_output
+struct tiles_data
 {
     device tile_node* head;
     device tile_node* nodes;
