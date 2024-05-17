@@ -146,7 +146,7 @@ void Renderer::BinCommands()
     pComputeEncoder->waitForFence(m_pClearBuffersFence);
     pComputeEncoder->setComputePipelineState(m_pBinningPSO);
 
-    bin_arguments* args = (bin_arguments*) m_BinInputArg.Map(m_FrameIndex);
+    draw_cmd_arguments* args = (draw_cmd_arguments*) m_BinInputArg.Map(m_FrameIndex);
     args->aa_width = m_AAWidth;
     args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
@@ -155,7 +155,7 @@ void Renderer::BinCommands()
     args->num_tile_height = m_NumTilesHeight;
     args->num_tile_width = m_NumTilesWidth;
     args->tile_size = TILE_SIZE;
-    m_BinInputArg.Unmap(m_FrameIndex, 0, sizeof(bin_arguments));
+    m_BinInputArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
 
     bin_output* output = (bin_output*) m_BinOutputArg.Map(m_FrameIndex);
     output->head = (tile_node*) m_pHead->gpuAddress();

@@ -11,6 +11,7 @@
 #define atomic_uint uint32_t
 #define device
 #define command_buffer void*
+typedef struct {float x, y;} float2;
 #else
 using namespace metal;
 #endif
@@ -62,7 +63,7 @@ struct counters
     uint32_t pad[2];
 };
 
-struct bin_arguments
+struct draw_cmd_arguments
 {
     constant draw_command* commands;
     constant float* draw_data;
@@ -72,6 +73,7 @@ struct bin_arguments
     uint16_t num_tile_height;
     float tile_size;
     float aa_width;
+    float2 screen_div;
 };
 
 struct bin_output

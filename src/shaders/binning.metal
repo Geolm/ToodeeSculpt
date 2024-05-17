@@ -3,7 +3,7 @@
 #include "collision.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------
-kernel void bin(constant bin_arguments& input [[buffer(0)]],
+kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 device bin_output& output [[buffer(1)]],
                 device counters& counter [[buffer(2)]],
                 device output_command_buffer& indirect_draw [[buffer(3)]],
@@ -82,7 +82,8 @@ kernel void bin(constant bin_arguments& input [[buffer(0)]],
 
         uint num_tiles = atomic_load_explicit(&counter.num_tiles, memory_order_relaxed);
 
-        cmd.set_vertex_buffer(output.tile_indices, 0);
+        cmd.set_vertex_buffer(&input, 0);
+        cmd.set_vertex_buffer(output.tile_indices, 1);
         cmd.draw_primitives(primitive_type::triangle_strip, 0, 4, num_tiles, 0);
     }
 }
