@@ -22,14 +22,23 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
         exit(EXIT_FAILURE);
     }
 
-    BuildComputePSO();
-    Resize(width, height);
-
     m_DrawCommandsBuffer.Init(m_pDevice, sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * Renderer::MAX_DRAWDATA);
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     m_pClearBuffersFence = m_pDevice->newFence();
+
+    MTL::IndirectCommandBufferDescriptor* pIcbDesc = MTL::IndirectCommandBufferDescriptor::alloc()->init();
+    pIcbDesc->setCommandTypes(MTL::IndirectCommandTypeDraw);
+    pIcbDesc->setInheritBuffers(false);
+    pIcbDesc->setMaxVertexBufferBindCount(1);
+    pIcbDesc->setMaxFragmentBufferBindCount(0);
+    pIcbDesc->setInheritPipelineState(true);
+    m_pIndirectCommandBuffer = m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
+    pIcbDesc->release();
+
+    BuildComputePSO();
+    Resize(width, height);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -41,7 +50,9 @@ void Renderer::Resize(uint32_t width, uint32_t height)
     m_NumTilesHeight = (height + TILE_SIZE - 1) / TILE_SIZE;
 
     SAFE_RELEASE(m_pHead);
+    SAFE_RELEASE(m_pTileIndices);
     m_pHead = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(tile_node), MTL::ResourceStorageModePrivate);
+    m_pTileIndices = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -81,11 +92,21 @@ void Renderer::BuildComputePSO()
         if (m_pBinningPSO == nullptr)
             log_error( "%s", pError->localizedDescription()->utf8String());
 
-        MTL::ArgumentEncoder* argumentEncoder = pBinningFunction->newArgumentEncoder(0);
+        MTL::ArgumentEncoder* inputArgumentEncoder = pBinningFunction->newArgumentEncoder(0);
+        MTL::ArgumentEncoder* outputArgumentEncoder = pBinningFunction->newArgumentEncoder(1);
+        MTL::ArgumentEncoder* indirectArgumentEncoder = pBinningFunction->newArgumentEncoder(3);
 
-        m_BinningArg.Init(m_pDevice, argumentEncoder->encodedLength());
+        m_BinInputArg.Init(m_pDevice, inputArgumentEncoder->encodedLength());
+        m_BinOutputArg.Init(m_pDevice, outputArgumentEncoder->encodedLength());
+        m_pIndirectArg = m_pDevice->newBuffer(indirectArgumentEncoder->encodedLength(), MTL::ResourceStorageModeShared);
 
-        argumentEncoder->release();
+        indirectArgumentEncoder->setArgumentBuffer(m_pIndirectArg, 0);
+        indirectArgumentEncoder->setIndirectCommandBuffer(m_pIndirectCommandBuffer, 0);
+
+        inputArgumentEncoder->release();
+        outputArgumentEncoder->release();
+        indirectArgumentEncoder->release();
+
         pComputeLibrary->release();
         pBinningFunction->release();
     }
@@ -125,7 +146,7 @@ void Renderer::BinCommands()
     pComputeEncoder->waitForFence(m_pClearBuffersFence);
     pComputeEncoder->setComputePipelineState(m_pBinningPSO);
 
-    bin_arguments* args = (bin_arguments*) m_BinningArg.Map(m_FrameIndex);
+    bin_arguments* args = (bin_arguments*) m_BinInputArg.Map(m_FrameIndex);
     args->aa_width = m_AAWidth;
     args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
@@ -134,14 +155,24 @@ void Renderer::BinCommands()
     args->num_tile_height = m_NumTilesHeight;
     args->num_tile_width = m_NumTilesWidth;
     args->tile_size = TILE_SIZE;
-    m_BinningArg.Unmap(m_FrameIndex, 0, sizeof(bin_arguments));
+    m_BinInputArg.Unmap(m_FrameIndex, 0, sizeof(bin_arguments));
 
-    pComputeEncoder->setBuffer(m_BinningArg.GetBuffer(m_FrameIndex), 0, 0);
-    pComputeEncoder->setBuffer(m_pHead, 0, 1);
-    pComputeEncoder->setBuffer(m_pNodes, 0, 2);
-    pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 3);
+    bin_output* output = (bin_output*) m_BinOutputArg.Map(m_FrameIndex);
+    output->head = (tile_node*) m_pHead->gpuAddress();
+    output->nodes = (tile_node*) m_pNodes->gpuAddress();
+    output->tile_indices = (uint16_t*) m_pTileIndices->gpuAddress();
+    m_BinOutputArg.Unmap(m_FrameIndex, 0, sizeof(bin_output));
+
+    pComputeEncoder->setBuffer(m_BinInputArg.GetBuffer(m_FrameIndex), 0, 0);
+    pComputeEncoder->setBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
+    pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 2);
+    pComputeEncoder->setBuffer(m_pIndirectArg, 0, 3);
     pComputeEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
+    pComputeEncoder->useResource(m_pHead, MTL::ResourceUsageRead|MTL::ResourceUsageWrite);
+    pComputeEncoder->useResource(m_pNodes, MTL::ResourceUsageWrite);
+    pComputeEncoder->useResource(m_pTileIndices, MTL::ResourceUsageWrite);
+    pComputeEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageWrite);
     
     MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
     MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
@@ -179,12 +210,16 @@ void Renderer::Terminate()
 {
     m_DrawCommandsBuffer.Terminate();
     m_DrawDataBuffer.Terminate();
-    m_BinningArg.Terminate();
+    m_BinInputArg.Terminate();
+    m_BinOutputArg.Terminate();
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pHead);
     SAFE_RELEASE(m_pNodes);
+    SAFE_RELEASE(m_pTileIndices);
+    SAFE_RELEASE(m_pIndirectArg);
+    SAFE_RELEASE(m_pIndirectCommandBuffer);
     SAFE_RELEASE(m_pCommandQueue);
 }
 

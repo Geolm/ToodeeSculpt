@@ -4,9 +4,9 @@
 
 // ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant bin_arguments& input [[buffer(0)]],
-                device tile_node* head [[buffer(1)]],
-                device tile_node* nodes [[buffer(2)]],
-                device counters& counter [[buffer(3)]],
+                device bin_output& output [[buffer(1)]],
+                device counters& counter [[buffer(2)]],
+                device output_command_buffer& indirect_draw [[buffer(3)]],
                 ushort2 index [[thread_position_in_grid]])
 {
     uint16_t tile_index = index.y * input.num_tile_width + index.x;
@@ -56,18 +56,33 @@ kernel void bin(constant bin_arguments& input [[buffer(0)]],
             if (new_node_index<input.max_nodes)
             {
                 // insert in the linked list the new node
-                nodes[new_node_index] = head[tile_index];
-                head[tile_index].command_index = i;
-                head[tile_index].next = new_node_index;
+                output.nodes[new_node_index] = output.head[tile_index];
+                output.head[tile_index].command_index = i;
+                output.head[tile_index].next = new_node_index;
             }
         }
     }
-    
-    //
-    //      extract command data depending of the type
-    //      quick aabb_tile vs aabb command
-    //      test precise aabb_tile vs command shape
-    //      if intersection
-    //          get a slot with interlock_increment output.num_next
-    //          update output.head[tile_index] to grow the linked-list
+
+    // if the tile has some draw command to proceed
+    if (output.head[tile_index].command_index != INVALID_INDEX)
+    {
+        uint pos = atomic_fetch_add_explicit(&counter.num_tiles, 1, memory_order_relaxed);
+
+        // add tile index
+        output.tile_indices[pos] = tile_index;
+    }
+
+    // wait until all thread have incremented the number of tiles to be drawn
+    threadgroup_barrier(mem_flags::mem_none);
+
+    // only the first thread write the indirect draw call buffer
+    if (tile_index == 0)
+    {
+        render_command cmd(indirect_draw.cmd_buffer, 0);
+
+        uint num_tiles = atomic_load_explicit(&counter.num_tiles, memory_order_relaxed);
+
+        cmd.set_vertex_buffer(output.tile_indices, 0);
+        cmd.draw_primitives(primitive_type::triangle_strip, 0, 4, num_tiles, 0);
+    }
 }

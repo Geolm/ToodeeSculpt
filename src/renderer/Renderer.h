@@ -41,7 +41,11 @@ private:
     MTL::Fence* m_pClearBuffersFence {nullptr};
     MTL::Buffer* m_pHead {nullptr};
     MTL::Buffer* m_pNodes {nullptr};
-    DynamicBuffer m_BinningArg;
+    MTL::Buffer* m_pTileIndices {nullptr};
+    MTL::IndirectCommandBuffer* m_pIndirectCommandBuffer {nullptr};
+    MTL::Buffer* m_pIndirectArg {nullptr};
+    DynamicBuffer m_BinInputArg;
+    DynamicBuffer m_BinOutputArg;
     
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;

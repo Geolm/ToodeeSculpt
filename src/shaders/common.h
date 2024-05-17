@@ -1,9 +1,16 @@
+// ---------------------------------------------------------------------------------------------------------------------------
+// constants
 #define TILE_SIZE (32)
 #define MAX_NODES_COUNT (1<<17)
+#define INVALID_INDEX (0xffffffff)
 
+// ---------------------------------------------------------------------------------------------------------------------------
+// cpp compatibility
 #ifndef __METAL_VERSION__
 #define constant
 #define atomic_uint uint32_t
+#define device
+#define command_buffer void*
 #else
 using namespace metal;
 #endif
@@ -50,8 +57,9 @@ struct tile_node
 
 struct counters
 {
-    atomic_uint num_nodes;  // should be clear to zero each frame start
-    uint32_t pad[3];
+    atomic_uint num_nodes;
+    atomic_uint num_tiles;
+    uint32_t pad[2];
 };
 
 struct bin_arguments
@@ -65,3 +73,24 @@ struct bin_arguments
     float tile_size;
     float aa_width;
 };
+
+struct bin_output
+{
+    device tile_node* head;
+    device tile_node* nodes;
+    device uint16_t* tile_indices;
+};
+
+struct output_command_buffer
+{
+    command_buffer cmd_buffer;
+};
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// cpp compatibility
+#ifndef __METAL_VERSION__
+#undef constant
+#undef atomic_uint
+#undef device
+#undef command_buffer
+#endif
