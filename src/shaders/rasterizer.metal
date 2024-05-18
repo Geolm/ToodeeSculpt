@@ -64,32 +64,36 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
 {
     half4 output = half4(0.f, 0.f, 0.f, 1.f);
 
-    float2 position = 
-
-    tile_node node = tiles.head[index];
+    tile_node node = tiles.head[in.tile_index];
     while (node.next != INVALID_INDEX)
     {
         draw_command& cmd = input.commands[node.command_index];
+        clip_rect& clip = input.clips[cmd.clip_index];
         uint32_t data_index = cmd.data_index;
 
-        float distance;
-
-        switch(cmd.type)
+        // check if the pixel is in the clip rect
+        if (in.pos.x >= clip.min_x && in.pos.x <= clip.max_x &&
+            in.pos.x >= clip.min_y && in.pos.y <= clip.max_y)
         {
-        case shape_circle_filled :
-            {
-                float2 center = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
-                float radius = input.draw_data[data_index+2];
-                float sq_radius = radius * radius;
-                distance = sd_disc(in.pos, center, radius);
-                break;
-            }
-        }
+            float distance;
 
-        half4 color = unpack_color(cmd.color);
-        half alpha_factor = 1.f - smoothstep(0.f, input.aa_width, distance);    // anti-aliasing
-        color.a *= alpha_factor;
-        output = accumulate_color(color, output);
+            switch(cmd.type)
+            {
+            case shape_circle_filled :
+                {
+                    float2 center = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
+                    float radius = input.draw_data[data_index+2];
+                    float sq_radius = radius * radius;
+                    distance = sd_disc(in.pos, center, radius);
+                    break;
+                }
+            }
+
+            half4 color = unpack_color(cmd.color);
+            half alpha_factor = 1.f - smoothstep(0.f, input.aa_width, distance);    // anti-aliasing
+            color.a *= alpha_factor;
+            output = accumulate_color(color, output);
+        }
 
         node = tiles.nodes[node.next];
     }

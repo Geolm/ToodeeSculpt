@@ -4,7 +4,6 @@
 #include "../Metal.hpp"
 
 #include "Renderer.h"
-#include "../system/log.h"
 #include "shader_reader.h"
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
@@ -116,6 +115,7 @@ void Renderer::BuildComputePSO()
 void Renderer::BeginFrame()
 {
     m_FrameIndex++;
+    m_CurrentClipIndex = 0;
     m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * Renderer::MAX_DRAWDATA);
 }
@@ -150,6 +150,7 @@ void Renderer::BinCommands()
     args->aa_width = m_AAWidth;
     args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
+    memcpy(args->clips, m_Clips, sizeof(m_Clips));
     args->max_nodes = MAX_NODES_COUNT;
     args->num_commands = m_NumDrawCommands;
     args->num_tile_height = m_NumTilesHeight;

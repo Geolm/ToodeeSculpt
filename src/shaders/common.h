@@ -3,6 +3,7 @@
 #define TILE_SIZE (32)
 #define MAX_NODES_COUNT (1<<17)
 #define INVALID_INDEX (0xffffffff)
+#define MAX_CLIPS (256)
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
@@ -63,10 +64,16 @@ struct counters
     uint32_t pad[2];
 };
 
+struct clip_rect
+{
+    uint16_t min_x, min_y, max_x, max_y;
+};
+
 struct draw_cmd_arguments
 {
     constant draw_command* commands;
     constant float* draw_data;
+    clip_rect clips[MAX_CLIPS];
     uint32_t num_commands;
     uint32_t max_nodes;
     uint16_t num_tile_width;
