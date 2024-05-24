@@ -12,14 +12,14 @@ struct vs_out
 // ---------------------------------------------------------------------------------------------------------------------------
 vertex vs_out tile_vs(uint instance_id [[instance_id]],
                       uint vertex_id [[vertex_id]],
-                      constant draw_cmd_arguments& input [[buffer0]]
-                      constant uint16_t* tile_indices [[buffer1]])
+                      constant draw_cmd_arguments& input [[buffer(0)]],
+                      constant uint16_t* tile_indices [[buffer(1)]])
 {
     vs_out out;
 
     uint16_t tile_index = tile_indices[instance_id];
-    uint16_t tile_x = instance_id % num_tile_width;
-    uint16_t tile_y = instance_id / num_tile_width;
+    uint16_t tile_x = instance_id % input.num_tile_width;
+    uint16_t tile_y = instance_id / input.num_tile_width;
     
     float2 screen_pos = float2(vertex_id&1, vertex_id>>1);
     screen_pos *= input.tile_size;
@@ -59,16 +59,16 @@ half4 accumulate_color(half4 color, half4 backbuffer)
 
 // ---------------------------------------------------------------------------------------------------------------------------
 fragment half4 tile_fs(vs_out in [[stage_in]],
-                       constant draw_cmd_arguments& input [[buffer0]],
-                       device tiles_data& tiles [[buffer1]])
+                       constant draw_cmd_arguments& input [[buffer(0)]],
+                       device tiles_data& tiles [[buffer(1)]])
 {
     half4 output = half4(0.f, 0.f, 0.f, 1.f);
 
     tile_node node = tiles.head[in.tile_index];
     while (node.next != INVALID_INDEX)
     {
-        draw_command& cmd = input.commands[node.command_index];
-        clip_rect& clip = input.clips[cmd.clip_index];
+        constant draw_command& cmd = input.commands[node.command_index];
+        constant clip_rect& clip = input.clips[cmd.clip_index];
         uint32_t data_index = cmd.data_index;
 
         // check if the pixel is in the clip rect
@@ -83,8 +83,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 {
                     float2 center = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
                     float radius = input.draw_data[data_index+2];
-                    float sq_radius = radius * radius;
-                    distance = sd_disc(in.pos, center, radius);
+                    distance = sd_disc(in.pos.xy, center, radius);
                     break;
                 }
             }

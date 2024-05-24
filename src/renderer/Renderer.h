@@ -34,7 +34,8 @@ private:
     MTL::Device* m_pDevice;
     MTL::CommandQueue* m_pCommandQueue;
     MTL::CommandBuffer* m_pCommandBuffer;
-    MTL::ComputePipelineState* m_pBinningPSO;
+    MTL::ComputePipelineState* m_pBinningPSO {nullptr};
+    MTL::RenderPipelineState* m_pDrawPSO {nullptr};
     
     DynamicBuffer m_DrawCommandsBuffer;
     DynamicBuffer m_DrawDataBuffer;

@@ -80,11 +80,10 @@ void Renderer::BuildComputePSO()
 {
     SAFE_RELEASE(m_pBinningPSO);
 
-    MTL::Library* pComputeLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "binning.metal");
-    if (pComputeLibrary != nullptr)
+    MTL::Library* pLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "binning.metal");
+    if (pLibrary != nullptr)
     {
-        MTL::Function* pBinningFunction = pComputeLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
-
+        MTL::Function* pBinningFunction = pLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
         NS::Error* pError = nullptr;
         m_pBinningPSO = m_pDevice->newComputePipelineState(pBinningFunction, &pError);
 
@@ -106,8 +105,30 @@ void Renderer::BuildComputePSO()
         outputArgumentEncoder->release();
         indirectArgumentEncoder->release();
 
-        pComputeLibrary->release();
+        pLibrary->release();
         pBinningFunction->release();
+    }
+
+    pLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "rasterizer.metal");
+    if (pLibrary != nullptr)
+    {
+        MTL::Function* pVertexFunction = pLibrary->newFunction(NS::String::string("tile_vs", NS::UTF8StringEncoding));
+        MTL::Function* pFragmentFunction = pLibrary->newFunction(NS::String::string("tile_fs", NS::UTF8StringEncoding));
+        NS::Error* pError = nullptr;
+
+        MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
+        pDesc->setVertexFunction(pVertexFunction);
+        pDesc->setFragmentFunction(pFragmentFunction);
+        pDesc->colorAttachments()->object(0)->setPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
+
+        m_pDrawPSO = m_pDevice->newRenderPipelineState( pDesc, &pError );
+
+        if (m_pDrawPSO == nullptr)
+            log_error( "%s", pError->localizedDescription()->utf8String());
+
+        pVertexFunction->release();
+        pFragmentFunction->release();
+        pDesc->release();
     }
 }
 
@@ -116,8 +137,11 @@ void Renderer::BeginFrame()
 {
     m_FrameIndex++;
     m_CurrentClipIndex = 0;
+    m_CurrentClipIndex = 0;
+
     m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * Renderer::MAX_DRAWDATA);
+    SetClipRect(0, 0, (uint16_t) m_ViewportWidth, (uint16_t) m_ViewportHeight);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -217,6 +241,7 @@ void Renderer::Terminate()
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
     SAFE_RELEASE(m_pBinningPSO);
+    SAFE_RELEASE(m_pDrawPSO);
     SAFE_RELEASE(m_pHead);
     SAFE_RELEASE(m_pNodes);
     SAFE_RELEASE(m_pTileIndices);
