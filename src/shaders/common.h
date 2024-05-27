@@ -12,7 +12,7 @@
 #define atomic_uint uint32_t
 #define device
 #define command_buffer void*
-typedef struct {float x, y;} float2;
+typedef struct alignas(8) {float x, y;} float2;
 #else
 using namespace metal;
 #endif

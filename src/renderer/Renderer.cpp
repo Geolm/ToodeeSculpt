@@ -109,7 +109,7 @@ void Renderer::BuildComputePSO()
         MTL::ArgumentEncoder* outputArgumentEncoder = pBinningFunction->newArgumentEncoder(1);
         MTL::ArgumentEncoder* indirectArgumentEncoder = pBinningFunction->newArgumentEncoder(3);
 
-        m_BinInputArg.Init(m_pDevice, inputArgumentEncoder->encodedLength());
+        m_DrawCommandsArg.Init(m_pDevice, inputArgumentEncoder->encodedLength());
         m_BinOutputArg.Init(m_pDevice, outputArgumentEncoder->encodedLength());
         m_pIndirectArg = m_pDevice->newBuffer(indirectArgumentEncoder->encodedLength(), MTL::ResourceStorageModeShared);
 
@@ -196,7 +196,7 @@ void Renderer::BinCommands()
     pComputeEncoder->waitForFence(m_pClearBuffersFence);
     pComputeEncoder->setComputePipelineState(m_pBinningPSO);
 
-    draw_cmd_arguments* args = (draw_cmd_arguments*) m_BinInputArg.Map(m_FrameIndex);
+    draw_cmd_arguments* args = (draw_cmd_arguments*) m_DrawCommandsArg.Map(m_FrameIndex);
     args->aa_width = m_AAWidth;
     args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
@@ -206,8 +206,8 @@ void Renderer::BinCommands()
     args->num_tile_height = m_NumTilesHeight;
     args->num_tile_width = m_NumTilesWidth;
     args->tile_size = TILE_SIZE;
-    args->screen_div = (float2) {.x = 1.f / (float)m_ViewportWidth, 1.f / (float) m_ViewportHeight};
-    m_BinInputArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
+    args->screen_div = (float2) {.x = 1.f / (float)m_ViewportWidth, .y = 1.f / (float) m_ViewportHeight};
+    m_DrawCommandsArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
 
     tiles_data* output = (tiles_data*) m_BinOutputArg.Map(m_FrameIndex);
     output->head = (tile_node*) m_pHead->gpuAddress();
@@ -215,7 +215,7 @@ void Renderer::BinCommands()
     output->tile_indices = (uint16_t*) m_pTileIndices->gpuAddress();
     m_BinOutputArg.Unmap(m_FrameIndex, 0, sizeof(tiles_data));
 
-    pComputeEncoder->setBuffer(m_BinInputArg.GetBuffer(m_FrameIndex), 0, 0);
+    pComputeEncoder->setBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
     pComputeEncoder->setBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
     pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 2);
     pComputeEncoder->setBuffer(m_pIndirectArg, 0, 3);
@@ -252,6 +252,7 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
     pRenderEncoder->setCullMode(MTL::CullModeNone);
     pRenderEncoder->setDepthStencilState(m_pDepthStencilState);
     
+    pRenderEncoder->useResource(m_DrawCommandsArg.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pRenderEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pRenderEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pRenderEncoder->useResource(m_pHead, MTL::ResourceUsageRead);
@@ -274,7 +275,7 @@ void Renderer::Terminate()
 {
     m_DrawCommandsBuffer.Terminate();
     m_DrawDataBuffer.Terminate();
-    m_BinInputArg.Terminate();
+    m_DrawCommandsArg.Terminate();
     m_BinOutputArg.Terminate();
     SAFE_RELEASE(m_pDepthStencilState);
     SAFE_RELEASE(m_pCountersBuffer);

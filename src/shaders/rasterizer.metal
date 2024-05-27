@@ -18,12 +18,12 @@ vertex vs_out tile_vs(uint instance_id [[instance_id]],
     vs_out out;
 
     uint16_t tile_index = tile_indices[instance_id];
-    uint16_t tile_x = instance_id % input.num_tile_width;
-    uint16_t tile_y = instance_id / input.num_tile_width;
+    uint16_t tile_x = tile_index % input.num_tile_width;
+    uint16_t tile_y = tile_index / input.num_tile_width;
     
     float2 screen_pos = float2(vertex_id&1, vertex_id>>1);
-    screen_pos *= input.tile_size;
     screen_pos += float2(tile_x, tile_y);
+    screen_pos *= input.tile_size;
 
     float2 clipspace_pos = screen_pos * input.screen_div;
     clipspace_pos = (clipspace_pos * 2.f) - 1.f;

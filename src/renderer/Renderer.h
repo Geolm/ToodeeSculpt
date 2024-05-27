@@ -48,7 +48,7 @@ private:
     MTL::Buffer* m_pTileIndices {nullptr};
     MTL::IndirectCommandBuffer* m_pIndirectCommandBuffer {nullptr};
     MTL::Buffer* m_pIndirectArg {nullptr};
-    DynamicBuffer m_BinInputArg;
+    DynamicBuffer m_DrawCommandsArg;
     DynamicBuffer m_BinOutputArg;
     
     PushArray<draw_command> m_Commands;
