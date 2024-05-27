@@ -31,12 +31,13 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     pIcbDesc->setCommandTypes(MTL::IndirectCommandTypeDraw);
     pIcbDesc->setInheritBuffers(false);
     pIcbDesc->setMaxVertexBufferBindCount(2);
-    pIcbDesc->setMaxFragmentBufferBindCount(1);
+    pIcbDesc->setMaxFragmentBufferBindCount(2);
     pIcbDesc->setInheritPipelineState(true);
     m_pIndirectCommandBuffer = m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
     pIcbDesc->release();
 
     BuildComputePSO();
+    BuildDepthStencilState();
     Resize(width, height);
 }
 
@@ -52,6 +53,19 @@ void Renderer::Resize(uint32_t width, uint32_t height)
     SAFE_RELEASE(m_pTileIndices);
     m_pHead = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(tile_node), MTL::ResourceStorageModePrivate);
     m_pTileIndices = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::BuildDepthStencilState()
+{
+    MTL::DepthStencilDescriptor* pDsDesc = MTL::DepthStencilDescriptor::alloc()->init();
+
+    pDsDesc->setDepthCompareFunction(MTL::CompareFunction::CompareFunctionAlways);
+    pDsDesc->setDepthWriteEnabled(false);
+
+    m_pDepthStencilState = m_pDevice->newDepthStencilState(pDsDesc);
+
+    pDsDesc->release();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -79,6 +93,7 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
 void Renderer::BuildComputePSO()
 {
     SAFE_RELEASE(m_pBinningPSO);
+    SAFE_RELEASE(m_pDrawPSO);
 
     MTL::Library* pLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "binning.metal");
     if (pLibrary != nullptr)
@@ -119,7 +134,17 @@ void Renderer::BuildComputePSO()
         MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
         pDesc->setVertexFunction(pVertexFunction);
         pDesc->setFragmentFunction(pFragmentFunction);
-        pDesc->colorAttachments()->object(0)->setPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
+        pDesc->setSupportIndirectCommandBuffers(true);
+
+        MTL::RenderPipelineColorAttachmentDescriptor *pRenderbufferAttachment = pDesc->colorAttachments()->object(0);
+        pRenderbufferAttachment->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
+        pRenderbufferAttachment->setBlendingEnabled(true);
+        pRenderbufferAttachment->setSourceRGBBlendFactor(MTL::BlendFactorOne);
+        pRenderbufferAttachment->setDestinationRGBBlendFactor(MTL::BlendFactorSourceAlpha);
+        pRenderbufferAttachment->setRgbBlendOperation(MTL::BlendOperationAdd);
+        pRenderbufferAttachment->setSourceAlphaBlendFactor(MTL::BlendFactorOne);
+        pRenderbufferAttachment->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
+        pRenderbufferAttachment->setAlphaBlendOperation(MTL::BlendOperationAdd);
 
         m_pDrawPSO = m_pDevice->newRenderPipelineState( pDesc, &pError );
 
@@ -162,6 +187,7 @@ void Renderer::BinCommands()
     MTL::BlitCommandEncoder* pBlitEncoder = m_pCommandBuffer->blitCommandEncoder();
     pBlitEncoder->fillBuffer(m_pCountersBuffer, NS::Range(0, m_pCountersBuffer->length()), 0);
     pBlitEncoder->fillBuffer(m_pHead, NS::Range(0, m_pHead->length()), 0xff);
+    pBlitEncoder->resetCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
     pBlitEncoder->updateFence(m_pClearBuffersFence);
     pBlitEncoder->endEncoding();
 
@@ -212,17 +238,29 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 {
     m_pCommandBuffer = m_pCommandQueue->commandBuffer();
 
+    BinCommands();
+
     MTL::RenderPassDescriptor* renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
     MTL::RenderPassColorAttachmentDescriptor* cd = renderPassDescriptor->colorAttachments()->object(0);
     cd->setTexture(pDrawable->texture());
     cd->setLoadAction(MTL::LoadActionClear);
     cd->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
     cd->setStoreAction(MTL::StoreActionStore);
-    
-    MTL::RenderCommandEncoder* renderCommandEncoder = m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
-    renderCommandEncoder->endEncoding();
 
-    BinCommands();
+    MTL::RenderCommandEncoder* pRenderEncoder = m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
+
+    pRenderEncoder->setCullMode(MTL::CullModeNone);
+    pRenderEncoder->setDepthStencilState(m_pDepthStencilState);
+    
+    pRenderEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
+    pRenderEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
+    pRenderEncoder->useResource(m_pHead, MTL::ResourceUsageRead);
+    pRenderEncoder->useResource(m_pNodes, MTL::ResourceUsageRead);
+    pRenderEncoder->useResource(m_pTileIndices, MTL::ResourceUsageRead);
+    pRenderEncoder->setRenderPipelineState(m_pDrawPSO);
+    pRenderEncoder->executeCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
+
+    pRenderEncoder->endEncoding();
 
     m_pCommandBuffer->presentDrawable(pDrawable);
     m_pCommandBuffer->commit();
@@ -238,6 +276,7 @@ void Renderer::Terminate()
     m_DrawDataBuffer.Terminate();
     m_BinInputArg.Terminate();
     m_BinOutputArg.Terminate();
+    SAFE_RELEASE(m_pDepthStencilState);
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
     SAFE_RELEASE(m_pBinningPSO);

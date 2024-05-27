@@ -32,7 +32,7 @@ void MetalLayerHelper::InitWindow(const char* windowName, unsigned int window_wi
     m_MetalWindow = glfwGetCocoaWindow(m_Window);
     m_MetalLayer = [CAMetalLayer layer];
     m_MetalLayer.device = (__bridge id<MTLDevice>)m_Device;
-    m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
     m_MetalLayer.drawableSize = CGSizeMake(width, height);
     m_MetalWindow.contentView.layer = m_MetalLayer;
     m_MetalWindow.contentView.wantsLayer = YES;

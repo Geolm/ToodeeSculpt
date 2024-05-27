@@ -22,6 +22,7 @@ public:
     inline void DrawCircleFilled(float x, float y, float radius, uint32_t color);
     
 private:
+    void BuildDepthStencilState();
     void BuildComputePSO();
     void BinCommands();
     MTL::Library* BuildShader(const char* path, const char* name);
@@ -36,6 +37,7 @@ private:
     MTL::CommandBuffer* m_pCommandBuffer;
     MTL::ComputePipelineState* m_pBinningPSO {nullptr};
     MTL::RenderPipelineState* m_pDrawPSO {nullptr};
+    MTL::DepthStencilState* m_pDepthStencilState {nullptr};
     
     DynamicBuffer m_DrawCommandsBuffer;
     DynamicBuffer m_DrawDataBuffer;
