@@ -26,6 +26,7 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     m_pClearBuffersFence = m_pDevice->newFence();
+    m_pBinningFence = m_pDevice->newFence();
 
     MTL::IndirectCommandBufferDescriptor* pIcbDesc = MTL::IndirectCommandBufferDescriptor::alloc()->init();
     pIcbDesc->setCommandTypes(MTL::IndirectCommandTypeDraw);
@@ -230,6 +231,7 @@ void Renderer::BinCommands()
     MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
 
     pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
+    pComputeEncoder->updateFence(m_pBinningFence);
     pComputeEncoder->endEncoding();
 }
 
@@ -249,6 +251,7 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 
     MTL::RenderCommandEncoder* pRenderEncoder = m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
 
+    pRenderEncoder->waitForFence(m_pBinningFence, MTL::RenderStageVertex|MTL::RenderStageFragment);
     pRenderEncoder->setCullMode(MTL::CullModeNone);
     pRenderEncoder->setDepthStencilState(m_pDepthStencilState);
     
@@ -260,7 +263,6 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
     pRenderEncoder->useResource(m_pTileIndices, MTL::ResourceUsageRead);
     pRenderEncoder->setRenderPipelineState(m_pDrawPSO);
     pRenderEncoder->executeCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
-
     pRenderEncoder->endEncoding();
 
     m_pCommandBuffer->presentDrawable(pDrawable);
@@ -280,6 +282,7 @@ void Renderer::Terminate()
     SAFE_RELEASE(m_pDepthStencilState);
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
+    SAFE_RELEASE(m_pBinningFence);
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pDrawPSO);
     SAFE_RELEASE(m_pHead);

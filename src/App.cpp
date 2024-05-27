@@ -31,7 +31,7 @@ void App::Update(CA::MetalDrawable* drawable)
 
     for(uint32_t i=0; i<1000; i++)
     {
-        m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight), 50.f, 0xffffffff);
+        m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight), 25.f, 0x7fc0c741);
     }
     
     m_Renderer.EndFrame();

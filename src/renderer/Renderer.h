@@ -43,6 +43,7 @@ private:
     DynamicBuffer m_DrawDataBuffer;
     MTL::Buffer* m_pCountersBuffer {nullptr};
     MTL::Fence* m_pClearBuffersFence {nullptr};
+    MTL::Fence* m_pBinningFence {nullptr};
     MTL::Buffer* m_pHead {nullptr};
     MTL::Buffer* m_pNodes {nullptr};
     MTL::Buffer* m_pTileIndices {nullptr};
