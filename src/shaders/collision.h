@@ -14,6 +14,12 @@ bool intersection_aabb_disc(aabb box, float2 center, float sq_radius)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
+inline bool intersection_aabb_aabb(aabb box0, aabb box1)
+{
+    return !(box1.max.x < box0.min.x || box0.max.x < box1.min.x || box1.max.y < box0.min.y || box0.max.y < box1.min.y);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_aabb_obb(aabb box, float2 p0, float2 p1, float width)
 {
     float2 dir = p1 - p0;

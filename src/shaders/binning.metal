@@ -25,7 +25,10 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         uint32_t data_index = input.commands[i].data_index;
         bool to_be_added;
 
-        // TODO : add clip test
+        constant clip_rect& clip = input.clips[input.commands[i].clip_index];
+        aabb clip_aabb = {.min = float2(clip.min_x, clip.min_y), .max = float2(clip.max_x, clip.max_y)};
+        if (!intersection_aabb_aabb(tile_aabb, clip_aabb))
+            continue;
 
         switch(input.commands[i].type)
         {
