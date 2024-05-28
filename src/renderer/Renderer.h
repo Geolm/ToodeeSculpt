@@ -44,6 +44,7 @@ private:
     MTL::Buffer* m_pCountersBuffer {nullptr};
     MTL::Fence* m_pClearBuffersFence {nullptr};
     MTL::Fence* m_pBinningFence {nullptr};
+    dispatch_semaphore_t m_Semaphore;
     MTL::Buffer* m_pHead {nullptr};
     MTL::Buffer* m_pNodes {nullptr};
     MTL::Buffer* m_pTileIndices {nullptr};
@@ -56,7 +57,7 @@ private:
     PushArray<float> m_DrawData;
     
     uint32_t m_FrameIndex {0};
-    uint32_t m_CurrentClipIndex {0};
+    uint32_t m_ClipsCount {0};
     clip_rect m_Clips[MAX_CLIPS];
     uint32_t m_ViewportWidth;
     uint32_t m_ViewportHeight;
@@ -73,11 +74,8 @@ inline static void write_float(float* buffer, float a, float b, float c, float d
 //----------------------------------------------------------------------------------------------------------------------------
 inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y)
 {
-    if (m_CurrentClipIndex < MAX_CLIPS)
-    {
-        m_CurrentClipIndex++;
-        m_Clips[m_CurrentClipIndex] = (clip_rect) {.min_x = min_x, .min_y = min_y, .max_x = max_x, .max_y = max_y};
-    }
+    if (m_ClipsCount < MAX_CLIPS)
+        m_Clips[m_ClipsCount++] = (clip_rect) {.min_x = min_x, .min_y = min_y, .max_x = max_x, .max_y = max_y};
     else
         log_error("too many clip rectangle! maximum is %d", MAX_CLIPS);
 }
@@ -88,7 +86,7 @@ inline void Renderer::DrawCircle(float x, float y, float radius, float width, ui
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_CurrentClipIndex;
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op_none;
@@ -108,7 +106,7 @@ inline void Renderer::DrawCircleFilled(float x, float y, float radius, uint32_t 
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = m_CurrentClipIndex;
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op_none;

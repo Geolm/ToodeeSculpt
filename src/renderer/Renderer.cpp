@@ -37,6 +37,8 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     m_pIndirectCommandBuffer = m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
     pIcbDesc->release();
 
+    m_Semaphore = dispatch_semaphore_create(DynamicBuffer::MaxInflightBuffers);
+
     BuildComputePSO();
     BuildDepthStencilState();
     Resize(width, height);
@@ -162,8 +164,7 @@ void Renderer::BuildComputePSO()
 void Renderer::BeginFrame()
 {
     m_FrameIndex++;
-    m_CurrentClipIndex = 0;
-    m_CurrentClipIndex = 0;
+    m_ClipsCount = 0;
 
     m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * Renderer::MAX_DRAWDATA);
@@ -240,6 +241,8 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 {
     m_pCommandBuffer = m_pCommandQueue->commandBuffer();
 
+    dispatch_semaphore_wait(m_Semaphore, DISPATCH_TIME_FOREVER);
+
     BinCommands();
 
     MTL::RenderPassDescriptor* renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
@@ -251,19 +254,28 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 
     MTL::RenderCommandEncoder* pRenderEncoder = m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
 
-    pRenderEncoder->waitForFence(m_pBinningFence, MTL::RenderStageVertex|MTL::RenderStageFragment);
-    pRenderEncoder->setCullMode(MTL::CullModeNone);
-    pRenderEncoder->setDepthStencilState(m_pDepthStencilState);
-    
-    pRenderEncoder->useResource(m_DrawCommandsArg.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-    pRenderEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-    pRenderEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-    pRenderEncoder->useResource(m_pHead, MTL::ResourceUsageRead);
-    pRenderEncoder->useResource(m_pNodes, MTL::ResourceUsageRead);
-    pRenderEncoder->useResource(m_pTileIndices, MTL::ResourceUsageRead);
-    pRenderEncoder->setRenderPipelineState(m_pDrawPSO);
-    pRenderEncoder->executeCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
-    pRenderEncoder->endEncoding();
+    if (m_pDrawPSO != nullptr)
+    {
+        pRenderEncoder->waitForFence(m_pBinningFence, MTL::RenderStageVertex|MTL::RenderStageFragment|MTL::RenderStageMesh|MTL::RenderStageObject);
+        pRenderEncoder->setCullMode(MTL::CullModeNone);
+        pRenderEncoder->setDepthStencilState(m_pDepthStencilState);
+        pRenderEncoder->useResource(m_DrawCommandsArg.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(m_pHead, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(m_pNodes, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(m_pTileIndices, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageRead);
+        pRenderEncoder->setRenderPipelineState(m_pDrawPSO);
+        pRenderEncoder->executeCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
+        pRenderEncoder->endEncoding();
+    }
+
+    Renderer* pRenderer = this;
+    m_pCommandBuffer->addCompletedHandler(^void( MTL::CommandBuffer* pCmd )
+    {
+        dispatch_semaphore_signal( pRenderer->m_Semaphore );
+    });
 
     m_pCommandBuffer->presentDrawable(pDrawable);
     m_pCommandBuffer->commit();

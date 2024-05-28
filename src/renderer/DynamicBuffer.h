@@ -17,8 +17,10 @@ public:
 private:
     uint32_t GetIndex(uint32_t currentFrameIndex) {return currentFrameIndex % DynamicBuffer::MaxInflightBuffers;}
 
-private:
+public:
     enum {MaxInflightBuffers = 3};
+
+private:
     MTL::Buffer* m_Buffers[MaxInflightBuffers];
     bool m_SharedMemory;
 };

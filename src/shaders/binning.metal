@@ -25,6 +25,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         uint32_t data_index = input.commands[i].data_index;
         bool to_be_added;
 
+        // TODO : add clip test
+
         switch(input.commands[i].type)
         {
             case shape_rect_filled :
@@ -38,9 +40,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
             case shape_circle_filled :
             {
                 float2 center = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
-                float radius = input.draw_data[data_index+2];
+                float radius = input.draw_data[data_index+2] + input.aa_width;
                 float sq_radius = radius * radius;
-                to_be_added = intersection_aabb_disc(tile_enlarge_aabb, center, sq_radius);
+                to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
             default : to_be_added = false;
@@ -48,7 +50,6 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
 
         if (to_be_added)
         {
-        
             // allocate one node
             uint new_node_index = atomic_fetch_add_explicit(&counter.num_nodes, 1, memory_order_relaxed);
 
@@ -73,10 +74,10 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     }
 
     // wait until all thread have incremented the number of tiles to be drawn
-    threadgroup_barrier(mem_flags::mem_none);
+    threadgroup_barrier(mem_flags::mem_device);
 
     // only the first thread write the indirect draw call buffer
-    if (tile_index == 0)
+    if (all(index.xy == ushort2(0,0)))
     {
         render_command cmd(indirect_draw.cmd_buffer, 0);
 
