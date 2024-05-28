@@ -74,20 +74,18 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     }
 
     // wait until all thread have incremented the number of tiles to be drawn
-    threadgroup_barrier(mem_flags::mem_device);
+    threadgroup_barrier(mem_flags::mem_none);
 
     // only the first thread write the indirect draw call buffer
     if (all(index.xy == ushort2(0,0)))
     {
         render_command cmd(indirect_draw.cmd_buffer, 0);
 
-        uint num_tiles = atomic_load_explicit(&counter.num_tiles, memory_order_relaxed);
-
         cmd.set_vertex_buffer(&input, 0);
         cmd.set_vertex_buffer(output.tile_indices, 1);
         cmd.set_fragment_buffer(&input, 0);
         cmd.set_fragment_buffer(&output, 1);
-        cmd.draw_primitives(primitive_type::triangle_strip, 0, 4, num_tiles, 0);
+        cmd.draw_primitives(primitive_type::triangle_strip, 0, 4, atomic_load_explicit(&counter.num_tiles, memory_order_relaxed), 0);
 
     }
 }
