@@ -47,6 +47,7 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Resize(uint32_t width, uint32_t height)
 {
+    log_info("resizing the viewport to %dx%d", width, height);
     m_ViewportWidth = width;
     m_ViewportHeight = height;
     m_NumTilesWidth = (width + TILE_SIZE - 1) / TILE_SIZE;

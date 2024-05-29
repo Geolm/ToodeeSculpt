@@ -12,6 +12,7 @@ public:
     void Terminate();
 
     void OnKeyEvent(int key, int scancode, int action, int mods);
+    void OnWindowResize(int width, int height);
 
 private:
     MTL::Device* m_Device;
