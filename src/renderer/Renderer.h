@@ -46,7 +46,6 @@ private:
     DynamicBuffer m_DrawDataBuffer;
     MTL::Buffer* m_pCountersBuffer {nullptr};
     MTL::Fence* m_pClearBuffersFence {nullptr};
-    MTL::Fence* m_pBinningFence {nullptr};
     MTL::Fence* m_pWriteIcbFence {nullptr};
     dispatch_semaphore_t m_Semaphore;
     MTL::Buffer* m_pHead {nullptr};

@@ -26,7 +26,6 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     m_pClearBuffersFence = m_pDevice->newFence();
-    m_pBinningFence = m_pDevice->newFence();
     m_pWriteIcbFence = m_pDevice->newFence();
 
     MTL::IndirectCommandBufferDescriptor* pIcbDesc = MTL::IndirectCommandBufferDescriptor::alloc()->init();
@@ -254,13 +253,14 @@ void Renderer::BinCommands()
     MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
 
     pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
-    pComputeEncoder->updateFence(m_pBinningFence);
 
-    pComputeEncoder->setComputePipelineState(m_pBinningPSO);
+    pComputeEncoder->setComputePipelineState(m_pWriteIcbPSO);
     pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 0);
     pComputeEncoder->setBuffer(m_pIndirectArg, 0, 1);
     pComputeEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageWrite);
-    pComputeEncoder->dispatchThreads(MTL::Size(1))
+    pComputeEncoder->dispatchThreads(MTL::Size(1, 1, 1), MTL::Size(1, 1, 1));
+
+    pComputeEncoder->updateFence(m_pWriteIcbFence);
 
     pComputeEncoder->endEncoding();
 }
@@ -285,9 +285,14 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 
     if (m_pDrawPSO != nullptr && m_pBinningPSO != nullptr)
     {
-        pRenderEncoder->waitForFence(m_pBinningFence, MTL::RenderStageVertex|MTL::RenderStageFragment|MTL::RenderStageMesh|MTL::RenderStageObject);
+        pRenderEncoder->waitForFence(m_pWriteIcbFence, MTL::RenderStageVertex|MTL::RenderStageFragment|MTL::RenderStageMesh|MTL::RenderStageObject);
         pRenderEncoder->setCullMode(MTL::CullModeNone);
         pRenderEncoder->setDepthStencilState(m_pDepthStencilState);
+        pRenderEncoder->setVertexBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
+        pRenderEncoder->setVertexBuffer(m_pTileIndices, 0, 1);
+        pRenderEncoder->setFragmentBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
+        pRenderEncoder->setFragmentBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
+
         pRenderEncoder->useResource(m_DrawCommandsArg.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
         pRenderEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
         pRenderEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
@@ -323,7 +328,6 @@ void Renderer::Terminate()
     SAFE_RELEASE(m_pDepthStencilState);
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
-    SAFE_RELEASE(m_pBinningFence);
     SAFE_RELEASE(m_pWriteIcbFence);
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pDrawPSO);
