@@ -21,6 +21,7 @@ public:
     inline void SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
     inline void DrawCircle(float x, float y, float radius, float width, uint32_t color);
     inline void DrawCircleFilled(float x, float y, float radius, uint32_t color);
+    inline void DrawLine(float x0, float y0, float x1, float y1, float width, uint32_t color);
     
 private:
     void BuildDepthStencilState();
@@ -71,6 +72,7 @@ private:
 inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}
 inline static void write_float(float* buffer, float a, float b, float c) {write_float(buffer, a, b); buffer[2] = c;}
 inline static void write_float(float* buffer, float a, float b, float c, float d) {write_float(buffer, a, b, c); buffer[3] = d;}
+inline static void write_float(float* buffer, float a, float b, float c, float d, float e) {write_float(buffer, a, b, c, d); buffer[4] = e;}
 
 //----------------------------------------------------------------------------------------------------------------------------
 inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y)
@@ -116,6 +118,26 @@ inline void Renderer::DrawCircleFilled(float x, float y, float radius, uint32_t 
         float* data = m_DrawData.NewMultiple(3);
         if (data != nullptr)
             write_float(data,  x, y, radius);
+        else
+            m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::DrawLine(float x0, float y0, float x1, float y1, float width, uint32_t color)
+{
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_line;
+
+        float* data = m_DrawData.NewMultiple(5);
+        if (data != nullptr)
+            write_float(data,  x0, y0, x1, y1, width);
         else
             m_Commands.RemoveLast();
     }

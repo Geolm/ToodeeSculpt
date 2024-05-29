@@ -86,6 +86,14 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     distance = sd_disc(in.pos.xy, center, radius);
                     break;
                 }
+            case shape_line:
+                {
+                    float2 p0 = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
+                    float2 p1 = float2(input.draw_data[data_index+2], input.draw_data[data_index+3]);
+                    float width = input.draw_data[data_index+4];
+                    distance = sd_oriented_box(in.pos.xy, p0, p1, width);
+                    break;
+                }
             }
 
             half4 color = unpack_color(cmd.color);

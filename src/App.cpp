@@ -41,13 +41,14 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
 
     int seed = 0x12345678;
-    for(uint32_t i=0; i<10000; i++)
+    for(uint32_t i=0; i<100; i++)
     {
         m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight), 25.f, 0x7fc0c741);
+
+        m_Renderer.DrawLine(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                            iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight), 5.f, 0x7fc0c741);
     }
 
-    m_Renderer.DrawCircleFilled(25.f, m_ViewportHeight-25.f, 25.f, 0x7fc0c741);
-    
     m_Renderer.EndFrame();
     m_Renderer.Flush(drawable);
 }

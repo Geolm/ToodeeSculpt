@@ -32,7 +32,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
 
         switch(input.commands[i].type)
         {
-            case shape_rect_filled :
+            case shape_line :
             {
                 float2 p0 = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
                 float2 p1 = float2(input.draw_data[data_index+2], input.draw_data[data_index+3]);

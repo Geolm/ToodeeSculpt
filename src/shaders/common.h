@@ -19,15 +19,14 @@ using namespace metal;
 
 enum command_type
 {
-    shape_rect = 0,
-    shape_rect_filled = 1,
+    shape_box = 0,
+    shape_line = 1,
     shape_circle = 2,
     shape_circle_filled = 3,
     shape_arc = 4,
     shape_arc_filled = 5,
-    shape_line = 6,
-    shape_triangle = 7,
-    shape_triangle_filled = 8,
+    shape_triangle = 6,
+    shape_triangle_filled = 7,
     combination_begin = 16,
     combination_end = 17
 };
