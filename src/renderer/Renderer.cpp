@@ -247,11 +247,9 @@ void Renderer::BinCommands()
     pComputeEncoder->useResource(m_pHead, MTL::ResourceUsageRead|MTL::ResourceUsageWrite);
     pComputeEncoder->useResource(m_pNodes, MTL::ResourceUsageWrite);
     pComputeEncoder->useResource(m_pTileIndices, MTL::ResourceUsageWrite);
-    
-    
+
     MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
     MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
-
     pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
 
     pComputeEncoder->setComputePipelineState(m_pWriteIcbPSO);
@@ -259,9 +257,7 @@ void Renderer::BinCommands()
     pComputeEncoder->setBuffer(m_pIndirectArg, 0, 1);
     pComputeEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageWrite);
     pComputeEncoder->dispatchThreads(MTL::Size(1, 1, 1), MTL::Size(1, 1, 1));
-
     pComputeEncoder->updateFence(m_pWriteIcbFence);
-
     pComputeEncoder->endEncoding();
 }
 
@@ -292,7 +288,6 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
         pRenderEncoder->setVertexBuffer(m_pTileIndices, 0, 1);
         pRenderEncoder->setFragmentBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
         pRenderEncoder->setFragmentBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
-
         pRenderEncoder->useResource(m_DrawCommandsArg.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
         pRenderEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
         pRenderEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);

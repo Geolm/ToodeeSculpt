@@ -8,6 +8,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 device counters& counter [[buffer(2)]],
                 ushort2 index [[thread_position_in_grid]])
 {
+    if (index.x >= input.num_tile_width || index.y >= input.num_tile_height)
+        return;
+
     uint16_t tile_index = index.y * input.num_tile_width + index.x;
 
     // compute tile bounding box
