@@ -6,7 +6,6 @@
 kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 device tiles_data& output [[buffer(1)]],
                 device counters& counter [[buffer(2)]],
-                device output_command_buffer& indirect_draw [[buffer(3)]],
                 ushort2 index [[thread_position_in_grid]])
 {
     uint16_t tile_index = index.y * input.num_tile_width + index.x;
@@ -75,22 +74,14 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         // add tile index
         output.tile_indices[pos] = tile_index;
     }
-
-    // wait until all thread have incremented the number of tiles to be drawn
-    threadgroup_barrier(mem_flags::mem_none);
-
-    // only the first thread write the indirect draw call buffer
-    if (all(index.xy == ushort2(0,0)))
-    {
-        render_command cmd(indirect_draw.cmd_buffer, 0);
-
-        threadgroup_barrier(mem_flags::mem_device);
-
-        cmd.set_vertex_buffer(&input, 0);
-        cmd.set_vertex_buffer(output.tile_indices, 1);
-        cmd.set_fragment_buffer(&input, 0);
-        cmd.set_fragment_buffer(&output, 1);
-        cmd.draw_primitives(primitive_type::triangle_strip, 0, 4, atomic_load_explicit(&counter.num_tiles, memory_order_relaxed), 0);
-
-    }
 }
+
+
+// ---------------------------------------------------------------------------------------------------------------------------
+kernel void write_icb(device counters& counter [[buffer(0)]],
+                      device output_command_buffer& indirect_draw [[buffer(1)]])
+{
+    render_command cmd(indirect_draw.cmd_buffer, 0);
+    cmd.draw_primitives(primitive_type::triangle_strip, 0, 4, atomic_load_explicit(&counter.num_tiles, memory_order_relaxed), 0);
+}
+

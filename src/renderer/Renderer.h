@@ -38,6 +38,7 @@ private:
     MTL::CommandQueue* m_pCommandQueue;
     MTL::CommandBuffer* m_pCommandBuffer;
     MTL::ComputePipelineState* m_pBinningPSO {nullptr};
+    MTL::ComputePipelineState* m_pWriteIcbPSO {nullptr};
     MTL::RenderPipelineState* m_pDrawPSO {nullptr};
     MTL::DepthStencilState* m_pDepthStencilState {nullptr};
     
@@ -46,6 +47,7 @@ private:
     MTL::Buffer* m_pCountersBuffer {nullptr};
     MTL::Fence* m_pClearBuffersFence {nullptr};
     MTL::Fence* m_pBinningFence {nullptr};
+    MTL::Fence* m_pWriteIcbFence {nullptr};
     dispatch_semaphore_t m_Semaphore;
     MTL::Buffer* m_pHead {nullptr};
     MTL::Buffer* m_pNodes {nullptr};

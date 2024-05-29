@@ -27,13 +27,14 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     m_pClearBuffersFence = m_pDevice->newFence();
     m_pBinningFence = m_pDevice->newFence();
+    m_pWriteIcbFence = m_pDevice->newFence();
 
     MTL::IndirectCommandBufferDescriptor* pIcbDesc = MTL::IndirectCommandBufferDescriptor::alloc()->init();
     pIcbDesc->setCommandTypes(MTL::IndirectCommandTypeDraw);
-    pIcbDesc->setInheritBuffers(false);
+    pIcbDesc->setInheritBuffers(true);
+    pIcbDesc->setInheritPipelineState(true);
     pIcbDesc->setMaxVertexBufferBindCount(2);
     pIcbDesc->setMaxFragmentBufferBindCount(2);
-    pIcbDesc->setInheritPipelineState(true);
     m_pIndirectCommandBuffer = m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
     pIcbDesc->release();
 
@@ -105,6 +106,7 @@ void Renderer::BuildPSO()
 {
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pDrawPSO);
+    SAFE_RELEASE(m_pWriteIcbPSO);
 
     MTL::Library* pLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "binning.metal");
     if (pLibrary != nullptr)
@@ -114,25 +116,37 @@ void Renderer::BuildPSO()
         m_pBinningPSO = m_pDevice->newComputePipelineState(pBinningFunction, &pError);
 
         if (m_pBinningPSO == nullptr)
+        {
             log_error( "%s", pError->localizedDescription()->utf8String());
+            return;
+        }
 
         MTL::ArgumentEncoder* inputArgumentEncoder = pBinningFunction->newArgumentEncoder(0);
         MTL::ArgumentEncoder* outputArgumentEncoder = pBinningFunction->newArgumentEncoder(1);
-        MTL::ArgumentEncoder* indirectArgumentEncoder = pBinningFunction->newArgumentEncoder(3);
 
         m_DrawCommandsArg.Init(m_pDevice, inputArgumentEncoder->encodedLength());
         m_BinOutputArg.Init(m_pDevice, outputArgumentEncoder->encodedLength());
-        m_pIndirectArg = m_pDevice->newBuffer(indirectArgumentEncoder->encodedLength(), MTL::ResourceStorageModeShared);
-
-        indirectArgumentEncoder->setArgumentBuffer(m_pIndirectArg, 0);
-        indirectArgumentEncoder->setIndirectCommandBuffer(m_pIndirectCommandBuffer, 0);
 
         inputArgumentEncoder->release();
         outputArgumentEncoder->release();
-        indirectArgumentEncoder->release();
-
-        pLibrary->release();
         pBinningFunction->release();
+
+        MTL::Function* pWriteIcbFunction = pLibrary->newFunction(NS::String::string("write_icb", NS::UTF8StringEncoding));
+        m_pWriteIcbPSO = m_pDevice->newComputePipelineState(pWriteIcbFunction, &pError);
+        if (m_pWriteIcbPSO == nullptr)
+        {
+            log_error( "%s", pError->localizedDescription()->utf8String());
+            return;
+        }
+
+        MTL::ArgumentEncoder* indirectArgumentEncoder = pWriteIcbFunction->newArgumentEncoder(1);
+        m_pIndirectArg = m_pDevice->newBuffer(indirectArgumentEncoder->encodedLength(), MTL::ResourceStorageModeShared);
+        indirectArgumentEncoder->setArgumentBuffer(m_pIndirectArg, 0);
+        indirectArgumentEncoder->setIndirectCommandBuffer(m_pIndirectCommandBuffer, 0);
+
+        indirectArgumentEncoder->release();
+        pWriteIcbFunction->release();
+        pLibrary->release();
     }
 
     pLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "rasterizer.metal");
@@ -229,19 +243,25 @@ void Renderer::BinCommands()
     pComputeEncoder->setBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
     pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 2);
 
-    pComputeEncoder->setBuffer(m_pIndirectArg, 0, 3);
     pComputeEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(m_pHead, MTL::ResourceUsageRead|MTL::ResourceUsageWrite);
     pComputeEncoder->useResource(m_pNodes, MTL::ResourceUsageWrite);
     pComputeEncoder->useResource(m_pTileIndices, MTL::ResourceUsageWrite);
-    pComputeEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageWrite);
+    
     
     MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
     MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
 
     pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
     pComputeEncoder->updateFence(m_pBinningFence);
+
+    pComputeEncoder->setComputePipelineState(m_pBinningPSO);
+    pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 0);
+    pComputeEncoder->setBuffer(m_pIndirectArg, 0, 1);
+    pComputeEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageWrite);
+    pComputeEncoder->dispatchThreads(MTL::Size(1))
+
     pComputeEncoder->endEncoding();
 }
 
@@ -304,8 +324,10 @@ void Renderer::Terminate()
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
     SAFE_RELEASE(m_pBinningFence);
+    SAFE_RELEASE(m_pWriteIcbFence);
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pDrawPSO);
+    SAFE_RELEASE(m_pWriteIcbPSO);
     SAFE_RELEASE(m_pHead);
     SAFE_RELEASE(m_pNodes);
     SAFE_RELEASE(m_pTileIndices);
