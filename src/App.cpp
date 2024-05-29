@@ -20,6 +20,13 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     m_ViewportWidth = (uint32_t) width;
 
     m_Renderer.Init(m_Device, m_ViewportWidth, m_ViewportHeight);
+
+    glfwSetWindowUserPointer(window, this);
+    glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) 
+    {
+        App* user_ptr = (App*) glfwGetWindowUserPointer(window);
+        user_ptr->OnKeyEvent(key, scancode, action, mods);
+    });
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -29,7 +36,7 @@ void App::Update(CA::MetalDrawable* drawable)
 
     int seed = 0x12345678;
 
-    for(uint32_t i=0; i<20; i++)
+    for(uint32_t i=0; i<10000; i++)
     {
         m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight), 25.f, 0x7fc0c741);
     }
@@ -38,6 +45,13 @@ void App::Update(CA::MetalDrawable* drawable)
     
     m_Renderer.EndFrame();
     m_Renderer.Flush(drawable);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void App::OnKeyEvent(int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+        m_Renderer.ReloadShaders();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

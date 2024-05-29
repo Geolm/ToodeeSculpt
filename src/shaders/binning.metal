@@ -84,6 +84,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     {
         render_command cmd(indirect_draw.cmd_buffer, 0);
 
+        threadgroup_barrier(mem_flags::mem_device);
+
         cmd.set_vertex_buffer(&input, 0);
         cmd.set_vertex_buffer(output.tile_indices, 1);
         cmd.set_fragment_buffer(&input, 0);

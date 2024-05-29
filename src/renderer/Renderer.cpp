@@ -39,7 +39,7 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
 
     m_Semaphore = dispatch_semaphore_create(DynamicBuffer::MaxInflightBuffers);
 
-    BuildComputePSO();
+    BuildPSO();
     BuildDepthStencilState();
     Resize(width, height);
 }
@@ -56,6 +56,13 @@ void Renderer::Resize(uint32_t width, uint32_t height)
     SAFE_RELEASE(m_pTileIndices);
     m_pHead = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(tile_node), MTL::ResourceStorageModePrivate);
     m_pTileIndices = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::ReloadShaders()
+{
+    log_info("reloading shaders");
+    BuildPSO();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +100,7 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::BuildComputePSO()
+void Renderer::BuildPSO()
 {
     SAFE_RELEASE(m_pBinningPSO);
     SAFE_RELEASE(m_pDrawPSO);
@@ -220,6 +227,7 @@ void Renderer::BinCommands()
     pComputeEncoder->setBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
     pComputeEncoder->setBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
     pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 2);
+
     pComputeEncoder->setBuffer(m_pIndirectArg, 0, 3);
     pComputeEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
@@ -254,7 +262,7 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 
     MTL::RenderCommandEncoder* pRenderEncoder = m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
 
-    if (m_pDrawPSO != nullptr)
+    if (m_pDrawPSO != nullptr && m_pBinningPSO != nullptr)
     {
         pRenderEncoder->waitForFence(m_pBinningFence, MTL::RenderStageVertex|MTL::RenderStageFragment|MTL::RenderStageMesh|MTL::RenderStageObject);
         pRenderEncoder->setCullMode(MTL::CullModeNone);

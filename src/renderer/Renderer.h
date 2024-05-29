@@ -12,6 +12,7 @@ class Renderer
 public:
     void Init(MTL::Device* device, uint32_t width, uint32_t height);
     void Resize(uint32_t width, uint32_t height);
+    void ReloadShaders();
     void BeginFrame();
     void Flush(CA::MetalDrawable* drawable);
     void EndFrame();
@@ -23,7 +24,7 @@ public:
     
 private:
     void BuildDepthStencilState();
-    void BuildComputePSO();
+    void BuildPSO();
     void BinCommands();
     MTL::Library* BuildShader(const char* path, const char* name);
     

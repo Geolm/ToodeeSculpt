@@ -11,6 +11,8 @@ public:
     void Update(CA::MetalDrawable* drawable);
     void Terminate();
 
+    void OnKeyEvent(int key, int scancode, int action, int mods);
+
 private:
     MTL::Device* m_Device;
     Renderer m_Renderer;
