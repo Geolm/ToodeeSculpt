@@ -249,7 +249,10 @@ void Renderer::BinCommands()
     pComputeEncoder->useResource(m_pTileIndices, MTL::ResourceUsageWrite);
 
     MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
-    MTL::Size threadgroupSize(m_pBinningPSO->maxTotalThreadsPerThreadgroup(), 1, 1);
+
+    NS::UInteger w = m_pBinningPSO->threadExecutionWidth();
+    NS::UInteger h = m_pBinningPSO->maxTotalThreadsPerThreadgroup() / w;
+    MTL::Size threadgroupSize(w, h, 1);
     pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
 
     pComputeEncoder->setComputePipelineState(m_pWriteIcbPSO);

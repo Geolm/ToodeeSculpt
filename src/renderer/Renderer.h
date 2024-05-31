@@ -5,6 +5,7 @@
 #include "../shaders/common.h"
 #include "../system/PushArray.h"
 #include "../system/log.h"
+#include "font9x16.h"
 
 //----------------------------------------------------------------------------------------------------------------------------
 class Renderer
@@ -23,6 +24,7 @@ public:
     inline void DrawCircleFilled(float x, float y, float radius, uint32_t color);
     inline void DrawLine(float x0, float y0, float x1, float y1, float width, uint32_t color);
     inline void DrawBox(float x0, float y0, float x1, float y1, uint32_t color);
+    inline void DrawChar(float x, float y, char c, uint32_t color);
 
 private:
     void BuildDepthStencilState();
@@ -165,3 +167,28 @@ inline void Renderer::DrawBox(float x0, float y0, float x1, float y1, uint32_t c
             m_Commands.RemoveLast();
     }
 }
+
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::DrawChar(float x, float y, char c, uint32_t color)
+{
+    if (c < FONT_CHAR_FIRST || c > FONT_CHAR_LAST)
+        return;
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_char;
+        cmd->custom_data = (uint8_t) c;
+
+        float* data = m_DrawData.NewMultiple(2);
+        if (data != nullptr)
+            write_float(data, x, y);
+        else
+            m_Commands.RemoveLast();
+    }
+}
+

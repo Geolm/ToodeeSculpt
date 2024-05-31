@@ -29,6 +29,7 @@ enum command_type
     shape_arc_filled = 5,
     shape_triangle = 6,
     shape_triangle_filled = 7,
+    shape_char = 8,
     combination_begin = 16,
     combination_end = 17
 };
@@ -82,6 +83,8 @@ struct draw_cmd_arguments
     float tile_size;
     float aa_width;
     float2 screen_div;
+    float2 font_size;
+    float font_scale;
 };
 
 struct tiles_data

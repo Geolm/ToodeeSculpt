@@ -57,6 +57,14 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_aabb(tile_aabb, box_aabb);
                 break;
             }
+            case shape_char :
+            {
+                aabb char_aabb;
+                char_aabb.min = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
+                char_aabb.max = char_aabb.min + input.font_size * input.font_scale;
+                to_be_added = intersection_aabb_aabb(tile_aabb, char_aabb);
+                break;
+            }
             default : to_be_added = false;
         }
 
