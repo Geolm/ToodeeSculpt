@@ -21,8 +21,8 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
         exit(EXIT_FAILURE);
     }
 
-    m_DrawCommandsBuffer.Init(m_pDevice, sizeof(draw_command) * Renderer::MAX_COMMANDS);
-    m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * Renderer::MAX_DRAWDATA);
+    m_DrawCommandsBuffer.Init(m_pDevice, sizeof(draw_command) * MAX_COMMANDS);
+    m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * MAX_DRAWDATA);
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     m_pClearBuffersFence = m_pDevice->newFence();
@@ -187,8 +187,8 @@ void Renderer::BeginFrame()
     m_FrameIndex++;
     m_ClipsCount = 0;
 
-    m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * Renderer::MAX_COMMANDS);
-    m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * Renderer::MAX_DRAWDATA);
+    m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * MAX_COMMANDS);
+    m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
     SetClipRect(0, 0, (uint16_t) m_ViewportWidth, (uint16_t) m_ViewportHeight);
 }
 

@@ -50,6 +50,13 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
+            case shape_box :
+            {
+                aabb box_aabb = {.min = float2(input.draw_data[data_index], input.draw_data[data_index+1]),
+                                 .max = float2(input.draw_data[data_index+2], input.draw_data[data_index+3])};
+                to_be_added = intersection_aabb_aabb(tile_aabb, box_aabb);
+                break;
+            }
             default : to_be_added = false;
         }
 

@@ -22,17 +22,14 @@ public:
     inline void DrawCircle(float x, float y, float radius, float width, uint32_t color);
     inline void DrawCircleFilled(float x, float y, float radius, uint32_t color);
     inline void DrawLine(float x0, float y0, float x1, float y1, float width, uint32_t color);
-    
+    inline void DrawBox(float x0, float y0, float x1, float y1, uint32_t color);
+
 private:
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
     MTL::Library* BuildShader(const char* path, const char* name);
-    
-private:
-    enum {MAX_COMMANDS = 2<<10};
-    enum {MAX_DRAWDATA = Renderer::MAX_COMMANDS * 4};
-    
+
 private:
     MTL::Device* m_pDevice;
     MTL::CommandQueue* m_pCommandQueue;
@@ -74,6 +71,8 @@ inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; 
 inline static void write_float(float* buffer, float a, float b, float c) {write_float(buffer, a, b); buffer[2] = c;}
 inline static void write_float(float* buffer, float a, float b, float c, float d) {write_float(buffer, a, b, c); buffer[3] = d;}
 inline static void write_float(float* buffer, float a, float b, float c, float d, float e) {write_float(buffer, a, b, c, d); buffer[4] = e;}
+
+template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 
 //----------------------------------------------------------------------------------------------------------------------------
 inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y)
@@ -139,6 +138,29 @@ inline void Renderer::DrawLine(float x0, float y0, float x1, float y1, float wid
         float* data = m_DrawData.NewMultiple(5);
         if (data != nullptr)
             write_float(data,  x0, y0, x1, y1, width);
+        else
+            m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::DrawBox(float x0, float y0, float x1, float y1, uint32_t color)
+{
+    if (x0>x1) swap(x0, x1);
+    if (y0>y1) swap(y0, y1);
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_box;
+
+        float* data = m_DrawData.NewMultiple(4);
+        if (data != nullptr)
+            write_float(data, x0, y0, x1, y1);
         else
             m_Commands.RemoveLast();
     }

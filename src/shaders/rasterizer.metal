@@ -75,7 +75,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
         if (in.pos.x >= clip.min_x && in.pos.x <= clip.max_x &&
             in.pos.x >= clip.min_y && in.pos.y <= clip.max_y)
         {
-            float distance;
+            float distance = 10.f;
 
             switch(cmd.type)
             {
@@ -92,6 +92,14 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 p1 = float2(input.draw_data[data_index+2], input.draw_data[data_index+3]);
                     float width = input.draw_data[data_index+4];
                     distance = sd_oriented_box(in.pos.xy, p0, p1, width);
+                    break;
+                }
+            case shape_box:
+                {
+                    float2 min = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
+                    float2 max = float2(input.draw_data[data_index+2], input.draw_data[data_index+3]);
+                    if (all(in.pos.xy >= min && in.pos.xy <= max))
+                        distance = 0.f;
                     break;
                 }
             }

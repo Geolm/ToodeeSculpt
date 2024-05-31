@@ -41,12 +41,14 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
 
     int seed = 0x12345678;
-    for(uint32_t i=0; i<10000; i++)
+    for(uint32_t i=0; i<10; i++)
     {
-        m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight), 25.f, 0x7fc0c741);
-
-        m_Renderer.DrawLine(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
-                            iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight), 5.f, 0x7fc0c741);
+        float2 p0 = {.x = (float)iq_random_clamped(&seed, 0, m_ViewportWidth), .y = (float)iq_random_clamped(&seed, 0, m_ViewportHeight)};
+        float2 p1 = {.x = (float)iq_random_clamped(&seed, 0, m_ViewportWidth), .y = (float)iq_random_clamped(&seed, 0, m_ViewportHeight)};
+        m_Renderer.DrawCircleFilled(p0.x, p0.y, 25.f, 0x7f7ec4c1);
+        m_Renderer.DrawCircleFilled(p1.x, p1.y, 25.f, 0x7f7ec4c1);
+        m_Renderer.DrawBox(p0.x, p0.y, p1.x, p1.y, 0x4fd26471);
+        m_Renderer.DrawLine(p0.x, p0.y, p1.x, p1.y, 5.f, 0x7f34859d);
     }
 
     m_Renderer.EndFrame();

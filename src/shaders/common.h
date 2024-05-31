@@ -1,9 +1,11 @@
 // ---------------------------------------------------------------------------------------------------------------------------
 // constants
 #define TILE_SIZE (32)
-#define MAX_NODES_COUNT (1<<17)
+#define MAX_NODES_COUNT (1<<20)
 #define INVALID_INDEX (0xffffffff)
 #define MAX_CLIPS (256)
+#define MAX_COMMANDS (1<<16)
+#define MAX_DRAWDATA (MAX_COMMANDS * 4)
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
