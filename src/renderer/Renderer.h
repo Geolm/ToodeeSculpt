@@ -25,6 +25,7 @@ public:
     inline void DrawLine(float x0, float y0, float x1, float y1, float width, uint32_t color);
     inline void DrawBox(float x0, float y0, float x1, float y1, uint32_t color);
     inline void DrawChar(float x, float y, char c, uint32_t color);
+    inline void DrawText(float x, float y, const char* text, uint32_t color);
 
 private:
     void BuildDepthStencilState();
@@ -50,6 +51,7 @@ private:
     MTL::Buffer* m_pHead {nullptr};
     MTL::Buffer* m_pNodes {nullptr};
     MTL::Buffer* m_pTileIndices {nullptr};
+    MTL::Buffer* m_pFont {nullptr};
     MTL::IndirectCommandBuffer* m_pIndirectCommandBuffer {nullptr};
     MTL::Buffer* m_pIndirectArg {nullptr};
     DynamicBuffer m_DrawCommandsArg;
@@ -67,6 +69,7 @@ private:
     uint32_t m_NumTilesHeight;
     uint32_t m_NumDrawCommands;
     float m_AAWidth {1.f};
+    float m_FontScale {2.f};
 };
 
 inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}
@@ -189,6 +192,17 @@ inline void Renderer::DrawChar(float x, float y, char c, uint32_t color)
             write_float(data, x, y);
         else
             m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::DrawText(float x, float y, const char* text, uint32_t color)
+{
+    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
+    for(const char *c = text; *c != 0; c++)
+    {
+        DrawChar(x, y, *c, color);
+        x += font_spacing;
     }
 }
 

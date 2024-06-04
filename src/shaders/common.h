@@ -75,6 +75,7 @@ struct draw_cmd_arguments
 {
     constant draw_command* commands;
     constant float* draw_data;
+    constant uint16_t* font;
     clip_rect clips[MAX_CLIPS];
     uint32_t num_commands;
     uint32_t max_nodes;

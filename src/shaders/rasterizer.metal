@@ -102,6 +102,17 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                         distance = 0.f;
                     break;
                 }
+            case shape_char:
+                {
+                    float2 top_left = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
+                    float2 pos = (in.pos.xy - top_left) / input.font_scale;
+                    if (all(pos >= 0.f && pos <= input.font_size))
+                    {
+                        int2 pixel_pos = (int2) pos;
+                        
+                    }
+                    //char_aabb.max = char_aabb.min + input.font_size * input.font_scale;
+                }
             }
 
             half4 color = unpack_color(cmd.color);

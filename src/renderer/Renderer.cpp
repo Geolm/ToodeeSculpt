@@ -25,6 +25,7 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * MAX_DRAWDATA);
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
+    m_pFont = m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModePrivate);
     m_pClearBuffersFence = m_pDevice->newFence();
     m_pWriteIcbFence = m_pDevice->newFence();
 
@@ -223,6 +224,7 @@ void Renderer::BinCommands()
     args->aa_width = m_AAWidth;
     args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
+    args->font = (uint16_t*) m_pFont->gpuAddress();
     memcpy(args->clips, m_Clips, sizeof(m_Clips));
     args->max_nodes = MAX_NODES_COUNT;
     args->num_commands = m_NumDrawCommands;
@@ -230,6 +232,8 @@ void Renderer::BinCommands()
     args->num_tile_width = m_NumTilesWidth;
     args->tile_size = TILE_SIZE;
     args->screen_div = (float2) {.x = 1.f / (float)m_ViewportWidth, .y = 1.f / (float) m_ViewportHeight};
+    args->font_scale = m_FontScale;
+    args->font_size = (float2) {FONT_WIDTH, FONT_HEIGHT};
     m_DrawCommandsArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
 
     tiles_data* output = (tiles_data*) m_BinOutputArg.Map(m_FrameIndex);
@@ -298,6 +302,7 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
         pRenderEncoder->useResource(m_pNodes, MTL::ResourceUsageRead);
         pRenderEncoder->useResource(m_pTileIndices, MTL::ResourceUsageRead);
         pRenderEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(m_pFont, MTL::ResourceUsageRead);
         pRenderEncoder->setRenderPipelineState(m_pDrawPSO);
         pRenderEncoder->executeCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
         pRenderEncoder->endEncoding();
@@ -323,6 +328,7 @@ void Renderer::Terminate()
     m_DrawDataBuffer.Terminate();
     m_DrawCommandsArg.Terminate();
     m_BinOutputArg.Terminate();
+    SAFE_RELEASE(m_pFont);
     SAFE_RELEASE(m_pDepthStencilState);
     SAFE_RELEASE(m_pCountersBuffer);
     SAFE_RELEASE(m_pClearBuffersFence);
