@@ -20,12 +20,12 @@ public:
     void Terminate();
 
     inline void SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
-    inline void DrawCircle(float x, float y, float radius, float width, uint32_t color);
-    inline void DrawCircleFilled(float x, float y, float radius, uint32_t color);
-    inline void DrawLine(float x0, float y0, float x1, float y1, float width, uint32_t color);
-    inline void DrawBox(float x0, float y0, float x1, float y1, uint32_t color);
-    inline void DrawChar(float x, float y, char c, uint32_t color);
-    inline void DrawText(float x, float y, const char* text, uint32_t color);
+    inline void DrawCircle(float x, float y, float radius, float width, draw_color color);
+    inline void DrawCircleFilled(float x, float y, float radius, draw_color color);
+    inline void DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color);
+    inline void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
+    inline void DrawChar(float x, float y, char c, draw_color color);
+    inline void DrawText(float x, float y, const char* text, draw_color color);
 
 private:
     void BuildDepthStencilState();
@@ -89,7 +89,7 @@ inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawCircle(float x, float y, float radius, float width, uint32_t color)
+inline void Renderer::DrawCircle(float x, float y, float radius, float width, draw_color color)
 {
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -109,7 +109,7 @@ inline void Renderer::DrawCircle(float x, float y, float radius, float width, ui
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawCircleFilled(float x, float y, float radius, uint32_t color)
+inline void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color)
 {
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -129,7 +129,7 @@ inline void Renderer::DrawCircleFilled(float x, float y, float radius, uint32_t 
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawLine(float x0, float y0, float x1, float y1, float width, uint32_t color)
+inline void Renderer::DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color)
 {
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -149,7 +149,7 @@ inline void Renderer::DrawLine(float x0, float y0, float x1, float y1, float wid
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawBox(float x0, float y0, float x1, float y1, uint32_t color)
+inline void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
 {
     if (x0>x1) swap(x0, x1);
     if (y0>y1) swap(y0, y1);
@@ -172,7 +172,7 @@ inline void Renderer::DrawBox(float x0, float y0, float x1, float y1, uint32_t c
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawChar(float x, float y, char c, uint32_t color)
+inline void Renderer::DrawChar(float x, float y, char c, draw_color color)
 {
     if (c < FONT_CHAR_FIRST || c > FONT_CHAR_LAST)
         return;
@@ -196,7 +196,7 @@ inline void Renderer::DrawChar(float x, float y, char c, uint32_t color)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawText(float x, float y, const char* text, uint32_t color)
+inline void Renderer::DrawText(float x, float y, const char* text, draw_color color)
 {
     const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
     for(const char *c = text; *c != 0; c++)

@@ -36,13 +36,13 @@ vertex vs_out tile_vs(uint instance_id [[instance_id]],
 }
 
 //-----------------------------------------------------------------------------
-half4 unpack_color(uint32_t color)
+half4 unpack_color(draw_color color)
 {
     half4 result;
-    result.r = float((color>>16)&0xFF) / 255.f;
-    result.g = float((color>>8)&0xFF) / 255.f;
-    result.b = float(color&0xFF) / 255.f;
-    result.a = float((color>>24)&0xFF) / 255.f;
+    result.r = half(color.r) / 255.0;
+    result.g = half(color.g) / 255.0;
+    result.b = half(color.b) / 255.0;
+    result.a = half(color.a) / 255.0;
     return result;
 }
 

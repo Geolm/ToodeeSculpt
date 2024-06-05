@@ -43,13 +43,29 @@ enum sdf_operator
     op_smooth_union = 4
 };
 
+struct draw_color
+{
+    uint8_t r, g, b, a;
+
+#ifndef __METAL_VERSION__
+    explicit draw_color(uint32_t color) 
+    {
+        r = (color>>16)&0xFF;
+        g = (color>>8)&0xFF;
+        b = (color&0xFF);
+        a = (color>>24)&0xFF;
+    }
+    uint32_t to_uint() {return *(uint32_t*)&r;}
+#endif
+};
+
 struct draw_command
 {
     uint8_t type;
     uint8_t clip_index;
     uint8_t op;
     uint8_t custom_data;
-    uint32_t color;
+    draw_color color;
     uint32_t data_index;
 };
 

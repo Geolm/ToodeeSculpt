@@ -22,6 +22,7 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     m_ViewportWidth = (uint32_t) width;
 
     m_Renderer.Init(m_Device, m_ViewportWidth, m_ViewportHeight);
+    InitGui();
 
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) 
@@ -60,10 +61,13 @@ void App::DrawGui()
     mu_Command *cmd = NULL;
     while (mu_next_command(m_pGuiContext, &cmd))
     {
-    case MU_COMMAND_TEXT:
+        switch (cmd->type) 
         {
-            //m_Renderer.DrawText((float)cmd->text.pos.x, (float)cmd->text.pos.y, cmd->text.str, )
-            break;
+        case MU_COMMAND_TEXT:
+            {
+                //m_Renderer.DrawText((float)cmd->text.pos.x, (float)cmd->text.pos.y, cmd->text.str, )
+                break;
+            }
         }
     }
 }
@@ -79,13 +83,13 @@ void App::Update(CA::MetalDrawable* drawable)
     {
         float2 p0 = {.x = (float)iq_random_clamped(&seed, 0, m_ViewportWidth), .y = (float)iq_random_clamped(&seed, 0, m_ViewportHeight)};
         float2 p1 = {.x = (float)iq_random_clamped(&seed, 0, m_ViewportWidth), .y = (float)iq_random_clamped(&seed, 0, m_ViewportHeight)};
-        m_Renderer.DrawCircleFilled(p0.x, p0.y, 25.f, 0x7f7ec4c1);
-        m_Renderer.DrawCircleFilled(p1.x, p1.y, 25.f, 0x7f7ec4c1);
+        m_Renderer.DrawCircleFilled(p0.x, p0.y, 25.f, draw_color(0x7f7ec4c1));
+        m_Renderer.DrawCircleFilled(p1.x, p1.y, 25.f, draw_color(0x7f7ec4c1));
         //m_Renderer.DrawBox(p0.x, p0.y, p1.x, p1.y, 0x4fd26471);
-        m_Renderer.DrawLine(p0.x, p0.y, p1.x, p1.y, 5.f, 0x7f34859d);
+        m_Renderer.DrawLine(p0.x, p0.y, p1.x, p1.y, 5.f, draw_color(0x7f34859d));
     }
     
-    m_Renderer.DrawText(50.f, 20.f, "Ceci est un test!", 0x7fffffff);
+    m_Renderer.DrawText(50.f, 20.f, "Ceci est un test!", draw_color(0x7fffffff));
     
     DrawGui();
     m_Renderer.EndFrame();
