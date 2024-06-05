@@ -3,6 +3,7 @@
 #include "renderer/Renderer.h"
 
 struct GLFWwindow;
+struct mu_Context;
 
 class App
 {
@@ -15,9 +16,14 @@ public:
     void OnWindowResize(int width, int height);
 
 private:
-    MTL::Device* m_Device;
+    void InitGui();
+    void DrawGui();
+
+private:
+    MTL::Device* m_Device {nullptr};
     Renderer m_Renderer;
     GLFWwindow* m_Window;
     uint32_t m_ViewportHeight;
     uint32_t m_ViewportWidth;
+    mu_Context* m_pGuiContext {nullptr};
 };

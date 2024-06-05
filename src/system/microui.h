@@ -7,7 +7,7 @@
 
 #ifndef MICROUI_H
 #define MICROUI_H
-asdfads
+
 #define MU_VERSION "2.01"
 
 #define MU_COMMANDLIST_SIZE     (256 * 1024)

@@ -6,6 +6,8 @@
 #include "App.h"
 
 #include "system/random.h"
+#include "system/microui.h"
+#include <string.h>
 
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Init(MTL::Device* device, GLFWwindow* window)
@@ -36,6 +38,37 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void App::InitGui()
+{
+    m_pGuiContext = (mu_Context*) malloc(sizeof(mu_Context));
+    mu_init(m_pGuiContext);
+
+    m_pGuiContext->text_width = [](mu_Font font, const char *text, int len)  -> int
+    {
+        if (len == -1)
+            len = (int)strlen(text);
+
+        return len * FONT_SPACING;
+    };
+
+    m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT; };
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void App::DrawGui()
+{
+    mu_Command *cmd = NULL;
+    while (mu_next_command(m_pGuiContext, &cmd))
+    {
+    case MU_COMMAND_TEXT:
+        {
+            //m_Renderer.DrawText((float)cmd->text.pos.x, (float)cmd->text.pos.y, cmd->text.str, )
+            break;
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void App::Update(CA::MetalDrawable* drawable)
 {
     m_Renderer.BeginFrame();
@@ -53,7 +86,8 @@ void App::Update(CA::MetalDrawable* drawable)
     }
     
     m_Renderer.DrawText(50.f, 20.f, "Ceci est un test!", 0x7fffffff);
-                        
+    
+    DrawGui();
     m_Renderer.EndFrame();
     m_Renderer.Flush(drawable);
 }
@@ -77,4 +111,5 @@ void App::OnWindowResize(int width, int height)
 void App::Terminate()
 {
     m_Renderer.Terminate();
+    free(m_pGuiContext);
 }
