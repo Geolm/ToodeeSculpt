@@ -25,7 +25,7 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * MAX_DRAWDATA);
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
-    m_pFont = m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModePrivate);
+    m_pFont = m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModeShared);
     m_pClearBuffersFence = m_pDevice->newFence();
     m_pWriteIcbFence = m_pDevice->newFence();
 

@@ -41,7 +41,8 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
 
     int seed = 0x12345678;
-    for(uint32_t i=0; i<1000; i++)
+    //for(uint32_t i=0; i<1000; i++)
+    if (0)
     {
         float2 p0 = {.x = (float)iq_random_clamped(&seed, 0, m_ViewportWidth), .y = (float)iq_random_clamped(&seed, 0, m_ViewportHeight)};
         float2 p1 = {.x = (float)iq_random_clamped(&seed, 0, m_ViewportWidth), .y = (float)iq_random_clamped(&seed, 0, m_ViewportHeight)};
@@ -50,7 +51,9 @@ void App::Update(CA::MetalDrawable* drawable)
         //m_Renderer.DrawBox(p0.x, p0.y, p1.x, p1.y, 0x4fd26471);
         m_Renderer.DrawLine(p0.x, p0.y, p1.x, p1.y, 5.f, 0x7f34859d);
     }
-
+    
+    m_Renderer.DrawText(50.f, 20.f, "Ceci est un test!", 0x7fffffff);
+                        
     m_Renderer.EndFrame();
     m_Renderer.Flush(drawable);
 }

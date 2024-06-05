@@ -69,7 +69,7 @@ private:
     uint32_t m_NumTilesHeight;
     uint32_t m_NumDrawCommands;
     float m_AAWidth {1.f};
-    float m_FontScale {2.f};
+    float m_FontScale {1.f};
 };
 
 inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}
@@ -185,7 +185,7 @@ inline void Renderer::DrawChar(float x, float y, char c, uint32_t color)
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op_none;
         cmd->type = shape_char;
-        cmd->custom_data = (uint8_t) c;
+        cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
 
         float* data = m_DrawData.NewMultiple(2);
         if (data != nullptr)

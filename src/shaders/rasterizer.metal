@@ -109,9 +109,10 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     if (all(pos >= 0.f && pos <= input.font_size))
                     {
                         int2 pixel_pos = (int2) pos;
-                        
+                        uint16_t bitfield = input.font[cmd.custom_data * (uint) input.font_size.x + pixel_pos.x];
+                        if (bitfield&(1<<pixel_pos.y))
+                            distance = 0.f;
                     }
-                    //char_aabb.max = char_aabb.min + input.font_size * input.font_scale;
                 }
             }
 
