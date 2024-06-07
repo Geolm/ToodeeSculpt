@@ -14,6 +14,8 @@ public:
 
     void OnKeyEvent(int key, int scancode, int action, int mods);
     void OnWindowResize(int width, int height);
+    void OnMouseMove(float x, float y);
+    void OnMouseButton(int button, int action, int mods);
 
 private:
     void InitGui();
@@ -26,4 +28,5 @@ private:
     uint32_t m_ViewportHeight;
     uint32_t m_ViewportWidth;
     mu_Context* m_pGuiContext {nullptr};
+    float m_MouseX, m_MouseY;
 };

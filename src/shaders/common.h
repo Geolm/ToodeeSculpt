@@ -48,6 +48,7 @@ struct draw_color
     uint8_t r, g, b, a;
 
 #ifndef __METAL_VERSION__
+    draw_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) {r = red; b = blue; g = green; a = alpha;}
     explicit draw_color(uint32_t color) 
     {
         r = (color>>16)&0xFF;
