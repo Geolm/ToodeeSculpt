@@ -5,6 +5,7 @@
 
 #include "Renderer.h"
 #include "shader_reader.h"
+#include "../system/microui.h"
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 
@@ -322,6 +323,15 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void Renderer::UserInterface(struct mu_Context* gui_context)
+{
+    if (mu_begin_window_ex(gui_context, "Renderer Debug View", mu_rect(1680, 0, 300, 600), MU_OPT_NOCLOSE))
+    {
+        mu_end_window(gui_context);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Terminate()
 {
     m_DrawCommandsBuffer.Terminate();
@@ -343,4 +353,6 @@ void Renderer::Terminate()
     SAFE_RELEASE(m_pIndirectCommandBuffer);
     SAFE_RELEASE(m_pCommandQueue);
 }
+
+
 

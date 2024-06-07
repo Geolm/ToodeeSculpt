@@ -7,6 +7,8 @@
 #include "../system/log.h"
 #include "font9x16.h"
 
+struct mu_Context;
+
 //----------------------------------------------------------------------------------------------------------------------------
 class Renderer
 {
@@ -16,6 +18,7 @@ public:
     void ReloadShaders();
     void BeginFrame();
     void Flush(CA::MetalDrawable* drawable);
+    void UserInterface(struct mu_Context* gui_context);
     void EndFrame();
     void Terminate();
 

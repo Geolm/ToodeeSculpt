@@ -19,6 +19,7 @@ public:
 
 private:
     void InitGui();
+    void LogUserInterface();
     void DrawGui();
 
 private:
@@ -29,4 +30,6 @@ private:
     uint32_t m_ViewportWidth;
     mu_Context* m_pGuiContext {nullptr};
     float m_MouseX, m_MouseY;
+    char* m_pLogBuffer;
+    size_t m_LogSize;
 };
