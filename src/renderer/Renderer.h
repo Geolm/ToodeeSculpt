@@ -23,12 +23,12 @@ public:
     void Terminate();
 
     inline void SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
-    inline void DrawCircle(float x, float y, float radius, float width, draw_color color);
-    inline void DrawCircleFilled(float x, float y, float radius, draw_color color);
-    inline void DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color);
-    inline void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
-    inline void DrawChar(float x, float y, char c, draw_color color);
-    inline void DrawText(float x, float y, const char* text, draw_color color);
+    void DrawCircle(float x, float y, float radius, float width, draw_color color);
+    void DrawCircleFilled(float x, float y, float radius, draw_color color);
+    void DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color);
+    void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
+    void DrawChar(float x, float y, char c, draw_color color);
+    void DrawText(float x, float y, const char* text, draw_color color);
 
 private:
     void BuildDepthStencilState();
@@ -46,6 +46,7 @@ private:
     MTL::DepthStencilState* m_pDepthStencilState {nullptr};
     
     DynamicBuffer m_DrawCommandsBuffer;
+    DynamicBuffer m_CommandsAABBBuffer;
     DynamicBuffer m_DrawDataBuffer;
     MTL::Buffer* m_pCountersBuffer {nullptr};
     MTL::Fence* m_pClearBuffersFence {nullptr};
@@ -62,6 +63,7 @@ private:
     
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;
+    PushArray<quantized_aabb> m_CommandsAABB;
     
     uint32_t m_FrameIndex {0};
     uint32_t m_ClipsCount {0};
@@ -75,13 +77,6 @@ private:
     float m_FontScale {1.f};
 };
 
-inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}
-inline static void write_float(float* buffer, float a, float b, float c) {write_float(buffer, a, b); buffer[2] = c;}
-inline static void write_float(float* buffer, float a, float b, float c, float d) {write_float(buffer, a, b, c); buffer[3] = d;}
-inline static void write_float(float* buffer, float a, float b, float c, float d, float e) {write_float(buffer, a, b, c, d); buffer[4] = e;}
-
-template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
-
 //----------------------------------------------------------------------------------------------------------------------------
 inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y)
 {
@@ -89,123 +84,5 @@ inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x
         m_Clips[m_ClipsCount++] = (clip_rect) {.min_x = min_x, .min_y = min_y, .max_x = max_x, .max_y = max_y};
     else
         log_error("too many clip rectangle! maximum is %d", MAX_CLIPS);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawCircle(float x, float y, float radius, float width, draw_color color)
-{
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
-        cmd->type = shape_circle;
-
-        float* data = m_DrawData.NewMultiple(4);
-        if (data != nullptr)
-            write_float(data,  x, y, radius, width);
-        else
-            m_Commands.RemoveLast();
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color)
-{
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
-        cmd->type = shape_circle_filled;
-
-        float* data = m_DrawData.NewMultiple(3);
-        if (data != nullptr)
-            write_float(data,  x, y, radius);
-        else
-            m_Commands.RemoveLast();
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color)
-{
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
-        cmd->type = shape_line;
-
-        float* data = m_DrawData.NewMultiple(5);
-        if (data != nullptr)
-            write_float(data,  x0, y0, x1, y1, width);
-        else
-            m_Commands.RemoveLast();
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
-{
-    if (x0>x1) swap(x0, x1);
-    if (y0>y1) swap(y0, y1);
-
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
-        cmd->type = shape_box;
-
-        float* data = m_DrawData.NewMultiple(4);
-        if (data != nullptr)
-            write_float(data, x0, y0, x1, y1);
-        else
-            m_Commands.RemoveLast();
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawChar(float x, float y, char c, draw_color color)
-{
-    if (c < FONT_CHAR_FIRST || c > FONT_CHAR_LAST)
-        return;
-
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
-        cmd->type = shape_char;
-        cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
-
-        float* data = m_DrawData.NewMultiple(2);
-        if (data != nullptr)
-            write_float(data, x, y);
-        else
-            m_Commands.RemoveLast();
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawText(float x, float y, const char* text, draw_color color)
-{
-    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
-    for(const char *c = text; *c != 0; c++)
-    {
-        DrawChar(x, y, *c, color);
-        x += font_spacing;
-    }
 }
 

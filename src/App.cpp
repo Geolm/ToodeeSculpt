@@ -118,6 +118,14 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
 
 
+    int seed = 0x12345678;
+    for(uint i=0; i<10000; ++i)
+    {
+        m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                                    iq_random_clamped(&seed, 0, 20), draw_color(220, 110, 0, 64));
+    }
+
+
     m_Renderer.UserInterface(m_pGuiContext);
     LogUserInterface();
     mu_end(m_pGuiContext);

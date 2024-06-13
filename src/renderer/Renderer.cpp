@@ -24,6 +24,7 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
 
     m_DrawCommandsBuffer.Init(m_pDevice, sizeof(draw_command) * MAX_COMMANDS);
     m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * MAX_DRAWDATA);
+    m_CommandsAABBBuffer.Init(m_pDevice, sizeof(quantized_aabb) * MAX_COMMANDS);
     m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     m_pFont = m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModeShared);
@@ -190,6 +191,7 @@ void Renderer::BeginFrame()
     m_ClipsCount = 0;
 
     m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * MAX_COMMANDS);
+    m_CommandsAABB.Set(m_CommandsAABBBuffer.Map(m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
     SetClipRect(0, 0, (uint16_t) m_ViewportWidth, (uint16_t) m_ViewportHeight);
 }
@@ -198,6 +200,7 @@ void Renderer::BeginFrame()
 void Renderer::EndFrame()
 {
     m_DrawCommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
+    m_CommandsAABBBuffer.Unmap(m_FrameIndex, 0, m_CommandsAABB.GetNumElements() * sizeof(quantized_aabb));
     m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
     m_NumDrawCommands = m_Commands.GetNumElements();
 }
@@ -223,6 +226,7 @@ void Renderer::BinCommands()
 
     draw_cmd_arguments* args = (draw_cmd_arguments*) m_DrawCommandsArg.Map(m_FrameIndex);
     args->aa_width = m_AAWidth;
+    args->commands_aabb = (quantized_aabb*) m_CommandsAABBBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
     args->font = (uint16_t*) m_pFont->gpuAddress();
@@ -231,7 +235,6 @@ void Renderer::BinCommands()
     args->num_commands = m_NumDrawCommands;
     args->num_tile_height = m_NumTilesHeight;
     args->num_tile_width = m_NumTilesWidth;
-    args->tile_size = TILE_SIZE;
     args->screen_div = (float2) {.x = 1.f / (float)m_ViewportWidth, .y = 1.f / (float) m_ViewportHeight};
     args->font_scale = m_FontScale;
     args->font_size = (float2) {FONT_WIDTH, FONT_HEIGHT};
@@ -247,6 +250,7 @@ void Renderer::BinCommands()
     pComputeEncoder->setBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
     pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 2);
 
+    pComputeEncoder->useResource(m_CommandsAABBBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(m_pHead, MTL::ResourceUsageRead|MTL::ResourceUsageWrite);
@@ -336,6 +340,7 @@ void Renderer::Terminate()
 {
     m_DrawCommandsBuffer.Terminate();
     m_DrawDataBuffer.Terminate();
+    m_CommandsAABBBuffer.Terminate();
     m_DrawCommandsArg.Terminate();
     m_BinOutputArg.Terminate();
     SAFE_RELEASE(m_pFont);
@@ -354,5 +359,158 @@ void Renderer::Terminate()
     SAFE_RELEASE(m_pCommandQueue);
 }
 
+//----------------------------------------------------------------------------------------------------------------------------
+inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}
+inline static void write_float(float* buffer, float a, float b, float c) {write_float(buffer, a, b); buffer[2] = c;}
+inline static void write_float(float* buffer, float a, float b, float c, float d) {write_float(buffer, a, b, c); buffer[3] = d;}
+inline static void write_float(float* buffer, float a, float b, float c, float d, float e) {write_float(buffer, a, b, c, d); buffer[4] = e;}
 
+template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
+template<class T> T min(T a, T b) {return (a<b) ? a : b;}
+template<class T> T max(T a, T b) {return (a>b) ? a : b;}
+
+
+//----------------------------------------------------------------------------------------------------------------------------
+static inline void write_aabb(quantized_aabb* box, float min_x, float min_y, float max_x, float max_y)
+{
+    box->min_x = uint8_t(uint32_t(min_x) / TILE_SIZE);
+    box->min_y = uint8_t(uint32_t(min_y) / TILE_SIZE);
+    box->max_x = uint8_t((uint32_t(max_x) + TILE_SIZE - 1) / TILE_SIZE);
+    box->max_y = uint8_t((uint32_t(max_y) + TILE_SIZE - 1) / TILE_SIZE);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawCircle(float x, float y, float radius, float width, draw_color color)
+{
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_circle;
+
+        float* data = m_DrawData.NewMultiple(4);
+        if (data != nullptr)
+        {
+            write_float(data,  x, y, radius, width);
+            write_aabb(m_CommandsAABB.NewElement(), x - radius, y - radius, x + radius, y + radius);
+        }
+        else
+            m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color)
+{
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_circle_filled;
+
+        float* data = m_DrawData.NewMultiple(3);
+        if (data != nullptr)
+        {
+            write_float(data,  x, y, radius);
+            radius += m_AAWidth;
+            write_aabb(m_CommandsAABB.NewElement(), x - radius, y - radius, x + radius, y + radius);
+        }
+        else
+            m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color)
+{
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_line;
+
+        float* data = m_DrawData.NewMultiple(5);
+        if (data != nullptr)
+        {
+            write_float(data,  x0, y0, x1, y1, width);
+            width += m_AAWidth;
+            write_aabb(m_CommandsAABB.NewElement(), min(x0, x1) - width, min(y0, y1) - width, max(x0, x1) + width, max(y0, y1) + width);
+        }
+        else
+            m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
+{
+    if (x0>x1) swap(x0, x1);
+    if (y0>y1) swap(y0, y1);
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_box;
+
+        float* data = m_DrawData.NewMultiple(4);
+        if (data != nullptr)
+        {
+            write_float(data, x0, y0, x1, y1);
+            write_aabb(m_CommandsAABB.NewElement(), x0, y0, x1, y1);
+        }
+        else
+            m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawChar(float x, float y, char c, draw_color color)
+{
+    if (c < FONT_CHAR_FIRST || c > FONT_CHAR_LAST)
+        return;
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op_none;
+        cmd->type = shape_char;
+        cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
+
+        float* data = m_DrawData.NewMultiple(2);
+        if (data != nullptr)
+        {
+            write_float(data, x, y);
+            write_aabb(m_CommandsAABB.NewElement(), x, y, x + FONT_WIDTH, y + FONT_HEIGHT);
+        }
+        else
+            m_Commands.RemoveLast();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawText(float x, float y, const char* text, draw_color color)
+{
+    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
+    for(const char *c = text; *c != 0; c++)
+    {
+        DrawChar(x, y, *c, color);
+        x += font_spacing;
+    }
+}
 

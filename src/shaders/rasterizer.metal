@@ -23,7 +23,7 @@ vertex vs_out tile_vs(uint instance_id [[instance_id]],
     
     float2 screen_pos = float2(vertex_id&1, vertex_id>>1);
     screen_pos += float2(tile_x, tile_y);
-    screen_pos *= input.tile_size;
+    screen_pos *= TILE_SIZE;
 
     float2 clipspace_pos = screen_pos * input.screen_div;
     clipspace_pos = (clipspace_pos * 2.f) - 1.f;

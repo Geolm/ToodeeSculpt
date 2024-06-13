@@ -15,7 +15,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
 
     // compute tile bounding box
     aabb tile_aabb = {.min = float2(index.x, index.y), .max = float2(index.x + 1, index.y + 1)};
-    tile_aabb.min *= input.tile_size; tile_aabb.max *= input.tile_size;
+    tile_aabb.min *= TILE_SIZE; tile_aabb.max *= TILE_SIZE;
     
     // grow the bounding box for anti-aliasing
     aabb tile_enlarge_aabb = tile_aabb;
@@ -24,14 +24,18 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     // loop through draw commands in reverse order (because of the linked list)
     for(uint32_t i=input.num_commands; i-- > 0; )
     {
-        uint32_t data_index = input.commands[i].data_index;
-        bool to_be_added;
+        constant quantized_aabb& cmd_aabb = input.commands_aabb[i];
+        if (index.x > cmd_aabb.max_x || index.x < cmd_aabb.min_x ||
+            index.y > cmd_aabb.max_y || index.y < cmd_aabb.min_y)
+            continue;
 
+        uint32_t data_index = input.commands[i].data_index;
         constant clip_rect& clip = input.clips[input.commands[i].clip_index];
         aabb clip_aabb = {.min = float2(clip.min_x, clip.min_y), .max = float2(clip.max_x, clip.max_y)};
         if (!intersection_aabb_aabb(tile_aabb, clip_aabb))
             continue;
 
+        bool to_be_added;
         switch(input.commands[i].type)
         {
             case shape_line :

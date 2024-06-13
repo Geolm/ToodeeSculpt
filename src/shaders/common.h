@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------------------------------------------------------
 // constants
-#define TILE_SIZE (32)
+#define TILE_SIZE (16)
 #define MAX_NODES_COUNT (1<<20)
 #define INVALID_INDEX (0xffffffff)
 #define MAX_CLIPS (256)
@@ -88,9 +88,15 @@ struct clip_rect
     uint16_t min_x, min_y, max_x, max_y;
 };
 
+struct quantized_aabb
+{
+    uint8_t min_x, min_y, max_x, max_y;
+};
+
 struct draw_cmd_arguments
 {
     constant draw_command* commands;
+    constant quantized_aabb* commands_aabb;
     constant float* draw_data;
     constant uint16_t* font;
     clip_rect clips[MAX_CLIPS];
@@ -98,7 +104,6 @@ struct draw_cmd_arguments
     uint32_t max_nodes;
     uint16_t num_tile_width;
     uint16_t num_tile_height;
-    float tile_size;
     float aa_width;
     float2 screen_div;
     float2 font_size;
