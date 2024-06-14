@@ -123,6 +123,10 @@ void App::Update(CA::MetalDrawable* drawable)
     {
         m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
                                     iq_random_clamped(&seed, 0, 20), draw_color(220, 110, 0, 64));
+
+        m_Renderer.DrawLine(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                            iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                            iq_random_float(&seed) * 4.f, draw_color(24, 24, 224, 64));
     }
 
 
