@@ -11,7 +11,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     if (index.x >= input.num_tile_width || index.y >= input.num_tile_height)
         return;
 
-    uint16_t tile_index = index.y * input.num_tile_width + index.x;
+    ushort tile_index = index.y * input.num_tile_width + index.x;
 
     // compute tile bounding box
     aabb tile_aabb = {.min = float2(index.x, index.y), .max = float2(index.x + 1, index.y + 1)};
@@ -32,8 +32,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         uint32_t data_index = input.commands[i].data_index;
         constant clip_rect& clip = input.clips[input.commands[i].clip_index];
 
-        if (index.x > clip.max_x || index.x < clip.min_x ||
-            index.y > clip.max_y || index.y < clip.min_y)
+        ushort2 tile_pos = index * TILE_SIZE;
+        if (tile_pos.x > clip.max_x || (tile_pos.x + TILE_SIZE) < clip.min_x ||
+            tile_pos.y > clip.max_y || (tile_pos.y + TILE_SIZE) < clip.min_y)
             continue;
 
         bool to_be_added;
