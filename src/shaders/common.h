@@ -45,18 +45,17 @@ enum sdf_operator
 
 struct draw_color
 {
-    uint8_t r, g, b, a;
+    uint32_t packed_data;
 
 #ifndef __METAL_VERSION__
-    draw_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) {r = red; b = blue; g = green; a = alpha;}
+    draw_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
+    {
+        packed_data = (alpha<<24) | (blue<<16) | (green<<8) | red;
+    }
     explicit draw_color(uint32_t color) 
     {
-        r = (color>>16)&0xFF;
-        g = (color>>8)&0xFF;
-        b = (color&0xFF);
-        a = (color>>24)&0xFF;
+        packed_data = color;
     }
-    uint32_t to_uint() {return *(uint32_t*)&r;}
 #endif
 };
 

@@ -36,17 +36,6 @@ vertex vs_out tile_vs(uint instance_id [[instance_id]],
 }
 
 //-----------------------------------------------------------------------------
-half4 unpack_color(draw_color color)
-{
-    half4 result;
-    result.r = half(color.r) / 255.0;
-    result.g = half(color.g) / 255.0;
-    result.b = half(color.b) / 255.0;
-    result.a = half(color.a) / 255.0;
-    return result;
-}
-
-//-----------------------------------------------------------------------------
 // based on https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles
 // a specific blend equation is required
 half4 accumulate_color(half4 color, half4 backbuffer)
@@ -108,16 +97,16 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 pos = (in.pos.xy - top_left) / input.font_scale;
                     if (all(pos >= 0.f && pos <= input.font_size))
                     {
-                        int2 pixel_pos = (int2) pos;
-                        uint16_t bitfield = input.font[cmd.custom_data * (uint) input.font_size.x + pixel_pos.x];
+                        ushort2 pixel_pos = (ushort2) pos;
+                        ushort bitfield = input.font[cmd.custom_data * (ushort) input.font_size.x + pixel_pos.x];
                         if (bitfield&(1<<pixel_pos.y))
                             distance = 0.f;
                     }
                 }
             }
 
-            half4 color = unpack_color(cmd.color);
-            half alpha_factor = 1.f - smoothstep(0.f, input.aa_width, distance);    // anti-aliasing
+            half4 color = unpack_unorm4x8_to_half(cmd.color.packed_data);
+            half alpha_factor = 1.h - smoothstep(0.h, half(input.aa_width), half(distance));    // anti-aliasing
             color.a *= alpha_factor;
             output = accumulate_color(color, output);
         }
@@ -125,7 +114,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
         node = tiles.nodes[node.next];
     }
 
-    if (all(output == half4(0.f, 0.f, 0.f, 1.f)))
+    if (all(output == half4(0.h, 0.h, 0.h, 1.h)))
         discard_fragment();
 
     return output;
