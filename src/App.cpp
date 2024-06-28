@@ -7,9 +7,17 @@
 
 #include "system/random.h"
 #include "system/microui.h"
+#include "system/color_ramp.h"
 #include <string.h>
 
 static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.b, color.g, color.a);}
+static inline mu_Color to_mu_color(uint32_t packed_color) 
+{
+    mu_Color result; 
+    uint32_t* packed = (uint32_t*)&result.r;
+    *packed = packed_color;
+    return result;
+}
 
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Init(MTL::Device* device, GLFWwindow* window)
@@ -76,6 +84,22 @@ void App::InitGui()
     };
 
     m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT; };
+
+    hueshift_ramp_desc ramp = 
+    {
+        .hue = 220.0f,
+        .hue_shift = 60.0f,
+        .saturation_min = 0.1f,
+        .saturation_max = 0.9f,
+        .value_min = 0.2f,
+        .value_max = 1.0f
+    };
+
+    for(uint32_t i=0; i<MU_COLOR_MAX; ++i)
+        m_pGuiContext->style->colors[i] = to_mu_color(hueshift_ramp(&ramp, float(m_pGuiContext->style->colors[i].r) / 255.f, 0.9f));
+
+    m_pGuiContext->style->colors[MU_COLOR_TEXT] = to_mu_color(0xffffffff);
+    m_pGuiContext->style->colors[MU_COLOR_TITLETEXT] = to_mu_color(0xffffffff);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
