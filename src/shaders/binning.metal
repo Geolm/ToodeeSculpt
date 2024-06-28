@@ -25,53 +25,38 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     for(uint32_t i=input.num_commands; i-- > 0; )
     {
         constant quantized_aabb& cmd_aabb = input.commands_aabb[i];
-        if (index.x > cmd_aabb.max_x || index.x < cmd_aabb.min_x ||
-            index.y > cmd_aabb.max_y || index.y < cmd_aabb.min_y)
+        if (any(ushort4(index.xy, cmd_aabb.max_x, cmd_aabb.max_y) < ushort4(cmd_aabb.min_x, cmd_aabb.min_y, index.xy)))
             continue;
 
         uint32_t data_index = input.commands[i].data_index;
         constant clip_rect& clip = input.clips[input.commands[i].clip_index];
 
         ushort2 tile_pos = index * TILE_SIZE;
-        if (tile_pos.x > clip.max_x || (tile_pos.x + TILE_SIZE) < clip.min_x ||
-            tile_pos.y > clip.max_y || (tile_pos.y + TILE_SIZE) < clip.min_y)
+        if (any(tile_pos>ushort2(clip.max_x, clip.max_y)) || any((tile_pos + TILE_SIZE)<ushort2(clip.min_x, clip.min_y)))
             continue;
 
-        bool to_be_added;
+        bool to_be_added = false;
+        constant float* data = &input.draw_data[data_index];
         switch(input.commands[i].type)
         {
             case shape_line :
             {
-                float2 p0 = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
-                float2 p1 = float2(input.draw_data[data_index+2], input.draw_data[data_index+3]);
-                float width = input.draw_data[data_index+4];
+                float2 p0 = float2(data[0], data[1]);
+                float2 p1 = float2(data[2], data[3]);
+                float width = data[4];
                 to_be_added = intersection_aabb_obb(tile_enlarge_aabb, p0, p1, width);
                 break;
             }
             case shape_circle_filled :
             {
-                float2 center = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
-                float radius = input.draw_data[data_index+2] + input.aa_width;
+                float2 center = float2(data[0], data[1]);
+                float radius = data[2] + input.aa_width;
                 float sq_radius = radius * radius;
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
             case shape_box :
-            {
-                aabb box_aabb = {.min = float2(input.draw_data[data_index], input.draw_data[data_index+1]),
-                                 .max = float2(input.draw_data[data_index+2], input.draw_data[data_index+3])};
-                to_be_added = intersection_aabb_aabb(tile_aabb, box_aabb);
-                break;
-            }
-            case shape_char :
-            {
-                aabb char_aabb;
-                char_aabb.min = float2(input.draw_data[data_index], input.draw_data[data_index+1]);
-                char_aabb.max = char_aabb.min + input.font_size * input.font_scale;
-                to_be_added = intersection_aabb_aabb(tile_aabb, char_aabb);
-                break;
-            }
-            default : to_be_added = false;
+            case shape_char : to_be_added = true; break;
         }
 
         if (to_be_added)
