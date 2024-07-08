@@ -6,6 +6,8 @@ struct aabb
 
 float2 skew(float2 v) {return float2(-v.y, v.x);}
 
+template <class T> T square(T value) {return value*value;}
+
 // ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_aabb_disc(aabb box, float2 center, float sq_radius)
 {
@@ -14,7 +16,20 @@ bool intersection_aabb_disc(aabb box, float2 center, float sq_radius)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-inline bool intersection_aabb_aabb(aabb box0, aabb box1)
+bool intersection_aabb_circle(aabb box, float2 center, float radius, float half_width)
+{
+    if (!intersection_aabb_disc(box, center, square(radius + half_width)))
+        return false;
+
+    float2 candidate0 = abs(center.xy - box.min);
+    float2 candidate1 = abs(center.xy - box.max);
+    float2 furthest_point = max(candidate0, candidate1);
+
+    return length_squared(furthest_point) > square(radius - half_width);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+bool intersection_aabb_aabb(aabb box0, aabb box1)
 {
     return !(box1.max.x < box0.min.x || box0.max.x < box1.min.x || box1.max.y < box0.min.y || box0.max.y < box1.min.y);
 }

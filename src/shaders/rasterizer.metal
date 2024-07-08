@@ -69,6 +69,14 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
 
             switch(cmd.type)
             {
+            case shape_circle :
+                {
+                    float2 center = float2(data[0], data[1]);
+                    float radius = data[2];
+                    float half_width = data[3];
+                    distance = abs(sd_disc(in.pos.xy, center, radius)) - half_width;
+                    break;
+                }
             case shape_circle_filled :
                 {
                     float2 center = float2(data[0], data[1]);

@@ -399,8 +399,9 @@ void Renderer::DrawCircle(float x, float y, float radius, float width, draw_colo
         float* data = m_DrawData.NewMultiple(4);
         if (data != nullptr)
         {
-            write_float(data,  x, y, radius, width);
-            write_aabb(m_CommandsAABB.NewElement(), x - radius, y - radius, x + radius, y + radius);
+            float max_radius = radius + width * .5f + m_AAWidth;
+            write_float(data,  x, y, radius, width * .5f);
+            write_aabb(m_CommandsAABB.NewElement(), x - max_radius, y - max_radius, x + max_radius, y + max_radius);
         }
         else
             m_Commands.RemoveLast();
@@ -422,9 +423,9 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
         float* data = m_DrawData.NewMultiple(3);
         if (data != nullptr)
         {
+            float max_radius = radius + m_AAWidth;
             write_float(data,  x, y, radius);
-            radius += m_AAWidth;
-            write_aabb(m_CommandsAABB.NewElement(), x - radius, y - radius, x + radius, y + radius);
+            write_aabb(m_CommandsAABB.NewElement(), x - max_radius, y - max_radius, x + max_radius, y + max_radius);
         }
         else
             m_Commands.RemoveLast();

@@ -47,6 +47,14 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_obb(tile_enlarge_aabb, p0, p1, width);
                 break;
             }
+            case shape_circle :
+            {
+                float2 center = float2(data[0], data[1]);
+                float radius = data[2];
+                float half_width = data[3] + input.aa_width;
+                to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
+                break;
+            }
             case shape_circle_filled :
             {
                 float2 center = float2(data[0], data[1]);
