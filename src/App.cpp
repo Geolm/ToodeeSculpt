@@ -143,17 +143,20 @@ void App::Update(CA::MetalDrawable* drawable)
 
 
     int seed = 0x12345678;
-    // for(uint i=0; i<10000; ++i)
-    // {
-    //     m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
-    //                                 iq_random_clamped(&seed, 0, 20), draw_color(220, 110, 0, 64));
+    for(uint i=0; i<1000; ++i)
+    {
+        m_Renderer.DrawCircleFilled(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                                    iq_random_clamped(&seed, 0, 20), draw_color(220, 110, 0, 64));
 
-    //     m_Renderer.DrawLine(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
-    //                         iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
-    //                         iq_random_float(&seed) * 4.f, draw_color(24, 24, 224, 64));
-    // }
+        m_Renderer.DrawLine(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                            iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                            iq_random_float(&seed) * 4.f, draw_color(24, 24, 224, 64));
 
-    m_Renderer.DrawCircle(500, 500, 300, 20, draw_color(255, 255, 255, 255));
+        m_Renderer.DrawCircle(iq_random_clamped(&seed, 0, m_ViewportWidth), iq_random_clamped(&seed, 0, m_ViewportHeight),
+                              iq_random_clamped(&seed, 20, 200), iq_random_clamped(&seed, 0, 10), draw_color(24, 224, 24, 16));
+    }
+
+    
 
     m_Renderer.UserInterface(m_pGuiContext);
     LogUserInterface();
