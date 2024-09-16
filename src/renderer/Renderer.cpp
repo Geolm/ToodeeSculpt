@@ -194,6 +194,7 @@ void Renderer::BeginFrame()
     m_CommandsAABB.Set(m_CommandsAABBBuffer.Map(m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
     SetClipRect(0, 0, (uint16_t) m_ViewportWidth, (uint16_t) m_ViewportHeight);
+    ResetCanvas();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -364,11 +365,21 @@ inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; 
 inline static void write_float(float* buffer, float a, float b, float c) {write_float(buffer, a, b); buffer[2] = c;}
 inline static void write_float(float* buffer, float a, float b, float c, float d) {write_float(buffer, a, b, c); buffer[3] = d;}
 inline static void write_float(float* buffer, float a, float b, float c, float d, float e) {write_float(buffer, a, b, c, d); buffer[4] = e;}
+inline static void canvas_to_screen(float scale, float &a, float &b) {a *= scale; b *= scale;}
+inline static void canvas_to_screen(float scale, float &a, float &b, float &c) {a *= scale; b *= scale; c *= scale;}
+inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d) {canvas_to_screen(scale, a, b, c); d *= scale;}
+inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d, float &e) {canvas_to_screen(scale, a, b, c, d); e *= scale;}
 
 template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 template<class T> T min(T a, T b) {return (a<b) ? a : b;}
 template<class T> T max(T a, T b) {return (a>b) ? a : b;}
 
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::SetCanvas(float width, float height)
+{
+    assert(width >= FLT_EPSILON && height >= FLT_EPSILON);
+    m_CanvasScale = max((float) m_ViewportWidth / width, (float) m_ViewportHeight / height);
+}
 
 //----------------------------------------------------------------------------------------------------------------------------
 static inline void write_aabb(quantized_aabb* box, float min_x, float min_y, float max_x, float max_y)
@@ -399,6 +410,7 @@ void Renderer::DrawCircle(float x, float y, float radius, float width, draw_colo
         float* data = m_DrawData.NewMultiple(4);
         if (data != nullptr)
         {
+            canvas_to_screen(m_CanvasScale, x, y, radius, width);
             float max_radius = radius + width * .5f + m_AAWidth;
             write_float(data,  x, y, radius, width * .5f);
             write_aabb(m_CommandsAABB.NewElement(), x - max_radius, y - max_radius, x + max_radius, y + max_radius);
@@ -423,6 +435,7 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
         float* data = m_DrawData.NewMultiple(3);
         if (data != nullptr)
         {
+            canvas_to_screen(m_CanvasScale, x, y, radius);
             float max_radius = radius + m_AAWidth;
             write_float(data,  x, y, radius);
             write_aabb(m_CommandsAABB.NewElement(), x - max_radius, y - max_radius, x + max_radius, y + max_radius);
@@ -447,6 +460,7 @@ void Renderer::DrawLine(float x0, float y0, float x1, float y1, float width, dra
         float* data = m_DrawData.NewMultiple(5);
         if (data != nullptr)
         {
+            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width);
             write_float(data,  x0, y0, x1, y1, width);
             width += m_AAWidth;
             write_aabb(m_CommandsAABB.NewElement(), min(x0, x1) - width, min(y0, y1) - width, max(x0, x1) + width, max(y0, y1) + width);
@@ -474,6 +488,7 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
         float* data = m_DrawData.NewMultiple(4);
         if (data != nullptr)
         {
+            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1);
             write_float(data, x0, y0, x1, y1);
             write_aabb(m_CommandsAABB.NewElement(), x0, y0, x1, y1);
         }
@@ -512,6 +527,7 @@ void Renderer::DrawChar(float x, float y, char c, draw_color color)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawText(float x, float y, const char* text, draw_color color)
 {
+    canvas_to_screen(m_CanvasScale, x, y);
     const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
     for(const char *c = text; *c != 0; c++)
     {

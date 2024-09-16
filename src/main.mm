@@ -9,7 +9,7 @@ int main(int argc, const char * argv[])
     MetalLayerHelper helper;
     App app;
     
-    helper.Init("FieldCraft", 1980, 1080);
+    helper.Init("FieldCraft", 1920, 1080);
 
     app.Init(helper.GetDevice(), helper.GetGLFWWindow());
 

@@ -23,6 +23,9 @@ public:
     void Terminate();
 
     inline void SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
+    inline void ResetCanvas() {m_CanvasScale = 1.f;}
+    void SetCanvas(float width, float height);
+
     void DrawCircle(float x, float y, float radius, float width, draw_color color);
     void DrawCircleFilled(float x, float y, float radius, draw_color color);
     void DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color);
@@ -75,6 +78,7 @@ private:
     uint32_t m_NumDrawCommands;
     float m_AAWidth {1.f};
     float m_FontScale {1.f};
+    float m_CanvasScale {1.f};
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -85,4 +89,6 @@ inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x
     else
         log_error("too many clip rectangle! maximum is %d", MAX_CLIPS);
 }
+
+
 
