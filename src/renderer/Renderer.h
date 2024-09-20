@@ -26,12 +26,15 @@ public:
     inline void ResetCanvas() {m_CanvasScale = 1.f;}
     void SetCanvas(float width, float height);
 
-    void DrawCircle(float x, float y, float radius, float width, draw_color color);
+    void StartCombination(float smooth_value);
+    void EndCombination();
+    void DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op = op_none);
     void DrawCircleFilled(float x, float y, float radius, draw_color color);
     void DrawLine(float x0, float y0, float x1, float y1, float width, draw_color color);
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawChar(float x, float y, char c, draw_color color);
     void DrawText(float x, float y, const char* text, draw_color color);
+    
 
 private:
     void BuildDepthStencilState();
@@ -79,6 +82,7 @@ private:
     float m_AAWidth {1.f};
     float m_FontScale {1.f};
     float m_CanvasScale {1.f};
+    quantized_aabb* m_CombinationAABB {nullptr};
 };
 
 //----------------------------------------------------------------------------------------------------------------------------

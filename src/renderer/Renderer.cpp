@@ -195,6 +195,7 @@ void Renderer::BeginFrame()
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
     SetClipRect(0, 0, (uint16_t) m_ViewportWidth, (uint16_t) m_ViewportHeight);
     ResetCanvas();
+    m_CombinationAABB = nullptr;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -375,13 +376,6 @@ template<class T> T min(T a, T b) {return (a<b) ? a : b;}
 template<class T> T max(T a, T b) {return (a>b) ? a : b;}
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::SetCanvas(float width, float height)
-{
-    assert(width >= FLT_EPSILON && height >= FLT_EPSILON);
-    m_CanvasScale = max((float) m_ViewportWidth / width, (float) m_ViewportHeight / height);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
 static inline void write_aabb(quantized_aabb* box, float min_x, float min_y, float max_x, float max_y)
 {
     min_x = max(min_x, 0.f);
@@ -396,7 +390,78 @@ static inline void write_aabb(quantized_aabb* box, float min_x, float min_y, flo
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawCircle(float x, float y, float radius, float width, draw_color color)
+static inline void merge_aabb(quantized_aabb* merge, const quantized_aabb* other)
+{
+    if (merge != nullptr)
+    {
+        merge->min_x = min(merge->min_x, other->min_x);
+        merge->min_y = min(merge->min_y, other->min_y);
+        merge->max_x = min(merge->max_x, other->max_x);
+        merge->max_y = min(merge->max_y, other->max_y);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::SetCanvas(float width, float height)
+{
+    assert(width >= FLT_EPSILON && height >= FLT_EPSILON);
+    m_CanvasScale = max((float) m_ViewportWidth / width, (float) m_ViewportHeight / height);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::StartCombination(float smooth_value)
+{
+    assert(m_CombinationAABB == nullptr);
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->data_index = m_DrawData.GetNumElements();
+
+        float* k = m_DrawData.NewElement(); // just one float for the smooth
+
+        // reserve a aabb that we're going to update depending on the coming shapes
+        m_CombinationAABB = m_CommandsAABB.NewElement();
+        if (m_CombinationAABB != nullptr && k != nullptr)
+        {
+            *k = smooth_value;
+
+            // put an invalid aabb
+            m_CombinationAABB->max_x = 0;
+            m_CombinationAABB->max_y = 0;
+            m_CombinationAABB->min_x = (m_ViewportWidth + (TILE_SIZE - 1)) / TILE_SIZE;
+            m_CombinationAABB->min_y = (m_ViewportHeight + (TILE_SIZE - 1)) / TILE_SIZE;
+        }
+        else
+        {
+            log_warn("buffer overrun : too much draw command data, expect graphical artefacts");
+            m_Commands.RemoveLast();
+        }
+    }
+    else
+    {
+        log_warn("out of draw commands, expect graphical artefacts");
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::EndCombination()
+{
+    assert(m_CombinationAABB != nullptr);
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+
+    }
+
+
+    m_CombinationAABB = nullptr;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op)
 {
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -404,19 +469,28 @@ void Renderer::DrawCircle(float x, float y, float radius, float width, draw_colo
         cmd->clip_index = (uint8_t) m_ClipsCount-1;
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
+        cmd->op = op;
         cmd->type = shape_circle;
 
         float* data = m_DrawData.NewMultiple(4);
-        if (data != nullptr)
+        quantized_aabb* aabb = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabb != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x, y, radius, width);
             float max_radius = radius + width * .5f + m_AAWidth;
             write_float(data,  x, y, radius, width * .5f);
-            write_aabb(m_CommandsAABB.NewElement(), x - max_radius, y - max_radius, x + max_radius, y + max_radius);
+            write_aabb(aabb, x - max_radius, y - max_radius, x + max_radius, y + max_radius);
+            merge_aabb(m_CombinationAABB, aabb);
         }
         else
+        {
+            log_warn("buffer overrun : too much draw command data, expect graphical artefacts");
             m_Commands.RemoveLast();
+        }
+    }
+    else
+    {
+        log_warn("out of draw commands, expect graphical artefacts");
     }
 }
 
@@ -433,15 +507,24 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
         cmd->type = shape_circle_filled;
 
         float* data = m_DrawData.NewMultiple(3);
-        if (data != nullptr)
+        quantized_aabb* aabb = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabb != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x, y, radius);
             float max_radius = radius + m_AAWidth;
             write_float(data,  x, y, radius);
-            write_aabb(m_CommandsAABB.NewElement(), x - max_radius, y - max_radius, x + max_radius, y + max_radius);
+            write_aabb(aabb, x - max_radius, y - max_radius, x + max_radius, y + max_radius);
+            merge_aabb(m_CombinationAABB, aabb);
         }
         else
+        {
+            log_warn("buffer overrun : too much draw command data, expect graphical artefacts");
             m_Commands.RemoveLast();
+        }
+    }
+    else
+    {
+        log_warn("out of draw commands, expect graphical artefacts");
     }
 }
 
@@ -458,15 +541,24 @@ void Renderer::DrawLine(float x0, float y0, float x1, float y1, float width, dra
         cmd->type = shape_line;
 
         float* data = m_DrawData.NewMultiple(5);
-        if (data != nullptr)
+        quantized_aabb* aabb = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabb != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width);
             write_float(data,  x0, y0, x1, y1, width);
             width += m_AAWidth;
-            write_aabb(m_CommandsAABB.NewElement(), min(x0, x1) - width, min(y0, y1) - width, max(x0, x1) + width, max(y0, y1) + width);
+            write_aabb(aabb, min(x0, x1) - width, min(y0, y1) - width, max(x0, x1) + width, max(y0, y1) + width);
+            merge_aabb(m_CombinationAABB, aabb);
         }
         else
+        {
+            log_warn("buffer overrun : too much draw command data, expect graphical artefacts");
             m_Commands.RemoveLast();
+        }
+    }
+    else
+    {
+        log_warn("out of draw commands, expect graphical artefacts");
     }
 }
 
@@ -486,14 +578,23 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
         cmd->type = shape_box;
 
         float* data = m_DrawData.NewMultiple(4);
-        if (data != nullptr)
+        quantized_aabb* aabb = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabb != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x0, y0, x1, y1);
             write_float(data, x0, y0, x1, y1);
-            write_aabb(m_CommandsAABB.NewElement(), x0, y0, x1, y1);
+            write_aabb(aabb, x0, y0, x1, y1);
+            merge_aabb(m_CombinationAABB, aabb);
         }
         else
+        {
+            log_warn("buffer overrun : too much draw command data, expect graphical artefacts");
             m_Commands.RemoveLast();
+        }
+    }
+    else
+    {
+        log_warn("out of draw commands, expect graphical artefacts");
     }
 }
 
@@ -514,13 +615,22 @@ void Renderer::DrawChar(float x, float y, char c, draw_color color)
         cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
 
         float* data = m_DrawData.NewMultiple(2);
-        if (data != nullptr)
+        quantized_aabb* aabb = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabb != nullptr)
         {
             write_float(data, x, y);
-            write_aabb(m_CommandsAABB.NewElement(), x, y, x + FONT_WIDTH, y + FONT_HEIGHT);
+            write_aabb(aabb, x, y, x + FONT_WIDTH, y + FONT_HEIGHT);
+            merge_aabb(m_CombinationAABB, aabb);
         }
         else
+        {
+            log_warn("buffer overrun : too much draw command data, expect graphical artefacts");
             m_Commands.RemoveLast();
+        }
+    }
+    else
+    {
+        log_warn("out of draw commands, expect graphical artefacts");
     }
 }
 
