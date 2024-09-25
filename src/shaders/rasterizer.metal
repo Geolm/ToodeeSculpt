@@ -1,6 +1,7 @@
 #include <metal_stdlib>
 #include "common.h"
 #include "sdf.h"
+#include "operators.h"
 
 
 struct vs_out

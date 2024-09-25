@@ -56,6 +56,7 @@
 		FB8255502C8B9836005C34C1 /* color_ramp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = color_ramp.h; sourceTree = "<group>"; };
 		FB8255512C8B9836005C34C1 /* float16.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = float16.h; sourceTree = "<group>"; };
 		FB8255522C8B9836005C34C1 /* vec2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vec2.h; sourceTree = "<group>"; };
+		FB861FA72CA20A9F00C63D00 /* operators.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = operators.h; sourceTree = "<group>"; };
 		FB90E1392BE977D2004B4083 /* DynamicBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicBuffer.h; sourceTree = "<group>"; };
 		FB90E13A2BE977D2004B4083 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Renderer.cpp; sourceTree = "<group>"; };
 		FB90E13B2BE977D2004B4083 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
@@ -100,6 +101,7 @@
 		FB3C530C2BE2702700240FA8 /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				FB861FA72CA20A9F00C63D00 /* operators.h */,
 				FB2646BE2BF7F630009B2403 /* rasterizer.metal */,
 				FB2646BF2BF7F630009B2403 /* sdf.h */,
 				FBA5CD0D2BE931EB00398435 /* collision.h */,
