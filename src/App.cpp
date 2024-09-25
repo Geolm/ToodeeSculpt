@@ -147,20 +147,24 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
 
     m_Renderer.SetCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-
+/*
     int seed = 0x12345678;
     for(uint i=0; i<1000; ++i)
     {
         m_Renderer.DrawCircleFilled(iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
                                     iq_random_float(&seed) * 0.2f, draw_color(220, 110, 0, 64));
 
-        m_Renderer.DrawLine(iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
-                            iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
-                            iq_random_float(&seed) * .05f, draw_color(24, 24, 224, 64));
+        m_Renderer.DrawOrientedBox(iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
+                                   iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
+                                   iq_random_float(&seed) * .05f, 0.f, draw_color(24, 24, 224, 64));
 
         m_Renderer.DrawCircle(iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
                               iq_random_float(&seed) + 1.f, iq_random_float(&seed) * 0.05f, draw_color(24, 224, 24, 16));
     }
+
+*/
+
+    m_Renderer.DrawOrientedBox(3.f, 8.f, 12.f, 2.f, 1.f, 0.2f, draw_color(0xffffffff));
 
     m_Renderer.UserInterface(m_pGuiContext);
     LogUserInterface();

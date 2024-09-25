@@ -21,8 +21,8 @@ using namespace metal;
 
 enum command_type
 {
-    shape_box = 0,
-    shape_line = 1,
+    shape_aabox = 0,
+    shape_oriented_box = 1,
     shape_circle = 2,
     shape_circle_filled = 3,
     shape_arc = 4,

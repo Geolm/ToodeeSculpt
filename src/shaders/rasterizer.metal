@@ -85,15 +85,16 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     distance = sd_disc(in.pos.xy, center, radius);
                     break;
                 }
-            case shape_line:
+            case shape_oriented_box :
                 {
                     float2 p0 = float2(data[0], data[1]);
                     float2 p1 = float2(data[2], data[3]);
                     float width = data[4];
-                    distance = sd_oriented_box(in.pos.xy, p0, p1, width);
+                    float rounded = data[5];
+                    distance = sd_oriented_box(in.pos.xy, p0, p1, width) - rounded;
                     break;
                 }
-            case shape_box:
+            case shape_aabox:
                 {
                     float2 min = float2(data[0], data[1]);
                     float2 max = float2(data[2], data[3]);

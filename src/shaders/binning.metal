@@ -39,12 +39,15 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         constant float* data = &input.draw_data[data_index];
         switch(input.commands[i].type)
         {
-            case shape_line :
+            case shape_oriented_box :
             {
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
-                to_be_added = intersection_aabb_obb(tile_enlarge_aabb, p0, p1, width);
+                aabb tile_rounded = tile_enlarge_aabb;
+                tile_rounded.min -= data[5];
+                tile_rounded.max += data[5];
+                to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
             case shape_circle :
@@ -63,7 +66,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
-            case shape_box :
+            case shape_aabox :
             case shape_char : to_be_added = true; break;
         }
 
