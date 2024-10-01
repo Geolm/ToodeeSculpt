@@ -48,12 +48,19 @@ half4 accumulate_color(half4 color, half4 backbuffer)
     return output;
 }
 
+#define LARGE_DISTANCE (100.f)
+#define BLACK_COLOR (half4(0.h, 0.h, 0.h, 1.h))
+
 // ---------------------------------------------------------------------------------------------------------------------------
 fragment half4 tile_fs(vs_out in [[stage_in]],
                        constant draw_cmd_arguments& input [[buffer(0)]],
                        device tiles_data& tiles [[buffer(1)]])
 {
     half4 output = half4(0.h, 0.h, 0.h, 1.h);
+    float previous_distance;
+    half4 previous_color;
+    float smooth_factor;
+    bool combining = false;
 
     tile_node node = tiles.head[in.tile_index];
     while (node.next != INVALID_INDEX)
@@ -67,6 +74,15 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
         {
             float distance = 10.f;
             constant float* data = &input.draw_data[data_index];
+
+            if (cmd.type == combination_begin)
+            {
+                previous_color = BLACK_COLOR;
+                previous_distance = LARGE_DISTANCE;
+                smooth_factor = data[0];
+                combining = true;
+                continue;
+            }
 
             switch(cmd.type)
             {
@@ -113,19 +129,63 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                         if (bitfield&(1<<pixel_pos.y))
                             distance = 0.f;
                     }
+                    break;
                 }
             }
 
-            half4 color = unpack_unorm4x8_to_half(cmd.color.packed_data);
-            half alpha_factor = 1.h - smoothstep(0.h, half(input.aa_width), half(distance));    // anti-aliasing
-            color.a *= alpha_factor;
-            output = accumulate_color(color, output);
+            half4 color;
+            if (cmd.type == combination_end)
+            {
+                combining = false;
+                color = previous_color;
+            }
+            else
+            {
+                color = unpack_unorm4x8_to_half(cmd.color.packed_data);
+                half alpha_factor = 1.h - smoothstep(0.h, half(input.aa_width), half(distance));    // anti-aliasing
+                color.a *= alpha_factor;
+            }
+
+            // blend distance / color and skip writing output
+            if (combining)
+            {
+                switch(cmd.op)
+                {
+                case op_none : 
+                    {
+                        previous_distance = distance;
+                        previous_color = color;
+                        break;
+                    }
+                case op_union :
+                    {
+                        float2 smooth = smooth_minimum(distance, previous_distance, smooth_factor);
+                        previous_distance = smooth.x;
+                        previous_color = mix(previous_color, color, smooth.y);
+                        break;
+                    }
+                case op_subtraction :
+                    {
+                        previous_distance = smooth_substraction(previous_distance, distance, smooth_factor);
+                        break;
+                    }
+                case op_intersection :
+                    {
+                        previous_distance = smooth_intersection(previous_distance, distance, smooth_factor);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                output = accumulate_color(color, output);
+            }
         }
 
         node = tiles.nodes[node.next];
     }
 
-    if (all(output == half4(0.h, 0.h, 0.h, 1.h)))
+    if (all(output == BLACK_COLOR))
         discard_fragment();
 
     return output;
