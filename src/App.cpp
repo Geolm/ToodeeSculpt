@@ -164,7 +164,9 @@ void App::Update(CA::MetalDrawable* drawable)
 
 */
 
+    m_Renderer.BeginCombination(1.f);
     m_Renderer.DrawOrientedBox(3.f, 8.f, 12.f, 2.f, 1.f, 0.2f, draw_color(0xffffffff));
+    m_Renderer.EndCombination();
 
     m_Renderer.UserInterface(m_pGuiContext);
     LogUserInterface();

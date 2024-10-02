@@ -27,7 +27,7 @@ public:
     inline void ResetCanvas() {m_CanvasScale = 1.f;}
     void SetCanvas(float width, float height);
 
-    void StartCombination(float smooth_value);
+    void BeginCombination(float smooth_value);
     void EndCombination();
     void DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op = op_none);
     void DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op = op_none);

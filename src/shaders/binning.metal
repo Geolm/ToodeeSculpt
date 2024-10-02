@@ -66,6 +66,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
+            case combination_begin:
+            case combination_end:
             case shape_aabox :
             case shape_char : to_be_added = true; break;
         }

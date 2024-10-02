@@ -201,6 +201,7 @@ void Renderer::BeginFrame()
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::EndFrame()
 {
+    assert(m_CombinationAABB == nullptr);
     m_DrawCommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
     m_CommandsAABBBuffer.Unmap(m_FrameIndex, 0, m_CommandsAABB.GetNumElements() * sizeof(quantized_aabb));
     m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
@@ -398,8 +399,8 @@ static inline void merge_aabb(quantized_aabb* merge, const quantized_aabb* other
     {
         merge->min_x = min(merge->min_x, other->min_x);
         merge->min_y = min(merge->min_y, other->min_y);
-        merge->max_x = min(merge->max_x, other->max_x);
-        merge->max_y = min(merge->max_y, other->max_y);
+        merge->max_x = max(merge->max_x, other->max_x);
+        merge->max_y = max(merge->max_y, other->max_y);
     }
 }
 
@@ -423,7 +424,7 @@ void Renderer::SetCanvas(float width, float height)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::StartCombination(float smooth_value)
+void Renderer::BeginCombination(float smooth_value)
 {
     assert(m_CombinationAABB == nullptr);
 
