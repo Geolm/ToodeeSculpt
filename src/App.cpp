@@ -8,6 +8,7 @@
 #include "system/random.h"
 #include "system/microui.h"
 #include "system/color_ramp.h"
+#include "system/sokol_time.h"
 #include <string.h>
 
 static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.b, color.g, color.a);}
@@ -70,6 +71,9 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 
         snprintf(user_ptr->m_pLogBuffer, user_ptr->m_LogSize, ev->fmt, ev->ap);
     }, this, 0);
+
+    stm_setup();
+    m_StartTime = stm_now();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -143,30 +147,14 @@ void App::DrawGui()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Update(CA::MetalDrawable* drawable)
 {
+    m_Time = (float)stm_sec(stm_since(m_StartTime));
     mu_begin(m_pGuiContext);
     m_Renderer.BeginFrame();
-
     m_Renderer.SetCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-/*
-    int seed = 0x12345678;
-    for(uint i=0; i<1000; ++i)
-    {
-        m_Renderer.DrawCircleFilled(iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
-                                    iq_random_float(&seed) * 0.2f, draw_color(220, 110, 0, 64));
-
-        m_Renderer.DrawOrientedBox(iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
-                                   iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
-                                   iq_random_float(&seed) * .05f, 0.f, draw_color(24, 24, 224, 64));
-
-        m_Renderer.DrawCircle(iq_random_float(&seed) * CANVAS_WIDTH, iq_random_float(&seed) * CANVAS_HEIGHT,
-                              iq_random_float(&seed) + 1.f, iq_random_float(&seed) * 0.05f, draw_color(24, 224, 24, 16));
-    }
-
-*/
 
     m_Renderer.BeginCombination(50.f);
     m_Renderer.DrawOrientedBox(3.f, 8.f, 12.f, 2.f, 1.f, 0.2f, draw_color(32, 224, 32, 255));
-    m_Renderer.DrawCircleFilled(4.f, 6.f, 1.f, draw_color(224, 32, 32, 255), op_union);
+    m_Renderer.DrawCircleFilled(4.f + sinf(m_Time), 6.f, 1.f, draw_color(224, 32, 32, 255), op_union);
     m_Renderer.EndCombination();
 
     m_Renderer.UserInterface(m_pGuiContext);

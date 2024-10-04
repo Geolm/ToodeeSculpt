@@ -32,4 +32,6 @@ private:
     float m_MouseX, m_MouseY;
     char* m_pLogBuffer;
     size_t m_LogSize;
+    uint64_t m_StartTime;
+    float m_Time;
 };
