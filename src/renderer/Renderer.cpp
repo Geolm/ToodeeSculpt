@@ -442,6 +442,7 @@ void Renderer::BeginCombination(float smooth_value)
         if (m_CombinationAABB != nullptr && k != nullptr)
         {
             *k = smooth_value;
+            m_SmoothValue = smooth_value;
 
             // reserve a aabb that we're going to update depending on the coming shapes
             *m_CombinationAABB = invalid_aabb();
@@ -461,13 +462,18 @@ void Renderer::EndCombination()
     if (cmd != nullptr)
     {
         cmd->type = combination_end;
-        cmd->data_index = 0;
+        cmd->data_index = m_DrawData.GetNumElements();;
+
+        // we put also the smooth value as we traverse the list in reverse order on the gpu
+        float* k = m_DrawData.NewElement(); 
 
         quantized_aabb* aabb = m_CommandsAABB.NewElement();
-        if (aabb != nullptr)
+        if (aabb != nullptr && k != nullptr)
         {
             *aabb = *m_CombinationAABB;
+            *k = m_SmoothValue;
             m_CombinationAABB = nullptr;
+            m_SmoothValue = 0.f;
             return;
         }
         m_Commands.RemoveLast();
@@ -492,7 +498,7 @@ void Renderer::DrawCircle(float x, float y, float radius, float width, draw_colo
         if (data != nullptr && aabb != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x, y, radius, width);
-            float max_radius = radius + width * .5f + m_AAWidth;
+            float max_radius = radius + width * .5f + m_AAWidth + m_SmoothValue;
             write_float(data,  x, y, radius, width * .5f);
             write_aabb(aabb, x - max_radius, y - max_radius, x + max_radius, y + max_radius);
             merge_aabb(m_CombinationAABB, aabb);
@@ -520,7 +526,7 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
         if (data != nullptr && aabb != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x, y, radius);
-            float max_radius = radius + m_AAWidth;
+            float max_radius = radius + m_AAWidth + m_SmoothValue;
             write_float(data,  x, y, radius);
             write_aabb(aabb, x - max_radius, y - max_radius, x + max_radius, y + max_radius);
             merge_aabb(m_CombinationAABB, aabb);
@@ -548,7 +554,7 @@ void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float wid
         if (data != nullptr && aabox != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width, rounded);
-            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, rounded + m_AAWidth);
+            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, rounded + m_AAWidth + m_SmoothValue);
             write_float(data,  x0, y0, x1, y1, width, rounded);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);

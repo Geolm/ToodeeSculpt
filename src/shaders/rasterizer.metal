@@ -48,7 +48,7 @@ half4 accumulate_color(half4 color, half4 backbuffer)
     return output;
 }
 
-#define LARGE_DISTANCE (100.f)
+#define LARGE_DISTANCE (100000000.f)
 #define BLACK_COLOR (half4(0.h, 0.h, 0.h, 1.h))
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -139,12 +139,11 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 {
                     combining = false;
                     color = previous_color;
+                    distance = previous_distance;
                 }
                 else
                 {
                     color = unpack_unorm4x8_to_half(cmd.color.packed_data);
-                    half alpha_factor = 1.h - smoothstep(0.h, half(input.aa_width), half(distance));    // anti-aliasing
-                    color.a *= alpha_factor;
                 }
 
                 // blend distance / color and skip writing output
@@ -179,6 +178,8 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 }
                 else
                 {
+                    half alpha_factor = 1.h - smoothstep(0.h, half(input.aa_width), half(distance));    // anti-aliasing
+                    color.a *= alpha_factor;
                     output = accumulate_color(color, output);
                 }
             }

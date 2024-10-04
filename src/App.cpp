@@ -164,9 +164,9 @@ void App::Update(CA::MetalDrawable* drawable)
 
 */
 
-    m_Renderer.BeginCombination(100.f);
-    m_Renderer.DrawOrientedBox(3.f, 8.f, 12.f, 2.f, 1.f, 0.2f, draw_color(0xff00ff00));
-    //m_Renderer.DrawCircleFilled(4.f, 6.f, 1.f, draw_color(0xff00007f), op_union);
+    m_Renderer.BeginCombination(50.f);
+    m_Renderer.DrawOrientedBox(3.f, 8.f, 12.f, 2.f, 1.f, 0.2f, draw_color(32, 224, 32, 255));
+    m_Renderer.DrawCircleFilled(4.f, 6.f, 1.f, draw_color(224, 32, 32, 255), op_union);
     m_Renderer.EndCombination();
 
     m_Renderer.UserInterface(m_pGuiContext);

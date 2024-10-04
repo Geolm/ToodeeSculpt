@@ -21,7 +21,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     aabb tile_enlarge_aabb = tile_aabb;
     tile_enlarge_aabb.min -= input.aa_width; tile_enlarge_aabb.max += input.aa_width;
 
-    float smooth_factor = 0.f;
+    float smooth_border = 0.f;
     
     // loop through draw commands in reverse order (because of the linked list)
     for(uint32_t i=input.num_commands; i-- > 0; )
@@ -47,9 +47,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
                 aabb tile_rounded = tile_enlarge_aabb;
-                float smooth_border = data[5] + smooth_factor;
-                tile_rounded.min -= smooth_border;
-                tile_rounded.max += smooth_border;
+                float border = data[5] + smooth_border;
+                tile_rounded.min -= border;
+                tile_rounded.max += border;
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
@@ -57,26 +57,27 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
             {
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];
-                float half_width = data[3] + input.aa_width + smooth_factor;
+                float half_width = data[3] + input.aa_width + smooth_border;
                 to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
                 break;
             }
             case shape_circle_filled :
             {
                 float2 center = float2(data[0], data[1]);
-                float radius = data[2] + input.aa_width + smooth_factor;
+                float radius = data[2] + input.aa_width + smooth_border;
                 float sq_radius = radius * radius;
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
             case combination_begin:
                 {
-                    smooth_factor = data[0];
+                    smooth_border = 0.f;
                     to_be_added = true;
+                    break;
                 }
             case combination_end:
                 {
-                    smooth_factor = 0.f;
+                    smooth_border = data[0];    // we traverse in reverse order, so the end comes first
                     to_be_added = true;
                     break;
                 }
