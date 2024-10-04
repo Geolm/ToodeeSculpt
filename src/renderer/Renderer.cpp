@@ -6,6 +6,7 @@
 #include "Renderer.h"
 #include "shader_reader.h"
 #include "../system/microui.h"
+#include "../system/aabb.h"
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 
@@ -187,6 +188,7 @@ void Renderer::BuildPSO()
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::BeginFrame()
 {
+    assert(m_CombinationAABB == nullptr);
     m_FrameIndex++;
     m_ClipsCount = 0;
 
@@ -388,8 +390,8 @@ static inline void write_aabb(quantized_aabb* box, float min_x, float min_y, flo
 
     box->min_x = uint8_t(uint32_t(min_x) / TILE_SIZE);
     box->min_y = uint8_t(uint32_t(min_y) / TILE_SIZE);
-    box->max_x = uint8_t((uint32_t(max_x) + TILE_SIZE - 1) / TILE_SIZE);
-    box->max_y = uint8_t((uint32_t(max_y) + TILE_SIZE - 1) / TILE_SIZE);
+    box->max_x = uint8_t(uint32_t(max_x) / TILE_SIZE);
+    box->max_y = uint8_t(uint32_t(max_y) / TILE_SIZE);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -542,14 +544,14 @@ void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float wid
         cmd->type = shape_oriented_box;
 
         float* data = m_DrawData.NewMultiple(6);
-        quantized_aabb* aabb = m_CommandsAABB.NewElement();
-        if (data != nullptr && aabb != nullptr)
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width, rounded);
+            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, rounded + m_AAWidth);
             write_float(data,  x0, y0, x1, y1, width, rounded);
-            float border = width + m_AAWidth + rounded;
-            write_aabb(aabb, min(x0, x1) - border, min(y0, y1) - border, max(x0, x1) + border, max(y0, y1) + border);
-            merge_aabb(m_CombinationAABB, aabb);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
             return;
         }
         m_Commands.RemoveLast();

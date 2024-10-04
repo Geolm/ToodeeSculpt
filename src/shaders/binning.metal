@@ -20,6 +20,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     // grow the bounding box for anti-aliasing
     aabb tile_enlarge_aabb = tile_aabb;
     tile_enlarge_aabb.min -= input.aa_width; tile_enlarge_aabb.max += input.aa_width;
+
+    float smooth_factor = 0.f;
     
     // loop through draw commands in reverse order (because of the linked list)
     for(uint32_t i=input.num_commands; i-- > 0; )
@@ -45,8 +47,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
                 aabb tile_rounded = tile_enlarge_aabb;
-                tile_rounded.min -= data[5];
-                tile_rounded.max += data[5];
+                float smooth_border = data[5] + smooth_factor;
+                tile_rounded.min -= smooth_border;
+                tile_rounded.max += smooth_border;
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
@@ -54,20 +57,29 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
             {
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];
-                float half_width = data[3] + input.aa_width;
+                float half_width = data[3] + input.aa_width + smooth_factor;
                 to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
                 break;
             }
             case shape_circle_filled :
             {
                 float2 center = float2(data[0], data[1]);
-                float radius = data[2] + input.aa_width;
+                float radius = data[2] + input.aa_width + smooth_factor;
                 float sq_radius = radius * radius;
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
             case combination_begin:
+                {
+                    smooth_factor = data[0];
+                    to_be_added = true;
+                }
             case combination_end:
+                {
+                    smooth_factor = 0.f;
+                    to_be_added = true;
+                    break;
+                }
             case shape_aabox :
             case shape_char : to_be_added = true; break;
         }

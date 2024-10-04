@@ -162,7 +162,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                         {
                             float2 smooth = smooth_minimum(distance, previous_distance, smooth_factor);
                             previous_distance = smooth.x;
-                            previous_color = mix(previous_color, color, smooth.y);
+                            previous_color = mix(color, previous_color, smooth.y);
                             break;
                         }
                     case op_subtraction :

@@ -10,7 +10,7 @@ float2 smooth_minimum(float a, float b, float k)
 {
     if (k>0.f)
     {
-        float h = 1.0f - min( abs(a-b)/(4.0f*k), 1.0f);
+        float h = 1.0f - min( abs(a-b)/(k), 1.0f);
         float w = h*h;
         float m = w*0.5f;
         float s = w*k;

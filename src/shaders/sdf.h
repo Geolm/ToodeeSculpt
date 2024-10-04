@@ -20,7 +20,7 @@ float sd_oriented_box(float2 position, float2 a, float2 b, float height)
     float2  q = (position-(a+b)*0.5);
     q = float2x2(d.x,-d.y,d.y,d.x)*q;
     q = abs(q)-float2(l,height)*0.5;
-    return length(max(q,0.0)) + min(max(q.x,q.y),0.0);    
+    return length(max(q,0.0)) + min(max(q.x,q.y),0.0);
 }
 
 //-----------------------------------------------------------------------------
