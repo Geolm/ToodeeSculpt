@@ -73,7 +73,7 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     }, this, 0);
 
     stm_setup();
-    m_StartTime = stm_now();
+    m_LastTime = m_StartTime = stm_now();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -148,6 +148,8 @@ void App::DrawGui()
 void App::Update(CA::MetalDrawable* drawable)
 {
     m_Time = (float)stm_sec(stm_since(m_StartTime));
+    m_DeltaTime = (float) stm_sec(stm_laptime(&m_LastTime));
+
     mu_begin(m_pGuiContext);
     m_Renderer.BeginFrame();
     m_Renderer.SetCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);

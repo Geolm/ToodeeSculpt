@@ -51,6 +51,7 @@ public:
     }
 
     uint32_t GetNumElements() const {return m_NumElements;}
+    uint32_t GetMaxElements() const {return m_MaxElements;}
 
 private:
     T* m_pData;
