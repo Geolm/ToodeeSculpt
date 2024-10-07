@@ -28,11 +28,11 @@ float smooth_substraction(float d1, float d2, float k)
     if (k>0.f)
     {
         float h = saturate(0.5f - 0.5f*(d2+d1)/k);
-        return mix(d2, -d1, h) + k*h*(1.0f-h);
+        return mix(d1, -d2, h) + k*h*(1.0f-h);
     }
     else
     {
-        return max(-d1, d2);
+        return max(-d2, d1);
     }
 }
 

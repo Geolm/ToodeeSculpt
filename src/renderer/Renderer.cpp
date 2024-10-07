@@ -457,6 +457,7 @@ void Renderer::BeginCombination(float smooth_value)
         
         if (m_CombinationAABB != nullptr && k != nullptr)
         {
+            smooth_value *= m_CanvasScale;
             *k = smooth_value;
             m_SmoothValue = smooth_value;
 

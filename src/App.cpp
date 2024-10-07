@@ -125,21 +125,21 @@ void App::DrawGui()
         switch (cmd->type) 
         {
         case MU_COMMAND_TEXT:
-            {
-                m_Renderer.DrawText((float)cmd->text.pos.x, (float)cmd->text.pos.y, cmd->text.str, from_mu_color(cmd->text.color));
-                break;
-            }
+        {
+            m_Renderer.DrawText((float)cmd->text.pos.x, (float)cmd->text.pos.y, cmd->text.str, from_mu_color(cmd->text.color));
+            break;
+        }
         case MU_COMMAND_RECT:
-            {
-                m_Renderer.DrawBox(x0, y0, x1, y1, from_mu_color(cmd->rect.color));
-                break;
-            }
+        {
+            m_Renderer.DrawBox(x0, y0, x1, y1, from_mu_color(cmd->rect.color));
+            break;
+        }
         case MU_COMMAND_CLIP : 
-            {
-                m_Renderer.SetClipRect((uint16_t)cmd->rect.rect.x, (uint16_t)cmd->rect.rect.y,
-                                       (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
-                break;
-            }
+        {
+            m_Renderer.SetClipRect((uint16_t)cmd->rect.rect.x, (uint16_t)cmd->rect.rect.y,
+                                    (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
+            break;
+        }
         }
     }
 }
@@ -154,9 +154,11 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
     m_Renderer.SetCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    m_Renderer.BeginCombination(50.f);
+    m_Renderer.BeginCombination(0.1f);
     m_Renderer.DrawOrientedBox(3.f, 8.f, 12.f, 2.f, 1.f, 0.2f, draw_color(32, 224, 32, 255));
     m_Renderer.DrawCircleFilled(4.f + sinf(m_Time), 6.f, 1.f, draw_color(224, 32, 32, 255), op_union);
+    m_Renderer.DrawCircleFilled(9.f + sinf(m_Time), 4.f + cosf(m_Time * 1.6666f), .5f, draw_color(0), op_subtraction);
+    m_Renderer.DrawOrientedBox(4.35f, 7.4, 4.65f, 6.6f, 0.35f, 0.1f, draw_color(0), op_subtraction);
     m_Renderer.EndCombination();
 
     m_Renderer.UserInterface(m_pGuiContext);

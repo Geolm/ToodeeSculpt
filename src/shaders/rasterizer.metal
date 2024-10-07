@@ -152,28 +152,28 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     switch(cmd.op)
                     {
                     case op_none : 
-                        {
-                            previous_distance = distance;
-                            previous_color = color;
-                            break;
-                        }
+                    {
+                        previous_distance = distance;
+                        previous_color = color;
+                        break;
+                    }
                     case op_union :
-                        {
-                            float2 smooth = smooth_minimum(distance, previous_distance, smooth_factor);
-                            previous_distance = smooth.x;
-                            previous_color = mix(color, previous_color, smooth.y);
-                            break;
-                        }
+                    {
+                        float2 smooth = smooth_minimum(distance, previous_distance, smooth_factor);
+                        previous_distance = smooth.x;
+                        previous_color = mix(color, previous_color, smooth.y);
+                        break;
+                    }
                     case op_subtraction :
-                        {
-                            previous_distance = smooth_substraction(previous_distance, distance, smooth_factor);
-                            break;
-                        }
+                    {
+                        previous_distance = smooth_substraction(previous_distance, distance, smooth_factor);
+                        break;
+                    }
                     case op_intersection :
-                        {
-                            previous_distance = smooth_intersection(previous_distance, distance, smooth_factor);
-                            break;
-                        }
+                    {
+                        previous_distance = smooth_intersection(previous_distance, distance, smooth_factor);
+                        break;
+                    }
                     }
                 }
                 else
