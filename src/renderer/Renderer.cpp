@@ -346,6 +346,9 @@ void Renderer::UserInterface(struct mu_Context* gui_context)
         mu_text(gui_context, "draw cmd count");
         snprintf(buffer, TEXT_BUFFER_SIZE, "%6d/%d", m_Commands.GetNumElements(), m_Commands.GetMaxElements());
         mu_text(gui_context, buffer);
+        mu_text(gui_context, "draw data buffer");
+        snprintf(buffer, TEXT_BUFFER_SIZE, "%6d/%d", m_DrawData.GetNumElements(), m_DrawData.GetMaxElements());
+        mu_text(gui_context, buffer);
         mu_text(gui_context, "aa width");
         mu_slider(gui_context, &m_AAWidth, 0.f, 4.f);
 

@@ -71,17 +71,17 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 break;
             }
             case combination_begin:
-                {
-                    smooth_border = 0.f;
-                    to_be_added = true;
-                    break;
-                }
+            {
+                smooth_border = 0.f;
+                to_be_added = true;
+                break;
+            }
             case combination_end:
-                {
-                    smooth_border = data[0];    // we traverse in reverse order, so the end comes first
-                    to_be_added = true;
-                    break;
-                }
+            {
+                smooth_border = data[0];    // we traverse in reverse order, so the end comes first
+                to_be_added = true;
+                break;
+            }
             case shape_aabox :
             case shape_char : to_be_added = true; break;
         }
