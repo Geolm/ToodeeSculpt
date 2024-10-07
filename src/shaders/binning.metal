@@ -22,6 +22,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     tile_enlarge_aabb.min -= input.aa_width; tile_enlarge_aabb.max += input.aa_width;
 
     float smooth_border = 0.f;
+    bool draw_something = false;
     
     // loop through draw commands in reverse order (because of the linked list)
     for(uint32_t i=input.num_commands; i-- > 0; )
@@ -98,11 +99,14 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 output.head[tile_index].command_index = i;
                 output.head[tile_index].next = new_node_index;
             }
+
+            if (input.commands[i].type != combination_begin && input.commands[i].type != combination_end)
+                draw_something = true;
         }
     }
 
     // if the tile has some draw command to proceed
-    if (output.head[tile_index].command_index != INVALID_INDEX)
+    if (draw_something)
     {
         uint pos = atomic_fetch_add_explicit(&counter.num_tiles, 1, memory_order_relaxed);
 
