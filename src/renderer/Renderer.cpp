@@ -445,6 +445,7 @@ void Renderer::SetCanvas(float width, float height)
 void Renderer::BeginCombination(float smooth_value)
 {
     assert(m_CombinationAABB == nullptr);
+    assert(smooth_value >= 0.f);
 
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
