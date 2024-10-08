@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2020 rxi
+** Copyright (c) 2024 rxi
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a copy
 ** of this software and associated documentation files (the "Software"), to
@@ -46,6 +46,7 @@
     (stk).idx--;           \
   } while (0)
 
+
 static mu_Rect unclipped_rect = { 0, 0, 0x1000000, 0x1000000 };
 
 static mu_Style default_style = {
@@ -70,6 +71,7 @@ static mu_Style default_style = {
     { 30,  30,  30,  255 }  /* MU_COLOR_SCROLLTHUMB */
   }
 };
+
 
 mu_Vec2 mu_vec2(int x, int y) {
   mu_Vec2 res;
@@ -868,7 +870,7 @@ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
       (ctx->mouse_down | ctx->mouse_pressed) == MU_MOUSE_LEFT)
   {
     v = low + (ctx->mouse_pos.x - base.x) * (high - low) / base.w;
-    if (step) { v = (((v + step / 2) / step)) * step; }
+    if (step) { v = ((long long)((v + step / 2) / step)) * step; }
   }
   /* clamp and store value, update res */
   *value = v = mu_clamp(v, low, high);
@@ -1085,7 +1087,7 @@ int mu_begin_window_ex(mu_Context *ctx, const char *title, mu_Rect rect, int opt
   if (!cnt || !cnt->open) { return 0; }
   push(ctx->id_stack, id);
 
-  if (cnt->rect.w == 0 || opt&MU_OPT_FORCE_SIZE) { cnt->rect = rect; }
+  if (cnt->rect.w == 0) { cnt->rect = rect; }
   begin_root_container(ctx, cnt);
   rect = body = cnt->rect;
 
@@ -1229,7 +1231,6 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
         mu_Layout *layout = get_layout(ctx);
         layout->size.y += (num_entries+1) * ctx->style->title_height;
     }
-
 
     mu_Rect rect = mu_layout_next(ctx);
     mu_Font font = ctx->style->font;
