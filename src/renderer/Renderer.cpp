@@ -556,7 +556,7 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float rounded, draw_color color, sdf_operator op)
+void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op)
 {
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -571,9 +571,9 @@ void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float wid
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width, rounded);
-            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, rounded + m_AAWidth + m_SmoothValue);
-            write_float(data,  x0, y0, x1, y1, width, rounded);
+            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width, roundness);
+            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, roundness + m_AAWidth + m_SmoothValue);
+            write_float(data,  x0, y0, x1, y1, width, roundness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);
             return;

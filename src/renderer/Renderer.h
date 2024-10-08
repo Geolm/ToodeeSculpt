@@ -31,7 +31,7 @@ public:
     void EndCombination();
     void DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op = op_none);
     void DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op = op_none);
-    void DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float rounded, draw_color color, sdf_operator op = op_none);
+    void DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op = op_none);
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawChar(float x, float y, char c, draw_color color);
     void DrawText(float x, float y, const char* text, draw_color color);
