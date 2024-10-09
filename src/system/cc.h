@@ -217,7 +217,7 @@ Including the library:
     #define CC_USE_ASSERT
       Define this flag to raise assert in critical case (out of bound access for example)
 
-    #define CC_OUTBOUND_CHECK
+    #define CC_OUTOFBOUND_CHECK
       By default, CC does not check out of bound access (you can get a value out of bound, insert anywhere etc...)
       Define this flag will make CC functions return NULL in case of out of bound access
 
@@ -1536,7 +1536,7 @@ static inline void *cc_vec_get(
   assert(*(size_t *)key < cc_vec_size(cntr));
 #endif
 
-#ifdef CC_OUTBOUND_CHECK
+#ifdef CC_OUTOFBOUND_CHECK
   if (*(size_t *)key >= cc_vec_size(cntr))
     return NULL;
 #endif
@@ -1595,7 +1595,7 @@ static inline cc_allocing_fn_result_ty cc_vec_insert_n(
   assert(index <= cc_vec_size(cntr));
 #endif
 
-#ifdef CC_OUTBOUND_CHECK
+#ifdef CC_OUTOFBOUND_CHECK
   if (index > cc_vec_size(cntr))
     return cc_make_allocing_fn_result( cntr, NULL );
 #endif
@@ -1691,7 +1691,7 @@ static inline void *cc_vec_erase_n(
   assert(index < cc_vec_size(cntr));
 #endif
 
-#ifdef CC_OUTBOUND_CHECK
+#ifdef CC_OUTOFBOUND_CHECK
   if (index >= cc_vec_size(cntr))
     return NULL;
 #endif
