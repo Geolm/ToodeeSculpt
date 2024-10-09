@@ -69,6 +69,7 @@
 		FBA5CD0D2BE931EB00398435 /* collision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = collision.h; sourceTree = "<group>"; };
 		FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBEDE94F2CB6D797000B478D /* stateless.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stateless.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +90,7 @@
 		FB2823392BF2D8A7009FC4FD /* system */ = {
 			isa = PBXGroup;
 			children = (
+				FBEDE94F2CB6D797000B478D /* stateless.h */,
 				FBA57B442CB081460033DD9A /* aabb.h */,
 				FBA57B452CB081460033DD9A /* sokol_time.h */,
 				FBA57B462CB081460033DD9A /* sokol_time.c */,
@@ -203,7 +205,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1540;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					FBB60DDE2BDC03E50029473C = {
 						CreatedOnToolsVersion = 15.3;
@@ -376,7 +378,7 @@
 					"$(inherited)",
 					/opt/homebrew/Cellar/glfw/3.4/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -390,7 +392,7 @@
 					"$(inherited)",
 					/opt/homebrew/Cellar/glfw/3.4/lib,
 				);
-				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
