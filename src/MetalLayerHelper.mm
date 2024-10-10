@@ -19,7 +19,19 @@ void MetalLayerHelper::InitWindow(const char* windowName, unsigned int window_wi
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
     m_Window = glfwCreateWindow(window_width, window_height, windowName, NULL, NULL);
+
+    float x_scale, y_scale;
+    glfwGetWindowContentScale(m_Window, &x_scale, &y_scale);
+    
+    // recreate the window if some scale is happening
+    if (x_scale != 1.f || y_scale != 1.f)
+    {
+        glfwDestroyWindow(m_Window);
+        m_Window = glfwCreateWindow((float)window_width / x_scale, (float)window_height / y_scale, windowName, NULL, NULL);
+    }
+    
     if (!m_Window)
     {
         glfwTerminate();
