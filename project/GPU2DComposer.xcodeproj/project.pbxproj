@@ -123,6 +123,8 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FB3C530C2BE2702700240FA8 /* shaders */,
+				FB90E13E2BE977D2004B4083 /* renderer */,
 				FB2823392BF2D8A7009FC4FD /* system */,
 				FB6C49722BE9C15600F2926D /* App.cpp */,
 				FB6C49732BE9C15600F2926D /* App.h */,
@@ -130,8 +132,6 @@
 				FB3F5D1C2BDC068000BC4892 /* Metal.hpp */,
 				FB6C49702BE9BFAE00F2926D /* MetalLayerHelper.h */,
 				FB6C496F2BE9BFAE00F2926D /* MetalLayerHelper.mm */,
-				FB90E13E2BE977D2004B4083 /* renderer */,
-				FB3C530C2BE2702700240FA8 /* shaders */,
 			);
 			name = src;
 			path = ../src;
