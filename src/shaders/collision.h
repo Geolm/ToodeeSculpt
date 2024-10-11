@@ -4,6 +4,11 @@ struct aabb
     float2 max;
 };
 
+aabb aabb_grow(aabb box, float2 amount)
+{
+    return (aabb) {.min = box.min - amount, .max = box.max + amount};
+}
+
 float2 skew(float2 v) {return float2(-v.y, v.x);}
 
 template <class T> T square(T value) {return value*value;}
@@ -87,4 +92,62 @@ bool intersection_aabb_obb(aabb box, float2 p0, float2 p1, float width)
         return false;
 
     return true;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+float3 edge_init(float2 a, float2 b)
+{
+    float3 edge;
+    edge.x = a.y - b.y;
+    edge.y = b.x - a.x;
+    edge.z = a.x * b.y - a.y * b.x;
+    return edge;
+}
+
+float edge_distance(float3 e, float2 p)
+{
+    return e.x * p.x + e.y * p.y + e.z;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+bool intersection_aabb_triangle(aabb box, float2 p0, float2 p1, float2 p2)
+{
+    // first axis : aabb's axis
+    if (p0.x < box.min.x && p1.x < box.min.x && p2.x < box.min.x)
+        return false;
+
+    if (p0.x > box.max.x && p1.x > box.max.x && p2.x > box.max.x)
+        return false;
+    
+    if (p0.y < box.min.y && p1.y < box.min.y && p2.y < box.min.y)
+        return false;
+
+    if (p0.y > box.max.y && p1.y > box.max.y && p2.y > box.max.y)
+        return false;
+    
+    float2 v[4];
+    v[0] = box.min;
+    v[1] = box.max;
+    v[2] = (float2) {box.min.x, box.max.y};
+    v[3] = (float2) {box.max.x, box.min.y};
+
+    // we can't assume any winding order for the triangle, so we check distance to the aabb's vertices sign against 
+    // distance to the other vertex of the triangle sign. If all aabb's vertices have a opposite sign, it's a separate axis.
+    float3 e = edge_init(p0, p1);
+    float4 vertices_distance = float4(edge_distance(e, v[0]), edge_distance(e, v[1]), edge_distance(e, v[2]), edge_distance(e, v[3]));
+    if (all(sign(vertices_distance) != sign(edge_distance(e, p2))))
+        return false;
+
+    e = edge_init(p1, p2);
+    vertices_distance = float4(edge_distance(e, v[0]), edge_distance(e, v[1]), edge_distance(e, v[2]), edge_distance(e, v[3]));
+    if (all(sign(vertices_distance) != sign(edge_distance(e, p0))))
+        return false;
+
+    e = edge_init(p2, p0);
+    vertices_distance = float4(edge_distance(e, v[0]), edge_distance(e, v[1]), edge_distance(e, v[2]), edge_distance(e, v[3]));
+    if (all(sign(vertices_distance) != sign(edge_distance(e, p1))))
+        return false;
+
+    return true;
+
 }

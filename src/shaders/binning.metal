@@ -47,10 +47,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
-                aabb tile_rounded = tile_enlarge_aabb;
-                float border = data[5] + smooth_border;
-                tile_rounded.min -= border;
-                tile_rounded.max += border;
+                aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[5] + smooth_border);
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
@@ -68,6 +65,15 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float radius = data[2] + input.aa_width + smooth_border;
                 float sq_radius = radius * radius;
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
+                break;
+            }
+            case shape_triangle_filled :
+            {
+                float2 p0 = float2(data[0], data[1]);
+                float2 p1 = float2(data[2], data[3]);
+                float2 p2 = float2(data[4], data[5]);
+                aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6] + smooth_border);
+                to_be_added = intersection_aabb_triangle(tile_rounded, p0, p1, p2);
                 break;
             }
             case combination_begin:

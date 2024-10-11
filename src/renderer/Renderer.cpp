@@ -386,11 +386,13 @@ inline static void write_float(float* buffer, float a, float b, float c) {write_
 inline static void write_float(float* buffer, float a, float b, float c, float d) {write_float(buffer, a, b, c); buffer[3] = d;}
 inline static void write_float(float* buffer, float a, float b, float c, float d, float e) {write_float(buffer, a, b, c, d); buffer[4] = e;}
 inline static void write_float(float* buffer, float a, float b, float c, float d, float e, float f) {write_float(buffer, a, b, c, d, e); buffer[5] = f;}
+inline static void write_float(float* buffer, float a, float b, float c, float d, float e, float f, float g) {write_float(buffer, a, b, c, d, e, f); buffer[6] = g;}
 inline static void canvas_to_screen(float scale, float &a, float &b) {a *= scale; b *= scale;}
 inline static void canvas_to_screen(float scale, float &a, float &b, float &c) {a *= scale; b *= scale; c *= scale;}
 inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d) {canvas_to_screen(scale, a, b, c); d *= scale;}
 inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d, float &e) {canvas_to_screen(scale, a, b, c, d); e *= scale;}
 inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d, float &e, float &f) {canvas_to_screen(scale, a, b, c, d, e); f *= scale;}
+inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d, float &e, float &f, float&g) {canvas_to_screen(scale, a, b, c, d, e, f); g *= scale;}
 
 template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 template<class T> T min(T a, T b) {return (a<b) ? a : b;}
@@ -599,13 +601,13 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
         cmd->type = shape_aabox;
 
         float* data = m_DrawData.NewMultiple(4);
-        quantized_aabb* aabb = m_CommandsAABB.NewElement();
-        if (data != nullptr && aabb != nullptr)
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
         {
             canvas_to_screen(m_CanvasScale, x0, y0, x1, y1);
             write_float(data, x0, y0, x1, y1);
-            write_aabb(aabb, x0, y0, x1, y1);
-            merge_aabb(m_CombinationAABB, aabb);
+            write_aabb(aabox, x0, y0, x1, y1);
+            merge_aabb(m_CombinationAABB, aabox);
             return;
         }
         m_Commands.RemoveLast();
@@ -630,12 +632,45 @@ void Renderer::DrawChar(float x, float y, char c, draw_color color)
         cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
 
         float* data = m_DrawData.NewMultiple(2);
-        quantized_aabb* aabb = m_CommandsAABB.NewElement();
-        if (data != nullptr && aabb != nullptr)
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
         {
             write_float(data, x, y);
-            write_aabb(aabb, x, y, x + FONT_WIDTH, y + FONT_HEIGHT);
-            merge_aabb(m_CombinationAABB, aabb);
+            write_aabb(aabox, x, y, x + FONT_WIDTH, y + FONT_HEIGHT);
+            merge_aabb(m_CombinationAABB, aabox);
+            return;
+        }
+        m_Commands.RemoveLast();
+    }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op)
+{
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = shape_triangle_filled;
+
+        float* data = m_DrawData.NewMultiple(7);
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            vec2_scale(p0, m_CanvasScale);
+            vec2_scale(p1, m_CanvasScale);
+            vec2_scale(p2, m_CanvasScale);
+            roundness *= m_CanvasScale;
+
+            aabb bb = aabb_from_triangle(p0, p1, p2);
+            aabb_grow(&bb, vec2_splat(roundness + m_AAWidth + m_SmoothValue));
+            write_float(data,  p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, roundness);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
             return;
         }
         m_Commands.RemoveLast();

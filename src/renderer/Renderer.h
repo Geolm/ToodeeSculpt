@@ -35,6 +35,7 @@ public:
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawChar(float x, float y, char c, draw_color color);
     void DrawText(float x, float y, const char* text, draw_color color);
+    void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_none);
     
 
 private:
