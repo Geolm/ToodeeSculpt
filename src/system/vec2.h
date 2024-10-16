@@ -74,9 +74,11 @@ static inline float vec2_normalize(vec2* v)
 static inline void operator+= (vec2& a, vec2 b) {a = vec2_add(a, b);}
 static inline void operator-= (vec2& a, vec2 b) {a = vec2_sub(a, b);}
 static inline void operator*= (vec2& a, vec2 b) {a = vec2_mul(a, b);}
+static inline void operator*= (vec2& a, float scale) {a = vec2_scale(a, scale);}
 static inline vec2 operator+ (vec2 a, vec2 b) {return vec2_add(a, b);}
 static inline vec2 operator- (vec2 a, vec2 b) {return vec2_sub(a, b);}
 static inline vec2 operator* (vec2 a, vec2 b) {return vec2_mul(a, b);}
+static inline vec2 operator* (vec2 a, float scale) {return vec2_scale(a, scale);}
 static inline bool operator!= (vec2 a, vec2 b) {return !vec2_equal(a, b);}
 
 
