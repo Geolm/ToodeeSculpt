@@ -88,50 +88,56 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 switch(cmd.type)
                 {
                 case shape_circle :
-                    {
-                        float2 center = float2(data[0], data[1]);
-                        float radius = data[2];
-                        float half_width = data[3];
-                        distance = abs(sd_disc(in.pos.xy, center, radius)) - half_width;
-                        break;
-                    }
+                {
+                    float2 center = float2(data[0], data[1]);
+                    float radius = data[2];
+                    float half_width = data[3];
+                    distance = abs(sd_disc(in.pos.xy, center, radius)) - half_width;
+                    break;
+                }
                 case shape_circle_filled :
-                    {
-                        float2 center = float2(data[0], data[1]);
-                        float radius = data[2];
-                        distance = sd_disc(in.pos.xy, center, radius);
-                        break;
-                    }
+                {
+                    float2 center = float2(data[0], data[1]);
+                    float radius = data[2];
+                    distance = sd_disc(in.pos.xy, center, radius);
+                    break;
+                }
                 case shape_oriented_box :
-                    {
-                        float2 p0 = float2(data[0], data[1]);
-                        float2 p1 = float2(data[2], data[3]);
-                        float width = data[4];
-                        float rounded = data[5];
-                        distance = sd_oriented_box(in.pos.xy, p0, p1, width) - rounded;
-                        break;
-                    }
+                {
+                    float2 p0 = float2(data[0], data[1]);
+                    float2 p1 = float2(data[2], data[3]);
+                    distance = sd_oriented_box(in.pos.xy, p0, p1, data[4]) - data[5];
+                    break;
+                }
                 case shape_aabox:
-                    {
-                        float2 min = float2(data[0], data[1]);
-                        float2 max = float2(data[2], data[3]);
-                        if (all(in.pos.xy >= min && in.pos.xy <= max))
-                            distance = 0.f;
-                        break;
-                    }
+                {
+                    float2 min = float2(data[0], data[1]);
+                    float2 max = float2(data[2], data[3]);
+                    if (all(in.pos.xy >= min && in.pos.xy <= max))
+                        distance = 0.f;
+                    break;
+                }
                 case shape_char:
+                {
+                    float2 top_left = float2(data[0], data[1]);
+                    float2 pos = (in.pos.xy - top_left) / input.font_scale;
+                    if (all(pos >= 0.f && pos <= input.font_size))
                     {
-                        float2 top_left = float2(data[0], data[1]);
-                        float2 pos = (in.pos.xy - top_left) / input.font_scale;
-                        if (all(pos >= 0.f && pos <= input.font_size))
-                        {
-                            ushort2 pixel_pos = (ushort2) pos;
-                            ushort bitfield = input.font[cmd.custom_data * (ushort) input.font_size.x + pixel_pos.x];
-                            if (bitfield&(1<<pixel_pos.y))
-                                distance = 0.f;
-                        }
-                        break;
+                        ushort2 pixel_pos = (ushort2) pos;
+                        ushort bitfield = input.font[cmd.custom_data * (ushort) input.font_size.x + pixel_pos.x];
+                        if (bitfield&(1<<pixel_pos.y))
+                            distance = 0.f;
                     }
+                    break;
+                }
+                case shape_triangle_filled:
+                {
+                    float2 p0 = float2(data[0], data[1]);
+                    float2 p1 = float2(data[2], data[3]);
+                    float2 p2 = float2(data[4], data[5]);
+                    distance = sd_triangle(in.pos.xy, p0, p1, p2) - data[6];
+                    break;
+                }
                 }
 
                 half4 color;

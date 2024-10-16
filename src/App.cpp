@@ -159,7 +159,14 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.DrawCircleFilled(4.f + sinf(m_Time), 6.f, 1.f, draw_color(224, 32, 32, 255), op_union);
     m_Renderer.DrawCircleFilled(9.f + sinf(m_Time), 4.f + cosf(m_Time * 1.6666f), .5f, draw_color(0), op_subtraction);
     m_Renderer.DrawOrientedBox(4.35f, 7.4, 4.65f, 6.6f, 0.35f, 0.1f, draw_color(0), op_subtraction);
+    
     m_Renderer.EndCombination();
+
+    m_Renderer.DrawTriangleFilled((vec2){3.f + cosf(m_Time) * 3.f, 3.f + sinf(m_Time)},
+                                  (vec2){6.f + cosf(m_Time*1.5f) * 3.f, 3.f},
+                                  (vec2){3.f, 6.f+ sinf(m_Time*2.f) * 2.f},
+                                  0.2f * fabsf(sinf(m_Time)), draw_color(128, 112, 224, 128));
+    
 
     m_Renderer.UserInterface(m_pGuiContext);
     LogUserInterface();
