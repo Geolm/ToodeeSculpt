@@ -100,7 +100,9 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
     free(shader_buffer);
 
     if (pLibrary == nullptr)
-        log_error("%s", pError->localizedDescription()->utf8String());
+    {
+        log_error("error while compiling : %s\n%s", name, pError->localizedDescription()->utf8String());
+    }
     
     return pLibrary;
 }
@@ -381,18 +383,23 @@ void Renderer::Terminate()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline static void write_float(float* buffer, float a, float b) {buffer[0] = a; buffer[1] = b;}
-inline static void write_float(float* buffer, float a, float b, float c) {write_float(buffer, a, b); buffer[2] = c;}
-inline static void write_float(float* buffer, float a, float b, float c, float d) {write_float(buffer, a, b, c); buffer[3] = d;}
-inline static void write_float(float* buffer, float a, float b, float c, float d, float e) {write_float(buffer, a, b, c, d); buffer[4] = e;}
-inline static void write_float(float* buffer, float a, float b, float c, float d, float e, float f) {write_float(buffer, a, b, c, d, e); buffer[5] = f;}
-inline static void write_float(float* buffer, float a, float b, float c, float d, float e, float f, float g) {write_float(buffer, a, b, c, d, e, f); buffer[6] = g;}
-inline static void canvas_to_screen(float scale, float &a, float &b) {a *= scale; b *= scale;}
-inline static void canvas_to_screen(float scale, float &a, float &b, float &c) {a *= scale; b *= scale; c *= scale;}
-inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d) {canvas_to_screen(scale, a, b, c); d *= scale;}
-inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d, float &e) {canvas_to_screen(scale, a, b, c, d); e *= scale;}
-inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d, float &e, float &f) {canvas_to_screen(scale, a, b, c, d, e); f *= scale;}
-inline static void canvas_to_screen(float scale, float &a, float &b, float &c, float &d, float &e, float &f, float&g) {canvas_to_screen(scale, a, b, c, d, e, f); g *= scale;}
+void write_float(float* buffer, float value) {*buffer = value;};
+template<typename...Args>
+void write_float(float* buffer, float value, Args ... args)
+{
+    *buffer = value;
+    write_float(++buffer, args...);
+}
+
+template<typename T>
+void canvas_to_screen(float scale, T& var){var *= scale;}
+
+template<typename T, typename... Args>
+void canvas_to_screen(float scale, T& var, Args & ... args)
+{
+    var *= scale;
+    canvas_to_screen(scale, args...);
+}
 
 template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 template<class T> T min(T a, T b) {return (a<b) ? a : b;}
@@ -661,9 +668,7 @@ void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, dr
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            vec2_scale(p0, m_CanvasScale);
-            vec2_scale(p1, m_CanvasScale);
-            vec2_scale(p2, m_CanvasScale);
+            canvas_to_screen(m_CanvasScale, p0, p1, p2);
             roundness *= m_CanvasScale;
 
             aabb bb = aabb_from_triangle(p0, p1, p2);
