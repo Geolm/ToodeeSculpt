@@ -169,7 +169,7 @@ void App::Update(CA::MetalDrawable* drawable)
 
     m_Renderer.DrawTriangle((vec2){8.f, 3.f},
                             (vec2){12.f, 5.f},
-                            (vec2){9.f, 8.f}, 0.1f, draw_color(128, 112, 224, 128));
+                            (vec2){9.f, 8.f}, 0.1f * (m_Time - floorf(m_Time)), draw_color(128, 112, 224, 128));
     
 
     m_Renderer.UserInterface(m_pGuiContext);

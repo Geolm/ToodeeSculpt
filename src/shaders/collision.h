@@ -149,5 +149,26 @@ bool intersection_aabb_triangle(aabb box, float2 p0, float2 p1, float2 p2)
         return false;
 
     return true;
+}
 
+//-----------------------------------------------------------------------------
+static inline float edge_sign(float2 p, float2 e0, float2 e1)
+{
+    return (p.x - e1.x) * (e0.y - e1.y) - (e0.x - e1.x) * (p.y - e1.y);
+}
+
+//-----------------------------------------------------------------------------
+bool test_point_triangle(float2 p0, float2 p1, float2 p2, float2 point)
+{
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+
+    d1 = edge_sign(point, p0, p1);
+    d2 = edge_sign(point, p1, p2);
+    d3 = edge_sign(point, p2, p0);
+
+    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(has_neg && has_pos);
 }

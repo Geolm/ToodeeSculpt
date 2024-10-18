@@ -75,6 +75,15 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p2 = float2(data[4], data[5]);
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6] + smooth_border);
                 to_be_added = intersection_aabb_triangle(tile_rounded, p0, p1, p2);
+
+                if (input.commands[i].type == shape_triangle)
+                {
+                    bool corners_inside = test_point_triangle(p0, p1, p2, tile_rounded.min);
+                    corners_inside &= test_point_triangle(p0, p1, p2, tile_rounded.max);
+                    corners_inside &= test_point_triangle(p0, p1, p2, float2(tile_rounded.max.x, tile_rounded.min.y));
+                    corners_inside &= test_point_triangle(p0, p1, p2, float2(tile_rounded.min.x, tile_rounded.max.y));
+                    to_be_added &= !corners_inside;
+                }
                 break;
             }
             case combination_begin:
