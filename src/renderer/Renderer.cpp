@@ -653,6 +653,18 @@ void Renderer::DrawChar(float x, float y, char c, draw_color color)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawText(float x, float y, const char* text, draw_color color)
+{
+    canvas_to_screen(m_CanvasScale, x, y);
+    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
+    for(const char *c = text; *c != 0; c++)
+    {
+        DrawChar(x, y, *c, color);
+        x += font_spacing;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op)
 {
     draw_command* cmd = m_Commands.NewElement();
@@ -684,14 +696,32 @@ void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, dr
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawText(float x, float y, const char* text, draw_color color)
+void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op)
 {
-    canvas_to_screen(m_CanvasScale, x, y);
-    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
-    for(const char *c = text; *c != 0; c++)
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
     {
-        DrawChar(x, y, *c, color);
-        x += font_spacing;
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = shape_triangle;
+
+        float* data = m_DrawData.NewMultiple(7);
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            canvas_to_screen(m_CanvasScale, p0, p1, p2);
+            float half_width = width * m_CanvasScale * .5f;
+            aabb bb = aabb_from_triangle(p0, p1, p2);
+            aabb_grow(&bb, vec2_splat(half_width + m_AAWidth + m_SmoothValue));
+            write_float(data,  p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, half_width);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
+            return;
+        }
+        m_Commands.RemoveLast();
     }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 

@@ -68,6 +68,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 break;
             }
             case shape_triangle_filled :
+            case shape_triangle :
             {
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);

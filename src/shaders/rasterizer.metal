@@ -130,12 +130,18 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     }
                     break;
                 }
+                case shape_triangle:
                 case shape_triangle_filled:
                 {
                     float2 p0 = float2(data[0], data[1]);
                     float2 p1 = float2(data[2], data[3]);
                     float2 p2 = float2(data[4], data[5]);
-                    distance = sd_triangle(in.pos.xy, p0, p1, p2) - data[6];
+                    distance = sd_triangle(in.pos.xy, p0, p1, p2);
+                    
+                    if (cmd.type == shape_triangle)
+                        distance = abs(distance);
+                        
+                    distance -= data[6];
                     break;
                 }
                 }
