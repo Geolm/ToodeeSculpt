@@ -36,10 +36,9 @@ enum command_type
 
 enum sdf_operator
 {
-    op_none = 0,
-    op_union = 1,
-    op_subtraction = 2,
-    op_intersection = 3
+    op_union = 0,
+    op_subtraction = 1,
+    op_intersection = 2
 };
 
 struct draw_color

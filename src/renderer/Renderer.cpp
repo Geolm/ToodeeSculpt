@@ -604,7 +604,7 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
         cmd->clip_index = (uint8_t) m_ClipsCount-1;
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
+        cmd->op = op_union;
         cmd->type = shape_aabox;
 
         float* data = m_DrawData.NewMultiple(4);
@@ -634,7 +634,7 @@ void Renderer::DrawChar(float x, float y, char c, draw_color color)
         cmd->clip_index = (uint8_t) m_ClipsCount-1;
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_none;
+        cmd->op = op_union;
         cmd->type = shape_char;
         cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
 

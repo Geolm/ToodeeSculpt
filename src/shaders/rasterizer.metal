@@ -163,12 +163,6 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 {
                     switch(cmd.op)
                     {
-                    case op_none : 
-                    {
-                        previous_distance = distance;
-                        previous_color = color;
-                        break;
-                    }
                     case op_union :
                     {
                         float2 smooth = smooth_minimum(distance, previous_distance, smooth_factor);

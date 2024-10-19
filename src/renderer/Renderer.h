@@ -29,14 +29,14 @@ public:
 
     void BeginCombination(float smooth_value);
     void EndCombination();
-    void DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op = op_none);
-    void DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op = op_none);
-    void DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op = op_none);
+    void DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op = op_union);
+    void DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op = op_union);
+    void DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op = op_union);
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawChar(float x, float y, char c, draw_color color);
     void DrawText(float x, float y, const char* text, draw_color color);
-    void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_none);
-    void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op = op_none);
+    void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
+    void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op = op_union);
     
 
 private:
