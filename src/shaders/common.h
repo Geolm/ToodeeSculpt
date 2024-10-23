@@ -10,6 +10,7 @@
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
 #ifndef __METAL_VERSION__
+#pragma once
 #define constant
 #define atomic_uint uint32_t
 #define device
