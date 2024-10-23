@@ -5,7 +5,7 @@
 #include "../shaders/common.h"
 #include "../system/PushArray.h"
 #include "../system/log.h"
-#include "../system/vec2.h"
+#include "../system/aabb.h"
 #include "font9x16.h"
 
 struct mu_Context;
@@ -33,10 +33,13 @@ public:
     void DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op = op_union);
     void DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op = op_union);
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
+    void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
     void DrawChar(float x, float y, char c, draw_color color);
     void DrawText(float x, float y, const char* text, draw_color color);
     void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
     void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op = op_union);
+
+
     
 
 private:
