@@ -1533,6 +1533,7 @@ static inline void *cc_vec_get(
 )
 {
 #ifdef CC_USE_ASSERT
+  assert(cntr != NULL);
   assert(*(size_t *)key < cc_vec_size(cntr));
 #endif
 
@@ -1592,6 +1593,7 @@ static inline cc_allocing_fn_result_ty cc_vec_insert_n(
 )
 {
 #ifdef CC_USE_ASSERT
+  assert(cntr != NULL);
   assert(index <= cc_vec_size(cntr));
 #endif
 
@@ -1688,6 +1690,13 @@ static inline void *cc_vec_erase_n(
 )
 {
 #ifdef CC_USE_ASSERT
+  assert(cntr != NULL);
+#endif
+
+  if( n == 0 )
+    return (char *)cntr + sizeof( cc_vec_hdr_ty ) + el_size * index;
+    
+#ifdef CC_USE_ASSERT
   assert(index < cc_vec_size(cntr));
 #endif
 
@@ -1696,8 +1705,6 @@ static inline void *cc_vec_erase_n(
     return NULL;
 #endif
 
-  if( n == 0 )
-    return (char *)cntr + sizeof( cc_vec_hdr_ty ) + el_size * index;
 
   if( el_dtor )
     for( size_t j = 0; j < n; ++j )
@@ -1848,6 +1855,10 @@ static inline void cc_vec_clear(
   CC_UNUSED( cc_free_fnptr_ty, free_ )
 )
 {
+#ifdef CC_USE_ASSERT
+  assert(cntr != NULL);
+#endif
+
   cc_vec_erase_n( cntr, 0, cc_vec_size( cntr ), el_size, el_dtor );
 }
 
