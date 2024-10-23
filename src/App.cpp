@@ -10,6 +10,7 @@
 #include "system/color_ramp.h"
 #include "system/sokol_time.h"
 #include <string.h>
+#include "Editor.h"
 
 static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.b, color.g, color.a);}
 static inline mu_Color to_mu_color(uint32_t packed_color) 
@@ -19,9 +20,6 @@ static inline mu_Color to_mu_color(uint32_t packed_color)
     *packed = packed_color;
     return result;
 }
-
-#define CANVAS_WIDTH (16.f)
-#define CANVAS_HEIGHT (9.f)
 
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Init(MTL::Device* device, GLFWwindow* window)
@@ -74,6 +72,9 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 
     stm_setup();
     m_LastTime = m_StartTime = stm_now();
+
+    m_pEditor = new Editor;
+    m_pEditor->Init((aabb) {.min = (vec2) {510.f, 100.f}, .max = (vec2) {1410.f, 900.f}});
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -152,25 +153,8 @@ void App::Update(CA::MetalDrawable* drawable)
 
     mu_begin(m_pGuiContext);
     m_Renderer.BeginFrame();
-    m_Renderer.SetCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    m_Renderer.BeginCombination(0.1f);
-    m_Renderer.DrawOrientedBox(3.f, 8.f, 12.f, 2.f, 1.f, 0.2f, draw_color(32, 224, 32, 192));
-    m_Renderer.DrawCircleFilled(4.f + sinf(m_Time), 6.f, 1.f, draw_color(224, 32, 32, 255));
-    m_Renderer.DrawCircleFilled(9.f + sinf(m_Time), 4.f + cosf(m_Time * 1.6666f), .5f, draw_color(0), op_subtraction);
-    m_Renderer.DrawOrientedBox(4.35f, 7.4, 4.65f, 6.6f, 0.35f, 0.1f, draw_color(0));
-    m_Renderer.EndCombination();
-
-    m_Renderer.DrawTriangleFilled((vec2){3.f + cosf(m_Time) * 3.f, 3.f + sinf(m_Time)},
-                                  (vec2){6.f + cosf(m_Time*1.5f) * 3.f, 3.f},
-                                  (vec2){3.f, 6.f+ sinf(m_Time*2.f) * 2.f},
-                                  0.2f * fabsf(sinf(m_Time)), draw_color(128, 112, 224, 128));
-
-    m_Renderer.DrawTriangle((vec2){8.f, 3.f},
-                            (vec2){12.f, 5.f},
-                            (vec2){9.f, 8.f}, 0.1f * (m_Time - floorf(m_Time)), draw_color(128, 112, 224, 128));
-    
-
+    m_pEditor->Draw(m_Renderer);
+    m_pEditor->UserInterface(m_pGuiContext);
     m_Renderer.UserInterface(m_pGuiContext);
     LogUserInterface();
     mu_end(m_pGuiContext);
@@ -233,11 +217,15 @@ void App::OnMouseButton(int button, int action, int mods)
         mu_input_mousedown(m_pGuiContext, (int)m_MouseX, (int)m_MouseY, mu_button);
     else if (action == GLFW_RELEASE)
         mu_input_mouseup(m_pGuiContext, (int)m_MouseX, (int)m_MouseY, mu_button);
+
+    m_pEditor->OnMouseButton(m_MouseX, m_MouseY, button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Terminate()
 {
+    m_pEditor->Terminate();
+    delete m_pEditor;
     m_Renderer.Terminate();
     free(m_pGuiContext);
     free(m_pLogBuffer);

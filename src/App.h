@@ -4,6 +4,7 @@
 
 struct GLFWwindow;
 struct mu_Context;
+class Editor;
 
 class App
 {
@@ -36,4 +37,6 @@ private:
     uint64_t m_LastTime;
     float m_Time;
     float m_DeltaTime;
+
+    Editor* m_pEditor;
 };

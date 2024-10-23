@@ -17,6 +17,8 @@
 		FB6C49742BE9C15600F2926D /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB6C49722BE9C15600F2926D /* App.cpp */; };
 		FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13A2BE977D2004B4083 /* Renderer.cpp */; };
 		FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13C2BE977D2004B4083 /* shader_reader.c */; };
+		FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDEA2CC93DF800608C34 /* Editor.cpp */; };
+		FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */; };
 		FBA57B472CB081460033DD9A /* sokol_time.c in Sources */ = {isa = PBXBuildFile; fileRef = FBA57B462CB081460033DD9A /* sokol_time.c */; };
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
 /* End PBXBuildFile section */
@@ -63,6 +65,11 @@
 		FB90E13B2BE977D2004B4083 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
 		FB90E13C2BE977D2004B4083 /* shader_reader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader_reader.c; sourceTree = "<group>"; };
 		FB90E13D2BE977D2004B4083 /* shader_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_reader.h; sourceTree = "<group>"; };
+		FB93DDE92CC93DF800608C34 /* Editor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Editor.h; sourceTree = "<group>"; };
+		FB93DDEA2CC93DF800608C34 /* Editor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Editor.cpp; sourceTree = "<group>"; };
+		FB93DDEB2CC93DF800608C34 /* Icons.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Icons.h; sourceTree = "<group>"; };
+		FB93DDEC2CC93DF800608C34 /* ShapesStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShapesStack.h; sourceTree = "<group>"; };
+		FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ShapesStack.cpp; sourceTree = "<group>"; };
 		FBA57B442CB081460033DD9A /* aabb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aabb.h; sourceTree = "<group>"; };
 		FBA57B452CB081460033DD9A /* sokol_time.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sokol_time.h; sourceTree = "<group>"; };
 		FBA57B462CB081460033DD9A /* sokol_time.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sokol_time.c; sourceTree = "<group>"; };
@@ -123,6 +130,11 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FB93DDE92CC93DF800608C34 /* Editor.h */,
+				FB93DDEA2CC93DF800608C34 /* Editor.cpp */,
+				FB93DDEB2CC93DF800608C34 /* Icons.h */,
+				FB93DDEC2CC93DF800608C34 /* ShapesStack.h */,
+				FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */,
 				FB3C530C2BE2702700240FA8 /* shaders */,
 				FB90E13E2BE977D2004B4083 /* renderer */,
 				FB2823392BF2D8A7009FC4FD /* system */,
@@ -242,6 +254,8 @@
 				FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */,
 				FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */,
 				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,
+				FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */,
+				FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */,
 				FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
