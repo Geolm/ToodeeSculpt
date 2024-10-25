@@ -39,9 +39,6 @@ public:
     void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
     void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op = op_union);
 
-
-    
-
 private:
     void BuildDepthStencilState();
     void BuildPSO();

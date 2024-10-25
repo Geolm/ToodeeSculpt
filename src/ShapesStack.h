@@ -21,6 +21,9 @@ public:
     void Terminate();
 
 private:
+    void ContextualMenu(struct mu_Context* gui_context);
+
+private:
 
     //----------------------------------------------------------------------------------------------------------------------------
     // internal structures
@@ -32,7 +35,7 @@ private:
 
     struct triangle_data
     {
-        vec2 p0, p1, p3;
+        vec2 p0, p1, p2;
     };
 
     struct disc_data
@@ -65,5 +68,8 @@ private:
     //----------------------------------------------------------------------------------------------------------------------------
     // private properties
     cc_vec(shape) m_Shapes;
+    aabb m_EditionZone;
+    vec2 m_ContextualMenuPosition;
+    bool m_ContextualMenuOpen;
 };
 
