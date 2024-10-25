@@ -17,7 +17,7 @@ static aabb aabb_from_circle(vec2 center, float radius);
 static aabb aabb_from_sector(vec2 center, float radius, float rotation, float aperture);
 static aabb aabb_from_triangle(vec2 v0, vec2 v1, vec2 v2);
 static aabb aabb_from_center(vec2 center, vec2 extent);
-static bool test_point_aabb(aabb box, vec2 point);
+static bool aabb_test_point(aabb box, vec2 point);
 
 //-----------------------------------------------------------------------------
 static inline bool aabb_is_valid(aabb box)
@@ -32,7 +32,7 @@ static inline aabb aabb_invalid(void)
 }
 
 //-----------------------------------------------------------------------------
-static inline bool test_point_aabb(aabb box, vec2 point)
+static inline bool aabb_test_point(aabb box, vec2 point)
 {
     return !(point.x < box.min.x || point.y < box.min.y || point.x > box.max.x || point.y > box.max.y);
 }
@@ -124,7 +124,7 @@ static inline aabb aabb_from_bezier(vec2 p0, vec2 p1, vec2 p2)
     box.min = vec2_min(p0, p2);
     box.max = vec2_max(p0, p2);
 
-    if (!test_point_aabb(box, p1))
+    if (!aabb_test_point(box, p1))
     {
         vec2 t = vec2_saturate(vec2_div(vec2_sub(p0, p1), vec2_add(vec2_add(p0, vec2_scale(p1, -2.f)), p2)));
         vec2 s = vec2_sub(vec2_splat(1.f), t);
