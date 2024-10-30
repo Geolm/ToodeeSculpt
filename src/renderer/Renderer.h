@@ -32,6 +32,7 @@ public:
     void DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op = op_union);
     void DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op = op_union);
     void DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op = op_union);
+    inline void DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, draw_color color, sdf_operator op = op_union);
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
     void DrawChar(float x, float y, char c, draw_color color);
@@ -98,5 +99,9 @@ inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x
         log_error("too many clip rectangle! maximum is %d", MAX_CLIPS);
 }
 
-
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, draw_color color, sdf_operator op)
+{
+    DrawOrientedBox(p0.x, p0.y, p1.x, p1.y, width, roundness, color, op);
+}
 

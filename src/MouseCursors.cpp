@@ -15,6 +15,7 @@ void MouseCursors::Init(struct GLFWwindow* window)
     m_pCursors[CursorType::Hand] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
     m_pCursors[CursorType::HResize] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
     m_pCursors[CursorType::VResize] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
+    m_pCursors[CursorType::ResizeAll] = glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

@@ -51,9 +51,15 @@ void ShapesStack::Draw(Renderer& renderer)
             renderer.DrawCircleFilled(m_ShapePoints[i].x, m_ShapePoints[i].y, 5.f, draw_color(na16_red, 128));
 
         // preview shape
-        if (m_ShapeType == command_type::shape_triangle_filled && m_CurrentPoint == 2)
-            renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
-        
+        if (m_ShapeType == command_type::shape_triangle_filled) 
+        {
+            if (m_CurrentPoint == 1)
+                renderer.DrawOrientedBox(m_ShapePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
+            else if (m_CurrentPoint == 2)            
+                renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
+
+            renderer.DrawCircleFilled(m_MousePosition.x, m_MousePosition.y, 5.f, draw_color(na16_red, 128));
+        }
     }
 }
 
@@ -107,6 +113,12 @@ void ShapesStack::SetState(enum state new_state)
         m_CurrentPoint = 0;
         m_ContextualMenuOpen = false;
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
+    }
+
+    if (m_CurrentState == state::ADDING_POINTS && new_state == state::SET_ROUNDNESS)
+    {
+        m_RoundnessReference = m_MousePosition;
+        MouseCursors::GetInstance().Default();
     }
 
     m_CurrentState = new_state;

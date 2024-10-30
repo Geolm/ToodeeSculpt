@@ -84,6 +84,7 @@ private:
     uint32_t m_ShapeNumPoints;
     uint32_t m_CurrentPoint;
     vec2 m_ShapePoints[SHAPE_MAXPOINTS];
+    vec2 m_RoundnessReference;
     command_type m_ShapeType;
 };
 

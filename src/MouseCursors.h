@@ -17,7 +17,8 @@ public:
         Hand = 3,
         HResize = 4,
         VResize = 5,
-        Count = 6
+        ResizeAll = 6,
+        Count = 7
     };
 
     void Init(struct GLFWwindow* window);
