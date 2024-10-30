@@ -11,9 +11,15 @@ void Editor::Init(aabb zone)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::OnMouseButton(float x, float y, int button, int action)
+void Editor::OnMouseMove(vec2 pos)
 {
-    m_ShapesStack.OnMouseButton(x, y, button, action);
+    m_ShapesStack.OnMouseMove(pos);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::OnMouseButton(vec2 pos, int button, int action)
+{
+    m_ShapesStack.OnMouseButton(pos, button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

@@ -15,7 +15,8 @@ class ShapesStack
 {
 public:
     void Init(aabb zone);
-    void OnMouseButton(float x, float y, int button, int action);
+    void OnMouseMove(vec2 pos) {m_MousePosition = pos;}
+    void OnMouseButton(vec2 pos, int button, int action);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
     void Terminate();
@@ -60,8 +61,7 @@ private:
         IDLE,
         SHAPE_SELECTED,
         ADDING_POINTS,
-        NEW_DISC,
-        NEW_BOX
+        SET_ROUNDNESS
     };
 
     enum {SHAPE_MAXPOINTS = 4};
@@ -77,11 +77,13 @@ private:
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_ContextualMenuOpen;
+    vec2 m_MousePosition;
 
     // shape creation
     state m_CurrentState;
     uint32_t m_ShapeNumPoints;
     uint32_t m_CurrentPoint;
     vec2 m_ShapePoints[SHAPE_MAXPOINTS];
+    command_type m_ShapeType;
 };
 

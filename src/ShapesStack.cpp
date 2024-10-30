@@ -4,6 +4,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include "MouseCursors.h"
+#include "system/na16_palette.h"
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Init(aabb zone)
@@ -17,10 +18,10 @@ void ShapesStack::Init(aabb zone)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void ShapesStack::OnMouseButton(float x, float y, int button, int action)
+void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
 {
-    vec2 mouse_pos = (vec2) {x, y};
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && m_CurrentState == state::IDLE)
+    // contextual menu
+    if (m_CurrentState == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
         if (aabb_test_point(m_EditionZone, mouse_pos))
         {
@@ -28,12 +29,32 @@ void ShapesStack::OnMouseButton(float x, float y, int button, int action)
             m_ContextualMenuPosition = mouse_pos;
         }
     }
+    // adding points
+    else if (m_CurrentState == state::ADDING_POINTS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        assert(m_CurrentPoint < SHAPE_MAXPOINTS);
+        m_ShapePoints[m_CurrentPoint++] = mouse_pos;
+
+        if (m_CurrentPoint == m_ShapeNumPoints)
+        {
+            SetState(state::SET_ROUNDNESS);
+        }
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Draw(Renderer& renderer)
 {
+    if (m_CurrentState == state::ADDING_POINTS)
+    {
+        for(uint32_t i=0; i<m_CurrentPoint; ++i)
+            renderer.DrawCircleFilled(m_ShapePoints[i].x, m_ShapePoints[i].y, 5.f, draw_color(na16_red, 128));
 
+        // preview shape
+        if (m_ShapeType == command_type::shape_triangle_filled && m_CurrentPoint == 2)
+            renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
+        
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -69,6 +90,7 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
             if (mu_button_ex(gui_context, "triangle", 0, 0))
             {
                 m_ShapeNumPoints = 3;
+                m_ShapeType = command_type::shape_triangle_filled;
                 SetState(state::ADDING_POINTS);
             }
             

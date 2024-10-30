@@ -55,6 +55,10 @@ struct draw_color
     {
         packed_data = color;
     }
+    draw_color(uint32_t rgb, uint8_t alpha)
+    {
+        packed_data = (alpha<<24) | (rgb&0x00ffffff);
+    }
 #endif
 };
 

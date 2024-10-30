@@ -203,7 +203,8 @@ void App::OnWindowResize(int width, int height)
 void App::OnMouseMove(float x, float y)
 {
     mu_input_mousemove(m_pGuiContext, (int)x, (int)y);
-    m_MouseX = x; m_MouseY = y;
+    m_MousePos = (vec2) {x, y};
+    m_pEditor->OnMouseMove(m_MousePos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -218,11 +219,11 @@ void App::OnMouseButton(int button, int action, int mods)
     }
 
     if (action == GLFW_PRESS)
-        mu_input_mousedown(m_pGuiContext, (int)m_MouseX, (int)m_MouseY, mu_button);
+        mu_input_mousedown(m_pGuiContext, (int)m_MousePos.x, (int)m_MousePos.y, mu_button);
     else if (action == GLFW_RELEASE)
-        mu_input_mouseup(m_pGuiContext, (int)m_MouseX, (int)m_MouseY, mu_button);
+        mu_input_mouseup(m_pGuiContext, (int)m_MousePos.x, (int)m_MousePos.y, mu_button);
 
-    m_pEditor->OnMouseButton(m_MouseX, m_MouseY, button, action);
+    m_pEditor->OnMouseButton(m_MousePos, button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
