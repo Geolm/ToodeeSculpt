@@ -3,6 +3,7 @@
 #include "system/microui.h"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include "MouseCursors.h"
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Init(aabb zone)
@@ -10,13 +11,16 @@ void ShapesStack::Init(aabb zone)
     cc_init(&m_Shapes);
     m_ContextualMenuOpen = false;
     m_EditionZone = zone;
+    m_CurrentState = state::IDLE;
+    m_ShapeNumPoints = 0;
+    m_CurrentPoint = 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::OnMouseButton(float x, float y, int button, int action)
 {
     vec2 mouse_pos = (vec2) {x, y};
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && m_CurrentState == state::IDLE)
     {
         if (aabb_test_point(m_EditionZone, mouse_pos))
         {
@@ -64,11 +68,26 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
 
             if (mu_button_ex(gui_context, "triangle", 0, 0))
             {
-                m_ContextualMenuOpen = false;
+                m_ShapeNumPoints = 3;
+                SetState(state::ADDING_POINTS);
             }
+            
             mu_end_window(gui_context);
         }
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void ShapesStack::SetState(enum state new_state)
+{
+    if (m_CurrentState == state::IDLE && new_state == state::ADDING_POINTS)
+    {
+        m_CurrentPoint = 0;
+        m_ContextualMenuOpen = false;
+        MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
+    }
+
+    m_CurrentState = new_state;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

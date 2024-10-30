@@ -21,10 +21,6 @@ public:
     void Terminate();
 
 private:
-    void ContextualMenu(struct mu_Context* gui_context);
-
-private:
-
     //----------------------------------------------------------------------------------------------------------------------------
     // internal structures
     struct box_data
@@ -59,17 +55,33 @@ private:
         sdf_operator op;
     };
 
-    enum mode
+    enum state
     {
-        MODE_IDLE,
-        MODE_NEW_SHAPE
+        IDLE,
+        SHAPE_SELECTED,
+        ADDING_POINTS,
+        NEW_DISC,
+        NEW_BOX
     };
 
+    enum {SHAPE_MAXPOINTS = 4};
+
+private:
+    void ContextualMenu(struct mu_Context* gui_context);
+    void SetState(enum state new_state);
+
+private:
     //----------------------------------------------------------------------------------------------------------------------------
-    // private properties
+    // properties
     cc_vec(shape) m_Shapes;
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_ContextualMenuOpen;
+
+    // shape creation
+    state m_CurrentState;
+    uint32_t m_ShapeNumPoints;
+    uint32_t m_CurrentPoint;
+    vec2 m_ShapePoints[SHAPE_MAXPOINTS];
 };
 

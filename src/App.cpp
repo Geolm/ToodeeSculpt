@@ -11,6 +11,7 @@
 #include "system/sokol_time.h"
 #include <string.h>
 #include "Editor.h"
+#include "MouseCursors.h"
 
 static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.b, color.g, color.a);}
 static inline mu_Color to_mu_color(uint32_t packed_color) 
@@ -69,6 +70,9 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 
         snprintf(user_ptr->m_pLogBuffer, user_ptr->m_LogSize, ev->fmt, ev->ap);
     }, this, 0);
+
+    MouseCursors::CreateInstance();
+    MouseCursors::GetInstance().Init(window);
 
     stm_setup();
     m_LastTime = m_StartTime = stm_now();
@@ -224,6 +228,7 @@ void App::OnMouseButton(int button, int action, int mods)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Terminate()
 {
+    MouseCursors::GetInstance().Terminate();
     m_pEditor->Terminate();
     delete m_pEditor;
     m_Renderer.Terminate();

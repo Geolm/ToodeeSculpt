@@ -12,6 +12,7 @@
 		FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D162BDC05DA00BC4892 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		FB3F5D192BDC05E600BC4892 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */; };
 		FB3F5D1B2BDC05EE00BC4892 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */; };
+		FB4011B72CD27CF00018C19C /* MouseCursors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB4011B62CD27CF00018C19C /* MouseCursors.cpp */; };
 		FB6341C32C1099A1003F8DE7 /* microui.c in Sources */ = {isa = PBXBuildFile; fileRef = FB6341C12C10963E003F8DE7 /* microui.c */; };
 		FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB6C496F2BE9BFAE00F2926D /* MetalLayerHelper.mm */; };
 		FB6C49742BE9C15600F2926D /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB6C49722BE9C15600F2926D /* App.cpp */; };
@@ -48,6 +49,10 @@
 		FB3F5D182BDC05E600BC4892 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		FB3F5D1A2BDC05EE00BC4892 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		FB3F5D1C2BDC068000BC4892 /* Metal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Metal.hpp; sourceTree = "<group>"; };
+		FB4011B32CD27CE00018C19C /* cc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cc.h; sourceTree = "<group>"; };
+		FB4011B42CD27CE00018C19C /* Singleton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Singleton.h; sourceTree = "<group>"; };
+		FB4011B52CD27CF00018C19C /* MouseCursors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MouseCursors.h; sourceTree = "<group>"; };
+		FB4011B62CD27CF00018C19C /* MouseCursors.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MouseCursors.cpp; sourceTree = "<group>"; };
 		FB41C0542BE5754900927906 /* binning.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = binning.metal; sourceTree = "<group>"; };
 		FB6341C12C10963E003F8DE7 /* microui.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = microui.c; sourceTree = "<group>"; };
 		FB6341C22C10963E003F8DE7 /* microui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = microui.h; sourceTree = "<group>"; };
@@ -97,6 +102,8 @@
 		FB2823392BF2D8A7009FC4FD /* system */ = {
 			isa = PBXGroup;
 			children = (
+				FB4011B32CD27CE00018C19C /* cc.h */,
+				FB4011B42CD27CE00018C19C /* Singleton.h */,
 				FBEDE94F2CB6D797000B478D /* stateless.h */,
 				FBA57B442CB081460033DD9A /* aabb.h */,
 				FBA57B452CB081460033DD9A /* sokol_time.h */,
@@ -130,6 +137,8 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FB4011B52CD27CF00018C19C /* MouseCursors.h */,
+				FB4011B62CD27CF00018C19C /* MouseCursors.cpp */,
 				FB93DDE92CC93DF800608C34 /* Editor.h */,
 				FB93DDEA2CC93DF800608C34 /* Editor.cpp */,
 				FB93DDEB2CC93DF800608C34 /* Icons.h */,
@@ -249,6 +258,7 @@
 			files = (
 				FB6341C32C1099A1003F8DE7 /* microui.c in Sources */,
 				FB28233A2BF2D8A7009FC4FD /* log.c in Sources */,
+				FB4011B72CD27CF00018C19C /* MouseCursors.cpp in Sources */,
 				FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */,
 				FBA57B472CB081460033DD9A /* sokol_time.c in Sources */,
 				FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */,

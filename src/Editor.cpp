@@ -21,6 +21,7 @@ void Editor::Draw(Renderer& renderer)
 {
     renderer.DrawBox(m_ExternalZone, draw_color(0, 0, 0, 0xff));
     renderer.DrawBox(m_Zone, draw_color(0xffffffff));
+    m_ShapesStack.Draw(renderer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
