@@ -7,6 +7,7 @@
 #include "shader_reader.h"
 #include "../system/microui.h"
 #include "../system/aabb.h"
+#include "../system/format.h"
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 #define TEXT_BUFFER_SIZE (1024)
@@ -337,23 +338,17 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::UserInterface(struct mu_Context* gui_context)
 {
-    char buffer[TEXT_BUFFER_SIZE];
-
     if (mu_begin_window_ex(gui_context, "Renderer Debug View", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_text(gui_context, "frame count");
-        snprintf(buffer, TEXT_BUFFER_SIZE, "%6d", m_FrameIndex);
-        mu_text(gui_context, buffer);
+        mu_text(gui_context, format("%6d", m_FrameIndex));
         mu_text(gui_context, "draw cmd count");
-        snprintf(buffer, TEXT_BUFFER_SIZE, "%6d/%d", m_Commands.GetNumElements(), m_Commands.GetMaxElements());
-        mu_text(gui_context, buffer);
+        mu_text(gui_context, format("%6d/%d", m_Commands.GetNumElements(), m_Commands.GetMaxElements()));
         mu_text(gui_context, "draw data buffer");
-        snprintf(buffer, TEXT_BUFFER_SIZE, "%6d/%d", m_DrawData.GetNumElements(), m_DrawData.GetMaxElements());
-        mu_text(gui_context, buffer);
+        mu_text(gui_context, format("%6d/%d", m_DrawData.GetNumElements(), m_DrawData.GetMaxElements()));
         mu_text(gui_context, "aa width");
         mu_slider(gui_context, &m_AAWidth, 0.f, 4.f);
-
         mu_end_window(gui_context);
     }
 }

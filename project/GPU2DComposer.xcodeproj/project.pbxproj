@@ -22,6 +22,7 @@
 		FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */; };
 		FBA57B472CB081460033DD9A /* sokol_time.c in Sources */ = {isa = PBXBuildFile; fileRef = FBA57B462CB081460033DD9A /* sokol_time.c */; };
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
+		FBB617702CD31A6000B80BA3 /* format.c in Sources */ = {isa = PBXBuildFile; fileRef = FBB6176E2CD31A6000B80BA3 /* format.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -81,6 +82,9 @@
 		FBA5CD0D2BE931EB00398435 /* collision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = collision.h; sourceTree = "<group>"; };
 		FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBB6176D2CD31A6000B80BA3 /* format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = format.h; sourceTree = "<group>"; };
+		FBB6176E2CD31A6000B80BA3 /* format.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = format.c; sourceTree = "<group>"; };
+		FBB6176F2CD31A6000B80BA3 /* na16_palette.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = na16_palette.h; sourceTree = "<group>"; };
 		FBEDE94F2CB6D797000B478D /* stateless.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stateless.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -102,6 +106,9 @@
 		FB2823392BF2D8A7009FC4FD /* system */ = {
 			isa = PBXGroup;
 			children = (
+				FBB6176D2CD31A6000B80BA3 /* format.h */,
+				FBB6176E2CD31A6000B80BA3 /* format.c */,
+				FBB6176F2CD31A6000B80BA3 /* na16_palette.h */,
 				FB4011B32CD27CE00018C19C /* cc.h */,
 				FB4011B42CD27CE00018C19C /* Singleton.h */,
 				FBEDE94F2CB6D797000B478D /* stateless.h */,
@@ -266,6 +273,7 @@
 				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,
 				FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */,
 				FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */,
+				FBB617702CD31A6000B80BA3 /* format.c in Sources */,
 				FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

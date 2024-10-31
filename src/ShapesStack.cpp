@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include "MouseCursors.h"
 #include "system/na16_palette.h"
+#include "system/format.h"
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Init(aabb zone)
@@ -66,6 +67,15 @@ void ShapesStack::Draw(Renderer& renderer)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::UserInterface(struct mu_Context* gui_context)
 {
+    if (mu_begin_window_ex(gui_context, "shapes stack", mu_rect(50, 400, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
+    {
+        for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
+        {
+            mu_header(gui_context, format("shape %d", i));
+        }
+
+        mu_end_window(gui_context);
+    }
     ContextualMenu(gui_context);
 }
 
