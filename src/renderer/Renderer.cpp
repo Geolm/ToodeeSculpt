@@ -567,6 +567,9 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op)
 {
+    if (x0 == x1 && y1 == y0)
+        return;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
