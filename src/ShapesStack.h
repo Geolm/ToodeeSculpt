@@ -15,7 +15,7 @@ class ShapesStack
 {
 public:
     void Init(aabb zone);
-    void OnMouseMove(vec2 pos) {m_MousePosition = pos;}
+    void OnMouseMove(vec2 pos);
     void OnMouseButton(vec2 pos, int button, int action);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
@@ -54,6 +54,7 @@ private:
         command_type shape_type;
         float roundness;
         sdf_operator op;
+        draw_color color;
     };
 
     enum state
@@ -85,6 +86,7 @@ private:
     uint32_t m_CurrentPoint;
     vec2 m_ShapePoints[SHAPE_MAXPOINTS];
     vec2 m_RoundnessReference;
+    float m_Roundness;
     command_type m_ShapeType;
 };
 
