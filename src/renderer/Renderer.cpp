@@ -665,6 +665,10 @@ void Renderer::DrawText(float x, float y, const char* text, draw_color color)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op)
 {
+    // exclude invalid triangle
+    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
+        return;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -696,6 +700,10 @@ void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, dr
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op)
 {
+    // exclude invalid triangle
+    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
+        return;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
