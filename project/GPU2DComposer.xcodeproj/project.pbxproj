@@ -84,7 +84,6 @@
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBB6176D2CD31A6000B80BA3 /* format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = format.h; sourceTree = "<group>"; };
 		FBB6176E2CD31A6000B80BA3 /* format.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = format.c; sourceTree = "<group>"; };
-		FBB6176F2CD31A6000B80BA3 /* na16_palette.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = na16_palette.h; sourceTree = "<group>"; };
 		FBEDE94F2CB6D797000B478D /* stateless.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stateless.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -108,7 +107,6 @@
 			children = (
 				FBB6176D2CD31A6000B80BA3 /* format.h */,
 				FBB6176E2CD31A6000B80BA3 /* format.c */,
-				FBB6176F2CD31A6000B80BA3 /* na16_palette.h */,
 				FB4011B32CD27CE00018C19C /* cc.h */,
 				FB4011B42CD27CE00018C19C /* Singleton.h */,
 				FBEDE94F2CB6D797000B478D /* stateless.h */,

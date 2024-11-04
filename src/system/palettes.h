@@ -1,9 +1,9 @@
-#ifndef __NA16PALETTE_H__
-#define __NA16PALETTE_H__
+#ifndef __PALETTES_H
+#define __PALETTES_H
 
 #include <stdint.h>
 
-// na16 palette https://lospec.com/palette-list/na16
+// https://lospec.com/palette-list/na16
 static const uint32_t na16_light_grey = 0xffae8f8c;
 static const uint32_t na16_dark_grey = 0xff634558;
 static const uint32_t na16_dark_brown = 0xff37213e;
@@ -22,4 +22,8 @@ static const uint32_t na16_dark_blue = 0xff4b4317;
 static const uint32_t na16_black = 0xff1c0e1f;
 
 
-#endif // __PALETTE_H__
+// https://lospec.com/palette-list/slso8
+static const uint32_t slso8_numentries = 8;
+static const uint32_t slso8_palette[slso8_numentries] = {0xff452b0d, 0xff563c20, 0xff684e54, 0xff7a698d, 0xff5981d0, 0xff5eaaff, 0xffa3d4ff, 0xffd6ecff};
+
+#endif // __PALETTES_H

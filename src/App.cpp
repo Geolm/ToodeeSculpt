@@ -13,12 +13,14 @@
 #include "Editor.h"
 #include "MouseCursors.h"
 
-static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.b, color.g, color.a);}
+static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.g, color.b, color.a);}
 static inline mu_Color to_mu_color(uint32_t packed_color) 
 {
-    mu_Color result; 
-    uint32_t* packed = (uint32_t*)&result.r;
-    *packed = packed_color;
+    mu_Color result;
+    result.a = (packed_color>>24)&0xff;
+    result.b = (packed_color>>16)&0xff;
+    result.g = (packed_color>>8)&0xff;
+    result.r = packed_color&0xff;
     return result;
 }
 
@@ -98,12 +100,12 @@ void App::InitGui()
 
     hueshift_ramp_desc ramp = 
     {
-        .hue = 220.0f,
-        .hue_shift = 60.0f,
-        .saturation_min = 0.1f,
-        .saturation_max = 0.9f,
-        .value_min = 0.2f,
-        .value_max = 1.0f
+        .hue = 216.0f,
+        .saturation = 0.65f,
+        .value = 0.15f,
+        .hue_shift = -150.f,
+        .saturation_shift = -1.f,
+        .value_shift = 1.0f
     };
 
     for(uint32_t i=0; i<MU_COLOR_MAX; ++i)
