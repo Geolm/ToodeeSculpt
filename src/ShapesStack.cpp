@@ -121,11 +121,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
 {
     if (mu_begin_window_ex(gui_context, "shapes stack", mu_rect(50, 400, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
     {
-        static char pouet[128];
-        mu_textbox(gui_context, pouet, sizeof(pouet));
-        
         int res = 0;
-
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_label(gui_context,"smooth blend :");
         res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
