@@ -180,12 +180,38 @@ void App::LogUserInterface()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnKeyEvent(int key, int scancode, int action, int mods)
 {
-    // TODO : add keycode conversion
+    int ui_key = 0;
+
+    if (key >= GLFW_KEY_SPACE && key <= GLFW_KEY_Z && action == GLFW_PRESS)
+    {
+        char text[2] = {(char)key, 0};
+        
+        if (!(mods&GLFW_MOD_SHIFT))
+            text[0] = tolower(key);
+
+        mu_input_text(m_pGuiContext, text);
+    }
+
+    if (key == GLFW_KEY_BACKSPACE)
+        ui_key |= MU_KEY_BACKSPACE;
+
+    if (key == GLFW_KEY_ENTER)
+        ui_key |= MU_KEY_RETURN;
+
+    if (mods&GLFW_MOD_SHIFT)
+        ui_key |= MU_KEY_SHIFT;
+
+    if (mods&GLFW_MOD_CONTROL)
+        ui_key |= MU_KEY_CTRL;
+
+    if (mods&GLFW_MOD_ALT)
+        ui_key |= MU_KEY_ALT;
+
     if (action == GLFW_PRESS)
-        mu_input_keydown(m_pGuiContext, key);
+        mu_input_keydown(m_pGuiContext, ui_key);
 
     if (action == GLFW_RELEASE)
-        mu_input_keyup(m_pGuiContext, key);
+        mu_input_keyup(m_pGuiContext, ui_key);
 
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
         m_Renderer.ReloadShaders();

@@ -26,7 +26,6 @@ private:
     // internal structures
     enum {SHAPE_MAXPOINTS = 4};
     enum {SHAPES_STACK_RESERVATION = 100};
-    enum {SHAPES_NAME_BUFFER_SIZE = 32};
 
     struct box_data
     {
@@ -59,7 +58,6 @@ private:
         float roundness;
         sdf_operator op;
         draw_color color;
-        char name[SHAPES_NAME_BUFFER_SIZE];
     };
 
     enum state

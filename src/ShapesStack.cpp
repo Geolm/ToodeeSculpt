@@ -62,7 +62,6 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p1 = m_ShapePoints[1];
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
         new_shape.color = draw_color(na16_purple);
-        snprintf(new_shape.name, SHAPES_NAME_BUFFER_SIZE, "shape %d", cc_size(&m_Shapes));
         cc_push(&m_Shapes, new_shape);
 
         SetState(state::IDLE);
@@ -111,6 +110,7 @@ void ShapesStack::Draw(Renderer& renderer)
                                             s->roundness, s->color, s->op);
                 break;
             }
+        default: break;
         }
     }
     renderer.EndCombination();
@@ -121,6 +121,9 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
 {
     if (mu_begin_window_ex(gui_context, "shapes stack", mu_rect(50, 400, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
     {
+        static char pouet[128];
+        mu_textbox(gui_context, pouet, sizeof(pouet));
+        
         int res = 0;
 
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
@@ -130,12 +133,9 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
         {
             shape *s = cc_get(&m_Shapes, i);
-            if (mu_header(gui_context, s->name))
+            if (mu_header(gui_context, format("shape #%d", i)))
             {
                 mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
-                mu_label(gui_context,"name:");
-                res |= mu_textbox_ex(gui_context, s->name, SHAPES_NAME_BUFFER_SIZE, 0);
-
                 mu_label(gui_context,"type:");
                 switch(s->shape_type)
                 {
@@ -173,7 +173,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
 
         // if something has changed, handle undo
-        if (res & MU_RES_CHANGE)
+        if (res & (MU_RES_CHANGE|MU_RES_SUBMIT))
         {
             // TODO : undo
         }
