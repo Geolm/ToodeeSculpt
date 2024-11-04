@@ -11,11 +11,13 @@
 void ShapesStack::Init(aabb zone)
 {
     cc_init(&m_Shapes);
+    cc_reserve(&m_Shapes, SHAPES_STACK_RESERVATION);
     m_ContextualMenuOpen = false;
     m_EditionZone = zone;
     m_CurrentState = state::IDLE;
     m_ShapeNumPoints = 0;
     m_CurrentPoint = 0;
+    m_SmoothBlend = 1.f;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -60,6 +62,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p1 = m_ShapePoints[1];
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
         new_shape.color = draw_color(na16_purple);
+        snprintf(new_shape.name, SHAPES_NAME_BUFFER_SIZE, "shape %d", cc_size(&m_Shapes));
         cc_push(&m_Shapes, new_shape);
 
         SetState(state::IDLE);
@@ -72,7 +75,7 @@ void ShapesStack::Draw(Renderer& renderer)
     if (m_CurrentState == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawCircleFilled(m_ShapePoints[i].x, m_ShapePoints[i].y, 5.f, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(m_ShapePoints[i], 5.f, draw_color(na16_red, 128));
 
         // preview shape
         if (m_ShapeType == command_type::shape_triangle_filled) 
@@ -82,18 +85,20 @@ void ShapesStack::Draw(Renderer& renderer)
             else if (m_CurrentPoint == 2)            
                 renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
 
-            renderer.DrawCircleFilled(m_MousePosition.x, m_MousePosition.y, 5.f, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(m_MousePosition, 5.f, draw_color(na16_red, 128));
         }
     }
     else if (m_CurrentState == state::SET_ROUNDNESS)
     {
+        renderer.DrawCircleFilled(m_RoundnessReference, 5.f, draw_color(na16_red, 128));
+
         // preview shape
         if (m_ShapeType == command_type::shape_triangle_filled) 
             renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_ShapePoints[2], m_Roundness, draw_color(na16_light_blue, 128));
     }
 
     // drawing *the* shapes
-    renderer.BeginCombination(1.f);
+    renderer.BeginCombination(m_SmoothBlend);
     for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
     {
         shape *s = cc_get(&m_Shapes, i);
@@ -116,12 +121,62 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
 {
     if (mu_begin_window_ex(gui_context, "shapes stack", mu_rect(50, 400, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
     {
+        int res = 0;
+
+        mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
+        mu_label(gui_context,"smooth blend :");
+        res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
+
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
         {
-            mu_header(gui_context, format("shape %d", i));
+            shape *s = cc_get(&m_Shapes, i);
+            if (mu_header(gui_context, s->name))
+            {
+                mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
+                mu_label(gui_context,"name:");
+                res |= mu_textbox_ex(gui_context, s->name, SHAPES_NAME_BUFFER_SIZE, 0);
+
+                mu_label(gui_context,"type:");
+                switch(s->shape_type)
+                {
+                case command_type::shape_circle_filled : 
+                {
+                    mu_text(gui_context, "disc");
+                    mu_label(gui_context, "center");
+                    mu_text(gui_context, format("x:%f, y:%f", s->shape_desc.disc.center.x, s->shape_desc.disc.center.y));
+                    mu_label(gui_context, "radius");
+                    res |= mu_slider_ex(gui_context, &s->shape_desc.disc.radius, 0.f, 100.f, 1.f, "%3.0f", 0);
+                    break;
+                }
+                case command_type::shape_triangle_filled : 
+                {
+                    mu_text(gui_context, "triangle");
+                    mu_label(gui_context, "point0");
+                    mu_text(gui_context, format("x:%4.1f, y:%4.1f", s->shape_desc.triangle.p0.x, s->shape_desc.triangle.p0.y));
+                    mu_label(gui_context, "point1");
+                    mu_text(gui_context, format("x:%4.1f, y:%4.1f", s->shape_desc.triangle.p1.x, s->shape_desc.triangle.p1.y));
+                    mu_label(gui_context, "point2");
+                    mu_text(gui_context, format("x:%4.1f, y:%4.1f", s->shape_desc.triangle.p2.x, s->shape_desc.triangle.p2.y));
+                    mu_label(gui_context, "roundness");
+                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3f", 0);
+                    break;
+                }
+                case command_type::shape_oriented_box : mu_text(gui_context, "box");break;
+                default : break;
+                }
+
+                mu_label(gui_context, "color");
+                mu_text(gui_context, format("%8x", s->color));
+            }
         }
 
         mu_end_window(gui_context);
+
+        // if something has changed, handle undo
+        if (res & MU_RES_CHANGE)
+        {
+            // TODO : undo
+        }
     }
     ContextualMenu(gui_context);
 }

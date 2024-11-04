@@ -24,6 +24,10 @@ public:
 private:
     //----------------------------------------------------------------------------------------------------------------------------
     // internal structures
+    enum {SHAPE_MAXPOINTS = 4};
+    enum {SHAPES_STACK_RESERVATION = 100};
+    enum {SHAPES_NAME_BUFFER_SIZE = 32};
+
     struct box_data
     {
         vec2 p0, p1;
@@ -55,6 +59,7 @@ private:
         float roundness;
         sdf_operator op;
         draw_color color;
+        char name[SHAPES_NAME_BUFFER_SIZE];
     };
 
     enum state
@@ -65,16 +70,14 @@ private:
         SET_ROUNDNESS
     };
 
-    enum {SHAPE_MAXPOINTS = 4};
-
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
 
 private:
-    //----------------------------------------------------------------------------------------------------------------------------
-    // properties
+    
     cc_vec(shape) m_Shapes;
+    float m_SmoothBlend;
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_ContextualMenuOpen;
