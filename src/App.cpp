@@ -91,11 +91,10 @@ void App::InitGui()
     {
         if (len == -1)
             len = (int)strlen(text);
-
-        return len * FONT_SPACING;
+        return len * (FONT_WIDTH + FONT_SPACING);
     };
 
-    m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT; };
+    m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT + FONT_SPACING; };
 
     hueshift_ramp_desc ramp = 
     {
@@ -180,8 +179,6 @@ void App::LogUserInterface()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnKeyEvent(int key, int scancode, int action, int mods)
 {
-    int ui_key = 0;
-
     if (key >= GLFW_KEY_SPACE && key <= GLFW_KEY_Z && action == GLFW_PRESS)
     {
         char text[2] = {(char)key, 0};
@@ -192,19 +189,20 @@ void App::OnKeyEvent(int key, int scancode, int action, int mods)
         mu_input_text(m_pGuiContext, text);
     }
 
+    int ui_key = 0;
     if (key == GLFW_KEY_BACKSPACE)
         ui_key |= MU_KEY_BACKSPACE;
 
     if (key == GLFW_KEY_ENTER)
         ui_key |= MU_KEY_RETURN;
 
-    if (mods&GLFW_MOD_SHIFT)
+    if (key == GLFW_KEY_RIGHT_SHIFT || key == GLFW_KEY_LEFT_SHIFT)
         ui_key |= MU_KEY_SHIFT;
 
-    if (mods&GLFW_MOD_CONTROL)
+    if (key == GLFW_KEY_RIGHT_CONTROL || key == GLFW_KEY_LEFT_CONTROL)
         ui_key |= MU_KEY_CTRL;
 
-    if (mods&GLFW_MOD_ALT)
+    if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
         ui_key |= MU_KEY_ALT;
 
     if (action == GLFW_PRESS)
