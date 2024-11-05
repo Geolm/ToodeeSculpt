@@ -61,7 +61,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p0 = m_ShapePoints[0];
         new_shape.shape_desc.triangle.p1 = m_ShapePoints[1];
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
-        new_shape.color = draw_color(na16_purple);
+        new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f, .alpha = 1.f};
         cc_push(&m_Shapes, new_shape);
 
         SetState(state::IDLE);
@@ -101,13 +101,15 @@ void ShapesStack::Draw(Renderer& renderer)
     for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
     {
         shape *s = cc_get(&m_Shapes, i);
+        draw_color color;
+        color.from_float(s->color.red, s->color.green, s->color.blue, s->color.alpha);
 
         switch(s->shape_type)
         {
         case command_type::shape_triangle_filled: 
             {
                 renderer.DrawTriangleFilled(s->shape_desc.triangle.p0, s->shape_desc.triangle.p1, s->shape_desc.triangle.p2, 
-                                            s->roundness, s->color, s->op);
+                                            s->roundness, color, s->op);
                 break;
             }
         default: break;
@@ -138,8 +140,6 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
                 case command_type::shape_circle_filled : 
                 {
                     mu_text(gui_context, "disc");
-                    mu_label(gui_context, "center");
-                    mu_text(gui_context, format("x:%f, y:%f", s->shape_desc.disc.center.x, s->shape_desc.disc.center.y));
                     mu_label(gui_context, "radius");
                     res |= mu_slider_ex(gui_context, &s->shape_desc.disc.radius, 0.f, 100.f, 1.f, "%3.0f", 0);
                     break;
@@ -147,12 +147,6 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
                 case command_type::shape_triangle_filled : 
                 {
                     mu_text(gui_context, "triangle");
-                    mu_label(gui_context, "point0");
-                    mu_text(gui_context, format("x:%4.1f, y:%4.1f", s->shape_desc.triangle.p0.x, s->shape_desc.triangle.p0.y));
-                    mu_label(gui_context, "point1");
-                    mu_text(gui_context, format("x:%4.1f, y:%4.1f", s->shape_desc.triangle.p1.x, s->shape_desc.triangle.p1.y));
-                    mu_label(gui_context, "point2");
-                    mu_text(gui_context, format("x:%4.1f, y:%4.1f", s->shape_desc.triangle.p2.x, s->shape_desc.triangle.p2.y));
                     mu_label(gui_context, "roundness");
                     res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3f", 0);
                     break;
@@ -161,8 +155,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
                 default : break;
                 }
 
-                mu_label(gui_context, "color");
-                mu_text(gui_context, format("%8x", s->color));
+                res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
             }
         }
 

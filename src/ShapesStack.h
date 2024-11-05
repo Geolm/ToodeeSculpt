@@ -51,13 +51,19 @@ private:
         struct triangle_data triangle;
     };
 
+    union shape_color
+    {
+        struct {float red, green, blue, alpha;};
+        struct {float hue, saturation, value;};
+    };
+
     struct shape
     {
         shape_data shape_desc;
         command_type shape_type;
         float roundness;
         sdf_operator op;
-        draw_color color;
+        shape_color color;
     };
 
     enum state

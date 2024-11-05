@@ -1207,11 +1207,16 @@ void mu_end_panel(mu_Context *ctx) {
   pop_container(ctx);
 }
 
-void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries, int expand_layout)
+//----------------------------------------------------------------------------------------------------------------------------
+// Custom controls, probably requires C99
+//----------------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------------------------
+int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries)
 {
     // bad parameters check
     if (expanded == NULL || index == NULL || entries == NULL || num_entries < 1)
-        return;
+        return 0;
 
     // look for the longest string in the entries to size the combo box
     int longest_entry = -1;
@@ -1226,12 +1231,7 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
         }
     }
 
-    if (expand_layout && *expanded)
-    {
-        mu_Layout *layout = get_layout(ctx);
-        layout->size.y += (num_entries+1) * ctx->style->title_height;
-    }
-
+    int res = 0;
     mu_Rect rect = mu_layout_next(ctx);
     mu_Font font = ctx->style->font;
     mu_Rect text_box = mu_rect(rect.x, rect.y, ctx->text_width(font, entries[longest_index], longest_entry) + ctx->style->padding, ctx->style->indent);
@@ -1253,6 +1253,7 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
             {
                 *index = i;
                 *expanded = 0;
+                res |= MU_RES_CHANGE;
             }
 
             mu_Color color = (ctx->hover == entry_id) ? ctx->style->colors[MU_COLOR_BUTTONHOVER] : ctx->style->colors[MU_COLOR_TITLEBG];
@@ -1271,5 +1272,39 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
     if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == button_id)
         *expanded = !*expanded;
 
-    return;
+    return res;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
+{
+    const float hash_array[3] = {*red, *green, *blue};
+    mu_Id     id = mu_get_id(ctx, hash_array, sizeof(hash_array));
+    mu_Rect rect = mu_layout_next(ctx);
+    mu_update_control(ctx, id, rect, 0);
+
+    int res = 0;
+    mu_layout_row(ctx, 2, (int[]) { 100, -1 }, 0);
+    mu_label(ctx, "color");
+    mu_Rect r = mu_layout_next(ctx);
+    mu_draw_rect(ctx, r, mu_color((int)(*red*255.f), (int)(*green*255.f), (int)(*blue*255.f), 255));
+    mu_label(ctx, "red:");
+    res |= mu_slider_ex(ctx, red, 0.f, 1.f, 0.001f, "%1.2f", 0);
+    mu_label(ctx, "green:");
+    res |= mu_slider_ex(ctx, green, 0.f, 1.f, 0.001f, "%1.2f", 0);
+    mu_label(ctx, "blue:");
+    res |= mu_slider_ex(ctx, blue, 0.f, 1.f, 0.001f, "%1.2f", 0);
+    return res;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+int mu_hsv_color(mu_Context *ctx, float *hue, float *saturation, float *value)
+{
+    mu_Id     id = mu_get_id(ctx, &hue, sizeof(hue));
+    mu_Rect rect = mu_layout_next(ctx);
+    mu_update_control(ctx, id, rect, 0);
+
+    int res = 0;
+
+    return res;
 }
