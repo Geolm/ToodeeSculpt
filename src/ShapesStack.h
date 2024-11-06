@@ -64,6 +64,9 @@ private:
         float roundness;
         sdf_operator op;
         shape_color color;
+
+        // gui specific
+        int op_combo_expanded;
     };
 
     enum state
@@ -77,6 +80,8 @@ private:
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
+    bool MouseCursorInShape(const shape* s);
+    void DrawShapeGizmo(Renderer& renderer, const shape* s);
 
 private:
     

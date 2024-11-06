@@ -16,6 +16,7 @@
 		FB6341C32C1099A1003F8DE7 /* microui.c in Sources */ = {isa = PBXBuildFile; fileRef = FB6341C12C10963E003F8DE7 /* microui.c */; };
 		FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB6C496F2BE9BFAE00F2926D /* MetalLayerHelper.mm */; };
 		FB6C49742BE9C15600F2926D /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB6C49722BE9C15600F2926D /* App.cpp */; };
+		FB8C687F2CDB003A007875D7 /* inside.c in Sources */ = {isa = PBXBuildFile; fileRef = FB8C687D2CDB003A007875D7 /* inside.c */; };
 		FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13A2BE977D2004B4083 /* Renderer.cpp */; };
 		FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13C2BE977D2004B4083 /* shader_reader.c */; };
 		FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDEA2CC93DF800608C34 /* Editor.cpp */; };
@@ -66,6 +67,9 @@
 		FB8255512C8B9836005C34C1 /* float16.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = float16.h; sourceTree = "<group>"; };
 		FB8255522C8B9836005C34C1 /* vec2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vec2.h; sourceTree = "<group>"; };
 		FB861FA72CA20A9F00C63D00 /* operators.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = operators.h; sourceTree = "<group>"; };
+		FB8C687C2CDB003A007875D7 /* inside.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inside.h; sourceTree = "<group>"; };
+		FB8C687D2CDB003A007875D7 /* inside.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = inside.c; sourceTree = "<group>"; };
+		FB8C687E2CDB003A007875D7 /* palettes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = palettes.h; sourceTree = "<group>"; };
 		FB90E1392BE977D2004B4083 /* DynamicBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicBuffer.h; sourceTree = "<group>"; };
 		FB90E13A2BE977D2004B4083 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Renderer.cpp; sourceTree = "<group>"; };
 		FB90E13B2BE977D2004B4083 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
@@ -105,6 +109,9 @@
 		FB2823392BF2D8A7009FC4FD /* system */ = {
 			isa = PBXGroup;
 			children = (
+				FB8C687C2CDB003A007875D7 /* inside.h */,
+				FB8C687D2CDB003A007875D7 /* inside.c */,
+				FB8C687E2CDB003A007875D7 /* palettes.h */,
 				FBB6176D2CD31A6000B80BA3 /* format.h */,
 				FBB6176E2CD31A6000B80BA3 /* format.c */,
 				FB4011B32CD27CE00018C19C /* cc.h */,
@@ -267,6 +274,7 @@
 				FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */,
 				FBA57B472CB081460033DD9A /* sokol_time.c in Sources */,
 				FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */,
+				FB8C687F2CDB003A007875D7 /* inside.c in Sources */,
 				FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */,
 				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,
 				FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */,

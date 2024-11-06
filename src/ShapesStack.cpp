@@ -6,6 +6,7 @@
 #include "MouseCursors.h"
 #include "system/palettes.h"
 #include "system/format.h"
+#include "system/inside.h"
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Init(aabb zone)
@@ -62,6 +63,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p1 = m_ShapePoints[1];
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
         new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f, .alpha = 1.f};
+        new_shape.op_combo_expanded = false;
         cc_push(&m_Shapes, new_shape);
 
         SetState(state::IDLE);
@@ -71,31 +73,6 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Draw(Renderer& renderer)
 {
-    if (m_CurrentState == state::ADDING_POINTS)
-    {
-        for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawCircleFilled(m_ShapePoints[i], 5.f, draw_color(na16_red, 128));
-
-        // preview shape
-        if (m_ShapeType == command_type::shape_triangle_filled) 
-        {
-            if (m_CurrentPoint == 1)
-                renderer.DrawOrientedBox(m_ShapePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
-            else if (m_CurrentPoint == 2)            
-                renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
-
-            renderer.DrawCircleFilled(m_MousePosition, 5.f, draw_color(na16_red, 128));
-        }
-    }
-    else if (m_CurrentState == state::SET_ROUNDNESS)
-    {
-        renderer.DrawCircleFilled(m_RoundnessReference, 5.f, draw_color(na16_red, 128));
-
-        // preview shape
-        if (m_ShapeType == command_type::shape_triangle_filled) 
-            renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_ShapePoints[2], m_Roundness, draw_color(na16_light_blue, 128));
-    }
-
     // drawing *the* shapes
     renderer.BeginCombination(m_SmoothBlend);
     for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
@@ -116,6 +93,40 @@ void ShapesStack::Draw(Renderer& renderer)
         }
     }
     renderer.EndCombination();
+
+    if (m_CurrentState == state::ADDING_POINTS)
+    {
+        for(uint32_t i=0; i<m_CurrentPoint; ++i)
+            renderer.DrawCircleFilled(m_ShapePoints[i], 5.f, draw_color(na16_red, 128));
+
+        // preview shape
+        if (m_ShapeType == command_type::shape_triangle_filled) 
+        {
+            if (m_CurrentPoint == 1)
+                renderer.DrawOrientedBox(m_ShapePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
+            else if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_ShapePoints[1], m_ShapePoints[2], 0.001f)))
+                renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
+
+            renderer.DrawCircleFilled(m_MousePosition, 5.f, draw_color(na16_red, 128));
+        }
+    }
+    else if (m_CurrentState == state::SET_ROUNDNESS)
+    {
+        renderer.DrawCircleFilled(m_RoundnessReference, 5.f, draw_color(na16_red, 128));
+
+        // preview shape
+        if (m_ShapeType == command_type::shape_triangle_filled) 
+            renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_ShapePoints[2], m_Roundness, draw_color(na16_light_blue, 128));
+    }
+    else if (m_CurrentState == state::IDLE)
+    {
+        for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
+        {
+            shape *s = cc_get(&m_Shapes, i);
+            if (MouseCursorInShape(s))
+                DrawShapeGizmo(renderer, s);
+        }
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -125,7 +136,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
     {
         int res = 0;
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-        mu_label(gui_context,"smooth blend :");
+        mu_label(gui_context,"smooth blend");
         res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
 
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
@@ -134,7 +145,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             if (mu_header(gui_context, format("shape #%d", i)))
             {
                 mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
-                mu_label(gui_context,"type:");
+                mu_label(gui_context,"type");
                 switch(s->shape_type)
                 {
                 case command_type::shape_circle_filled : 
@@ -156,6 +167,11 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
                 }
 
                 res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
+
+                _Static_assert(sizeof(s->op) == sizeof(int));
+                mu_label(gui_context, "sdf op");
+                const char* op_names[3] = {"union", "substraction", "intersection"};
+                res |= mu_combo_box(gui_context, &s->op_combo_expanded, (int*)&s->op, 3, op_names);
             }
         }
 
@@ -226,6 +242,39 @@ void ShapesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Default();
 
     m_CurrentState = new_state;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+bool ShapesStack::MouseCursorInShape(const shape* s)
+{
+    switch(s->shape_type)
+    {
+    case command_type::shape_triangle_filled: 
+        return point_in_triangle(s->shape_desc.triangle.p0, s->shape_desc.triangle.p1, s->shape_desc.triangle.p2, m_MousePosition);
+
+    default: 
+        return false;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
+{
+    switch(s->shape_type)
+    {
+    case command_type::shape_triangle_filled: 
+        {
+            const triangle_data& tri = s->shape_desc.triangle;
+            renderer.DrawTriangleFilled(tri.p0, tri.p1, tri.p2, 0.f, draw_color(na16_orange, 128));
+            renderer.DrawCircleFilled(tri.p0, 5.f, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(tri.p1, 5.f, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(tri.p2, 5.f, draw_color(na16_red, 128));
+            break;
+        }
+
+    default: 
+        break;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
