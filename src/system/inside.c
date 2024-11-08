@@ -22,8 +22,4 @@ bool point_in_triangle(vec2 p0, vec2 p1, vec2 p2, vec2 point)
     return !(has_neg && has_pos);
 }
 
-//-----------------------------------------------------------------------------
-bool point_in_disc(vec2 center, float radius, vec2 point)
-{
-    return (vec2_sq_distance(center, point) <= radius * radius);
-}
+

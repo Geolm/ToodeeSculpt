@@ -21,6 +21,7 @@ void ShapesStack::Init(aabb zone)
     m_ShapeNumPoints = 0;
     m_CurrentPoint = 0;
     m_SmoothBlend = 1.f;
+    m_SelectedShapeIndex = INVALID_INDEX;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -44,6 +45,22 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         {
             m_ContextualMenuOpen = !m_ContextualMenuOpen;
             m_ContextualMenuPosition = mouse_pos;
+            m_SelectedShapeIndex = INVALID_INDEX;
+        }
+    }
+    // selecting shape
+    else if (m_CurrentState == state::IDLE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        if (aabb_test_point(m_EditionZone, mouse_pos))
+        {
+            uint32_t selection = INVALID_INDEX;
+            for(uint32_t i=0; i<cc_size(&m_Shapes) && selection == INVALID_INDEX; ++i)
+            {
+                shape *s = cc_get(&m_Shapes, i);
+                if (MouseCursorInShape(s))
+                    selection = i;
+            }
+            m_SelectedShapeIndex = selection;
         }
     }
     // adding points
@@ -128,53 +145,54 @@ void ShapesStack::Draw(Renderer& renderer)
             if (MouseCursorInShape(s))
                 DrawShapeGizmo(renderer, s);
         }
+
+        if (m_SelectedShapeIndex != INVALID_INDEX && m_SelectedShapeIndex < cc_size(&m_Shapes))
+            DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
     }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::UserInterface(struct mu_Context* gui_context)
 {
-    if (mu_begin_window_ex(gui_context, "shapes stack", mu_rect(50, 400, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
+    if (mu_begin_window_ex(gui_context, "shape inspector", mu_rect(50, 50, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
     {
         int res = 0;
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_label(gui_context,"smooth blend");
         res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
 
-        for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
+        if (m_SelectedShapeIndex != INVALID_INDEX && m_SelectedShapeIndex < cc_size(&m_Shapes))
         {
-            shape *s = cc_get(&m_Shapes, i);
-            if (mu_header(gui_context, format("shape #%d", i)))
+            shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
+
+            mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
+            mu_label(gui_context,"type");
+            switch(s->shape_type)
             {
-                mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
-                mu_label(gui_context,"type");
-                switch(s->shape_type)
-                {
-                case command_type::shape_circle_filled : 
-                {
-                    mu_text(gui_context, "disc");
-                    mu_label(gui_context, "radius");
-                    res |= mu_slider_ex(gui_context, &s->shape_desc.disc.radius, 0.f, 100.f, 1.f, "%3.0f", 0);
-                    break;
-                }
-                case command_type::shape_triangle_filled : 
-                {
-                    mu_text(gui_context, "triangle");
-                    mu_label(gui_context, "roundness");
-                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3f", 0);
-                    break;
-                }
-                case command_type::shape_oriented_box : mu_text(gui_context, "box");break;
-                default : break;
-                }
-
-                res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
-
-                _Static_assert(sizeof(s->op) == sizeof(int));
-                mu_label(gui_context, "sdf op");
-                const char* op_names[3] = {"union", "substraction", "intersection"};
-                res |= mu_combo_box(gui_context, &s->op_combo_expanded, (int*)&s->op, 3, op_names);
+            case command_type::shape_circle_filled : 
+            {
+                mu_text(gui_context, "disc");
+                mu_label(gui_context, "radius");
+                res |= mu_slider_ex(gui_context, &s->shape_desc.disc.radius, 0.f, 100.f, 1.f, "%3.0f", 0);
+                break;
             }
+            case command_type::shape_triangle_filled : 
+            {
+                mu_text(gui_context, "triangle");
+                mu_label(gui_context, "roundness");
+                res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3f", 0);
+                break;
+            }
+            case command_type::shape_oriented_box : mu_text(gui_context, "box");break;
+            default : break;
+            }
+
+            res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
+
+            _Static_assert(sizeof(s->op) == sizeof(int));
+            mu_label(gui_context, "sdf op");
+            const char* op_names[3] = {"union", "substraction", "intersection"};
+            res |= mu_combo_box(gui_context, &s->op_combo_expanded, (int*)&s->op, 3, op_names);
         }
 
         mu_end_window(gui_context);

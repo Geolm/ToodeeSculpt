@@ -100,5 +100,6 @@ private:
     vec2 m_RoundnessReference;
     float m_Roundness;
     command_type m_ShapeType;
+    uint32_t m_SelectedShapeIndex;
 };
 
