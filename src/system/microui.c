@@ -1230,6 +1230,9 @@ int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, co
             longest_index = i;
         }
     }
+    
+    if (*expanded)
+        get_layout(ctx)->size.y += (num_entries+1) * ctx->style->title_height;
 
     int res = 0;
     mu_Rect rect = mu_layout_next(ctx);
