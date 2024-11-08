@@ -8,6 +8,8 @@
 #include "system/format.h"
 #include "system/inside.h"
 
+const float shape_point_radius = 7.f;
+
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Init(aabb zone)
 {
@@ -97,7 +99,7 @@ void ShapesStack::Draw(Renderer& renderer)
     if (m_CurrentState == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawCircleFilled(m_ShapePoints[i], 5.f, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(m_ShapePoints[i], shape_point_radius, draw_color(na16_red, 128));
 
         // preview shape
         if (m_ShapeType == command_type::shape_triangle_filled) 
@@ -107,12 +109,12 @@ void ShapesStack::Draw(Renderer& renderer)
             else if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_ShapePoints[1], m_ShapePoints[2], 0.001f)))
                 renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
 
-            renderer.DrawCircleFilled(m_MousePosition, 5.f, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(m_MousePosition, shape_point_radius, draw_color(na16_red, 128));
         }
     }
     else if (m_CurrentState == state::SET_ROUNDNESS)
     {
-        renderer.DrawCircleFilled(m_RoundnessReference, 5.f, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_RoundnessReference, shape_point_radius, draw_color(na16_red, 128));
 
         // preview shape
         if (m_ShapeType == command_type::shape_triangle_filled) 
@@ -250,7 +252,14 @@ bool ShapesStack::MouseCursorInShape(const shape* s)
     switch(s->shape_type)
     {
     case command_type::shape_triangle_filled: 
-        return point_in_triangle(s->shape_desc.triangle.p0, s->shape_desc.triangle.p1, s->shape_desc.triangle.p2, m_MousePosition);
+    {
+        const triangle_data& tri = s->shape_desc.triangle;
+        bool result = point_in_triangle(tri.p0, tri.p1, tri.p2, m_MousePosition);
+        result |= point_in_disc(tri.p0, shape_point_radius, m_MousePosition);
+        result |= point_in_disc(tri.p1, shape_point_radius, m_MousePosition);
+        result |= point_in_disc(tri.p2, shape_point_radius, m_MousePosition);
+        return result;
+    }
 
     default: 
         return false;
@@ -266,9 +275,9 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
         {
             const triangle_data& tri = s->shape_desc.triangle;
             renderer.DrawTriangleFilled(tri.p0, tri.p1, tri.p2, 0.f, draw_color(na16_orange, 128));
-            renderer.DrawCircleFilled(tri.p0, 5.f, draw_color(na16_red, 128));
-            renderer.DrawCircleFilled(tri.p1, 5.f, draw_color(na16_red, 128));
-            renderer.DrawCircleFilled(tri.p2, 5.f, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(tri.p0, shape_point_radius, draw_color(na16_black, 128));
+            renderer.DrawCircleFilled(tri.p1, shape_point_radius, draw_color(na16_black, 128));
+            renderer.DrawCircleFilled(tri.p2, shape_point_radius, draw_color(na16_black, 128));
             break;
         }
 
