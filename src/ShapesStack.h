@@ -64,9 +64,6 @@ private:
         float roundness;
         sdf_operator op;
         shape_color color;
-
-        // gui specific
-        int op_combo_expanded;
     };
 
     enum state
@@ -84,14 +81,16 @@ private:
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
 
 private:
-    
+    // serialized data 
     cc_vec(shape) m_Shapes;
     float m_SmoothBlend;
     float m_AlphaValue;
 
+    // ui
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_ContextualMenuOpen;
+    int m_SDFOperationComboBox;
     vec2 m_MousePosition;
 
     // shape creation
