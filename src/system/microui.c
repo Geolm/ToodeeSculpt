@@ -1298,14 +1298,3 @@ int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
     return res;
 }
 
-//----------------------------------------------------------------------------------------------------------------------------
-int mu_hsv_color(mu_Context *ctx, float *hue, float *saturation, float *value)
-{
-    mu_Id     id = mu_get_id(ctx, &hue, sizeof(hue));
-    mu_Rect rect = mu_layout_next(ctx);
-    mu_update_control(ctx, id, rect, 0);
-
-    int res = 0;
-
-    return res;
-}

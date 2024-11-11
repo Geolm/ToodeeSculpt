@@ -299,7 +299,6 @@ void mu_begin_panel_ex(mu_Context *ctx, const char *name, int opt);
 void mu_end_panel(mu_Context *ctx);
 int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries);
 int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue);
-int mu_hsv_color(mu_Context *ctx, float *hue, float *saturation, float *value);
 
 #ifdef __cplusplus
 }
