@@ -51,6 +51,13 @@ void undo_store_state(struct undo_context* context, const void* data, size_t siz
 //-----------------------------------------------------------------------------------------------------------------------------
 void* undo_undo(struct undo_context* context, size_t* output_size)
 {
+    if (context->num_states > 0)
+    {
+        struct undo_state* state = &context->states[--context->num_states];
+        context->current_position = state->start_position + state->size;
+        *output_size = state->size;
+        return &context->buffer[state->start_position];
+    }
     return NULL;
 }
 

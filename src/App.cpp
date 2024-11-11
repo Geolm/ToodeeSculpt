@@ -237,8 +237,11 @@ void App::OnKeyEvent(int key, int scancode, int action, int mods)
     if (action == GLFW_RELEASE)
         mu_input_keyup(m_pGuiContext, ui_key);
 
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    if (key == GLFW_KEY_R && action == GLFW_PRESS && mods&GLFW_MOD_CONTROL)
         m_Renderer.ReloadShaders();
+        
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        m_pEditor->Undo();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
