@@ -1291,11 +1291,11 @@ int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
     mu_label(ctx, "color");
     mu_Rect r = mu_layout_next(ctx);
     mu_draw_rect(ctx, r, mu_color((int)(*red*255.f), (int)(*green*255.f), (int)(*blue*255.f), 255));
-    mu_label(ctx, "red:");
+    mu_label(ctx, "red");
     res |= mu_slider_ex(ctx, red, 0.f, 1.f, 0.001f, "%1.2f", 0);
-    mu_label(ctx, "green:");
+    mu_label(ctx, "green");
     res |= mu_slider_ex(ctx, green, 0.f, 1.f, 0.001f, "%1.2f", 0);
-    mu_label(ctx, "blue:");
+    mu_label(ctx, "blue");
     res |= mu_slider_ex(ctx, blue, 0.f, 1.f, 0.001f, "%1.2f", 0);
     return res;
 }

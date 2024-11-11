@@ -87,6 +87,8 @@ private:
     
     cc_vec(shape) m_Shapes;
     float m_SmoothBlend;
+    float m_AlphaValue;
+
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_ContextualMenuOpen;

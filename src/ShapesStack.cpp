@@ -8,7 +8,7 @@
 #include "system/format.h"
 #include "system/inside.h"
 
-const float shape_point_radius = 7.f;
+const float shape_point_radius = 6.f;
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Init(aabb zone)
@@ -21,6 +21,7 @@ void ShapesStack::Init(aabb zone)
     m_ShapeNumPoints = 0;
     m_CurrentPoint = 0;
     m_SmoothBlend = 1.f;
+    m_AlphaValue = 1.f;
     m_SelectedShapeIndex = INVALID_INDEX;
 }
 
@@ -86,6 +87,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         cc_push(&m_Shapes, new_shape);
 
         SetState(state::IDLE);
+        m_SelectedShapeIndex = cc_size(&m_Shapes)-1;
     }
 }
 
@@ -98,7 +100,7 @@ void ShapesStack::Draw(Renderer& renderer)
     {
         shape *s = cc_get(&m_Shapes, i);
         draw_color color;
-        color.from_float(s->color.red, s->color.green, s->color.blue, s->color.alpha);
+        color.from_float(s->color.red, s->color.green, s->color.blue, m_AlphaValue);
 
         switch(s->shape_type)
         {
@@ -157,11 +159,17 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
     if (mu_begin_window_ex(gui_context, "shape inspector", mu_rect(50, 50, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
     {
         int res = 0;
-        mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-        mu_label(gui_context,"smooth blend");
-        res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
+        if (mu_header_ex(gui_context, "global control", MU_OPT_EXPANDED))
+        {
+            mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
+            mu_label(gui_context,"smooth blend");
+            res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
+            mu_label(gui_context, "alpha");
+            res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
+        }
 
-        if (m_SelectedShapeIndex != INVALID_INDEX && m_SelectedShapeIndex < cc_size(&m_Shapes))
+        if (m_SelectedShapeIndex != INVALID_INDEX && m_SelectedShapeIndex < cc_size(&m_Shapes)
+            && mu_header_ex(gui_context, "selected shape", MU_OPT_EXPANDED))
         {
             shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
 
@@ -180,19 +188,18 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             {
                 mu_text(gui_context, "triangle");
                 mu_label(gui_context, "roundness");
-                res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3f", 0);
+                res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
                 break;
             }
             case command_type::shape_oriented_box : mu_text(gui_context, "box");break;
             default : break;
             }
 
-            res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
-
             _Static_assert(sizeof(s->op) == sizeof(int));
             mu_label(gui_context, "sdf op");
             const char* op_names[3] = {"union", "substraction", "intersection"};
             res |= mu_combo_box(gui_context, &s->op_combo_expanded, (int*)&s->op, 3, op_names);
+            res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
         }
 
         mu_end_window(gui_context);
