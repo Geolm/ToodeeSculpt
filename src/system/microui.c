@@ -1283,9 +1283,7 @@ int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
 {
     const float hash_array[3] = {*red, *green, *blue};
     mu_Id     id = mu_get_id(ctx, hash_array, sizeof(hash_array));
-    mu_Rect rect = mu_layout_next(ctx);
-    mu_update_control(ctx, id, rect, 0);
-
+    
     int res = 0;
     mu_layout_row(ctx, 2, (int[]) { 100, -1 }, 0);
     mu_label(ctx, "color");
