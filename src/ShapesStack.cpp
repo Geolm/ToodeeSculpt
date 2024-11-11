@@ -20,6 +20,7 @@ void ShapesStack::Init(aabb zone)
     m_CurrentState = state::IDLE;
     m_ShapeNumPoints = 0;
     m_CurrentPoint = 0;
+    m_SDFOperationComboBox = 0;
     m_SmoothBlend = 1.f;
     m_AlphaValue = 1.f;
     m_SelectedShapeIndex = INVALID_INDEX;
@@ -83,11 +84,10 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p1 = m_ShapePoints[1];
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
         new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f, .alpha = 1.f};
-        new_shape.op_combo_expanded = false;
         cc_push(&m_Shapes, new_shape);
 
         SetState(state::IDLE);
-        m_SelectedShapeIndex = cc_size(&m_Shapes)-1;
+        m_SelectedShapeIndex = uint32_t(cc_size(&m_Shapes))-1;
     }
 }
 
@@ -156,7 +156,7 @@ void ShapesStack::Draw(Renderer& renderer)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::UserInterface(struct mu_Context* gui_context)
 {
-    if (mu_begin_window_ex(gui_context, "shape inspector", mu_rect(50, 50, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
+    if (mu_begin_window_ex(gui_context, "shape inspector", mu_rect(50, 50, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
     {
         int res = 0;
         if (mu_header_ex(gui_context, "global control", MU_OPT_EXPANDED))
@@ -198,7 +198,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             _Static_assert(sizeof(s->op) == sizeof(int));
             mu_label(gui_context, "sdf op");
             const char* op_names[3] = {"union", "substraction", "intersection"};
-            res |= mu_combo_box(gui_context, &s->op_combo_expanded, (int*)&s->op, 3, op_names);
+            res |= mu_combo_box(gui_context, &m_SDFOperationComboBox, (int*)&s->op, 3, op_names);
             res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
         }
 
@@ -219,7 +219,7 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
     if (m_ContextualMenuOpen)
     {
         if (mu_begin_window_ex(gui_context, "new shape", mu_rect((int)m_ContextualMenuPosition.x,
-           (int)m_ContextualMenuPosition.y, 100, 140), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT))
+           (int)m_ContextualMenuPosition.y, 100, 140), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
             mu_layout_row(gui_context, 1, (int[]) { 90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0))

@@ -24,6 +24,7 @@
 		FBA57B472CB081460033DD9A /* sokol_time.c in Sources */ = {isa = PBXBuildFile; fileRef = FBA57B462CB081460033DD9A /* sokol_time.c */; };
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
 		FBB617702CD31A6000B80BA3 /* format.c in Sources */ = {isa = PBXBuildFile; fileRef = FBB6176E2CD31A6000B80BA3 /* format.c */; };
+		FBE0612E2CE245B4001A1EAF /* Icons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FBE0612D2CE245B4001A1EAF /* Icons.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -88,6 +89,7 @@
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBB6176D2CD31A6000B80BA3 /* format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = format.h; sourceTree = "<group>"; };
 		FBB6176E2CD31A6000B80BA3 /* format.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = format.c; sourceTree = "<group>"; };
+		FBE0612D2CE245B4001A1EAF /* Icons.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Icons.cpp; sourceTree = "<group>"; };
 		FBEDE94F2CB6D797000B478D /* stateless.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stateless.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -153,6 +155,7 @@
 				FB4011B62CD27CF00018C19C /* MouseCursors.cpp */,
 				FB93DDE92CC93DF800608C34 /* Editor.h */,
 				FB93DDEA2CC93DF800608C34 /* Editor.cpp */,
+				FBE0612D2CE245B4001A1EAF /* Icons.cpp */,
 				FB93DDEB2CC93DF800608C34 /* Icons.h */,
 				FB93DDEC2CC93DF800608C34 /* ShapesStack.h */,
 				FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */,
@@ -274,6 +277,7 @@
 				FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */,
 				FBA57B472CB081460033DD9A /* sokol_time.c in Sources */,
 				FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */,
+				FBE0612E2CE245B4001A1EAF /* Icons.cpp in Sources */,
 				FB8C687F2CDB003A007875D7 /* inside.c in Sources */,
 				FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */,
 				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,

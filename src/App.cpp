@@ -9,9 +9,11 @@
 #include "system/microui.h"
 #include "system/color_ramp.h"
 #include "system/sokol_time.h"
+#include "system/palettes.h"
 #include <string.h>
 #include "Editor.h"
 #include "MouseCursors.h"
+#include "Icons.h"
 
 static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.g, color.b, color.a);}
 static inline mu_Color to_mu_color(uint32_t packed_color) 
@@ -154,6 +156,18 @@ void App::DrawGui()
                                     (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
             break;
         }
+        case MU_COMMAND_ICON :
+        {
+            aabb box = (aabb){.min = (vec2) {(float)cmd->icon.rect.x, (float)cmd->icon.rect.y},
+                              .max = (vec2) {(float)(cmd->icon.rect.x + cmd->icon.rect.w), (float)(cmd->icon.rect.y + cmd->icon.rect.h)}};
+            switch(cmd->icon.id)
+            {
+                case MU_ICON_CLOSE : DrawIcon(m_Renderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
+            }
+
+            break;
+        }
+
         }
     }
 }
