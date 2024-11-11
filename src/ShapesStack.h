@@ -5,6 +5,7 @@
 #include "system/cc.h"
 #include "system/aabb.h"
 #include "shaders/common.h"
+#include "system/undo.h"
 
 
 struct mu_Context;
@@ -19,6 +20,7 @@ public:
     void OnMouseButton(vec2 pos, int button, int action);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
+    void Undo();
     void Terminate();
 
 private:
@@ -102,5 +104,6 @@ private:
     float m_Roundness;
     command_type m_ShapeType;
     uint32_t m_SelectedShapeIndex;
+    struct undo_context* m_UndoContext;
 };
 

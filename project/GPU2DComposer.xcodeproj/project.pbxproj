@@ -25,6 +25,7 @@
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
 		FBB617702CD31A6000B80BA3 /* format.c in Sources */ = {isa = PBXBuildFile; fileRef = FBB6176E2CD31A6000B80BA3 /* format.c */; };
 		FBE0612E2CE245B4001A1EAF /* Icons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FBE0612D2CE245B4001A1EAF /* Icons.cpp */; };
+		FBE061312CE28CA8001A1EAF /* undo.c in Sources */ = {isa = PBXBuildFile; fileRef = FBE061302CE28CA8001A1EAF /* undo.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -90,6 +91,8 @@
 		FBB6176D2CD31A6000B80BA3 /* format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = format.h; sourceTree = "<group>"; };
 		FBB6176E2CD31A6000B80BA3 /* format.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = format.c; sourceTree = "<group>"; };
 		FBE0612D2CE245B4001A1EAF /* Icons.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Icons.cpp; sourceTree = "<group>"; };
+		FBE0612F2CE28CA8001A1EAF /* undo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = undo.h; sourceTree = "<group>"; };
+		FBE061302CE28CA8001A1EAF /* undo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = undo.c; sourceTree = "<group>"; };
 		FBEDE94F2CB6D797000B478D /* stateless.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stateless.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -111,6 +114,8 @@
 		FB2823392BF2D8A7009FC4FD /* system */ = {
 			isa = PBXGroup;
 			children = (
+				FBE0612F2CE28CA8001A1EAF /* undo.h */,
+				FBE061302CE28CA8001A1EAF /* undo.c */,
 				FB8C687C2CDB003A007875D7 /* inside.h */,
 				FB8C687D2CDB003A007875D7 /* inside.c */,
 				FB8C687E2CDB003A007875D7 /* palettes.h */,
@@ -271,6 +276,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBE061312CE28CA8001A1EAF /* undo.c in Sources */,
 				FB6341C32C1099A1003F8DE7 /* microui.c in Sources */,
 				FB28233A2BF2D8A7009FC4FD /* log.c in Sources */,
 				FB4011B72CD27CF00018C19C /* MouseCursors.cpp in Sources */,

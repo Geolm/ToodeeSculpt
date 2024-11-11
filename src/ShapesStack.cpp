@@ -24,6 +24,7 @@ void ShapesStack::Init(aabb zone)
     m_SmoothBlend = 1.f;
     m_AlphaValue = 1.f;
     m_SelectedShapeIndex = INVALID_INDEX;
+    m_UndoContext = undo_init(1<<20, 1<<17);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -85,9 +86,11 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
         new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f, .alpha = 1.f};
         cc_push(&m_Shapes, new_shape);
+        undo_store_state(m_UndoContext, cc_get(&m_Shapes, 0), cc_size(&m_Shapes) * sizeof(shape));
 
         SetState(state::IDLE);
         m_SelectedShapeIndex = uint32_t(cc_size(&m_Shapes))-1;
+        
     }
 }
 
@@ -206,9 +209,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
 
         // if something has changed, handle undo
         if (res & MU_RES_CHANGE)
-        {
-            // TODO : undo
-        }
+            undo_store_state(m_UndoContext, cc_get(&m_Shapes, 0), cc_size(&m_Shapes) * sizeof(shape));
     }
     ContextualMenu(gui_context);
 }
@@ -244,6 +245,33 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
                 SetState(state::ADDING_POINTS);
             }
             mu_end_window(gui_context);
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void ShapesStack::Undo()
+{
+    // cancel shape creation
+    if (m_CurrentState == state::ADDING_POINTS || m_CurrentState == state::SET_ROUNDNESS)
+    {
+        SetState(state::IDLE);
+    }
+    // if idle, call undo manager
+    else if (m_CurrentState == state::IDLE || m_CurrentState == state::SHAPE_SELECTED)
+    {
+        size_t size;
+        shape* backup_data = (shape*) undo_undo(m_UndoContext, &size);
+
+        if (backup_data != nullptr)
+        {
+            if (size != 0)
+            {
+                cc_resize(&m_Shapes, size / sizeof(shape));
+                memcpy(cc_get(&m_Shapes, 0), backup_data, size);
+            }
+            else
+                cc_clear(&m_Shapes);
         }
     }
 }
@@ -314,5 +342,6 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Terminate()
 {
+    undo_terminate(m_UndoContext);
     cc_cleanup(&m_Shapes);
 }
