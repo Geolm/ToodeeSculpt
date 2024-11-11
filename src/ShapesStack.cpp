@@ -205,7 +205,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
 
         // if something has changed, handle undo
-        if (res & (MU_RES_CHANGE|MU_RES_SUBMIT))
+        if (res & MU_RES_CHANGE)
         {
             // TODO : undo
         }
