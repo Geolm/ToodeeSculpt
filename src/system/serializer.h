@@ -43,6 +43,12 @@ static inline size_t serializer_get_leftspace(serializer_context* context)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
+static inline size_t serializer_get_position(serializer_context* context)
+{
+    return context->position;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
 // write functions, return false if there is no enough space to write the data
 #define DECLARE_SERIALIZER_WRITE_FUNC(type)                                             \
 static inline bool serializer_write_##type(serializer_context* context, type value)     \
@@ -73,6 +79,7 @@ static inline bool serializer_write_blob(serializer_context* context, void* blob
     if (serializer_get_leftspace(context) >= blob_size)
     {
         memcpy(&context->buffer[context->position], blob, blob_size);
+        context->position += blob_size;
         return true;
     }
     return false;
