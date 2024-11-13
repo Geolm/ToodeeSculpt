@@ -79,6 +79,8 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
     }
     else if (m_CurrentState == state::SET_ROUNDNESS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
+        UndoSnapshot();
+
         shape new_shape;
         new_shape.shape_type = m_ShapeType;
         new_shape.op = op_union;
@@ -88,11 +90,9 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
         new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f, .alpha = 1.f};
         cc_push(&m_Shapes, new_shape);
-        UndoSnapshot();
 
         SetState(state::IDLE);
         m_SelectedShapeIndex = uint32_t(cc_size(&m_Shapes))-1;
-        
     }
 }
 
@@ -257,13 +257,16 @@ void ShapesStack::UndoSnapshot()
 {
     serializer_context serializer;
     size_t max_size;
+    size_t array_size = cc_size(&m_Shapes);
 
     void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
     serializer_init(&serializer, buffer, max_size);
     serializer_write_float(&serializer, m_AlphaValue);
     serializer_write_float(&serializer, m_Roundness);
+    serializer_write_uint32_t(&serializer, m_SelectedShapeIndex);
     serializer_write_size_t(&serializer, cc_size(&m_Shapes));
-    serializer_write_blob(&serializer, cc_get(&m_Shapes, 0), cc_size(&m_Shapes) * sizeof(shape));
+    if (array_size != 0)
+        serializer_write_blob(&serializer, cc_get(&m_Shapes, 0), cc_size(&m_Shapes) * sizeof(shape));
     undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
 
     if (serializer_get_status(&serializer) == serializer_write_error)
@@ -283,16 +286,22 @@ void ShapesStack::Undo()
     {
         serializer_context serializer;
         size_t max_size;
+        void* pBuffer = undo_undo(m_pUndoContext, &max_size);
 
-        serializer_init(&serializer, undo_undo(m_pUndoContext, &max_size), max_size);
-        m_AlphaValue = serializer_read_float(&serializer);
-        m_Roundness = serializer_read_float(&serializer);
-        size_t array_size = serializer_read_size_t(&serializer);
-        cc_resize(&m_Shapes, array_size);
-        serializer_read_blob(&serializer, cc_get(&m_Shapes, 0), array_size * sizeof(shape));
+        if (pBuffer != nullptr)
+        {
+            serializer_init(&serializer, pBuffer, max_size);
+            m_AlphaValue = serializer_read_float(&serializer);
+            m_Roundness = serializer_read_float(&serializer);
+            m_SelectedShapeIndex = serializer_read_uint32_t(&serializer);
+            size_t array_size = serializer_read_size_t(&serializer);
+            cc_resize(&m_Shapes, array_size);
+            if (array_size != 0)
+                serializer_read_blob(&serializer, cc_get(&m_Shapes, 0), array_size * sizeof(shape));
 
-        if (serializer_get_status(&serializer) == serializer_read_error)
-            log_fatal("corrupt undo buffer");
+            if (serializer_get_status(&serializer) == serializer_read_error)
+                log_fatal("corrupt undo buffer");
+        }
     }
 }
 
