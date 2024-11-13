@@ -5,8 +5,6 @@
 #include "system/cc.h"
 #include "system/aabb.h"
 #include "shaders/common.h"
-#include "system/undo.h"
-
 
 struct mu_Context;
 class Renderer;
@@ -15,7 +13,7 @@ class Renderer;
 class ShapesStack
 {
 public:
-    void Init(aabb zone);
+    void Init(aabb zone, struct undo_context* undo);
     void OnMouseMove(vec2 pos);
     void OnMouseButton(vec2 pos, int button, int action);
     void Draw(Renderer& renderer);
@@ -81,6 +79,7 @@ private:
     void SetState(enum state new_state);
     bool MouseCursorInShape(const shape* s);
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
+    void UndoSnapshot();
 
 private:
     // serialized data 
@@ -104,6 +103,6 @@ private:
     float m_Roundness;
     command_type m_ShapeType;
     uint32_t m_SelectedShapeIndex;
-    struct undo_context* m_UndoContext;
+    struct undo_context* m_pUndoContext;
 };
 

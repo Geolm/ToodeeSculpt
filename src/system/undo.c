@@ -34,17 +34,19 @@ struct undo_context* undo_init(size_t buffer_size, uint32_t max_states)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
-void undo_store_state(struct undo_context* context, const void* data, size_t size)
+void* undo_begin_snapshot(struct undo_context* context, size_t* max_size)
 {
-    // currently asserting if we're out of states/memory
-    // TODO : implement a ring buffer : new states can override oldest states
-    assert(context->num_states < context->max_states && (context->current_position + size) < context->buffer_size);
+    assert(context->num_states < context->max_states && context->current_position < context->buffer_size);
+    *max_size = context->buffer_size - context->current_position;
+    return &context->buffer[context->current_position];
+}
 
+//-----------------------------------------------------------------------------------------------------------------------------
+void undo_end_snapshot(struct undo_context* context, void* data, size_t size)
+{
     struct undo_state* state = &context->states[context->num_states++];
     state->start_position = context->current_position;
     state->size = size;
-
-    memcpy(&context->buffer[state->start_position], data, size);
     context->current_position += size;
 }
 

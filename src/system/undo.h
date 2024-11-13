@@ -19,8 +19,9 @@ extern "C" {
 // allocate structures and buffer
 struct undo_context* undo_init(size_t buffer_size, uint32_t max_states_count);
 
-// push a new state in the buffer, data is copied
-void undo_store_state(struct undo_context* context, const void* data, size_t size); 
+// request memory for an undo snapshot
+void* undo_begin_snapshot(struct undo_context* context, size_t* max_size); 
+void undo_end_snapshot(struct undo_context* context, void* data, size_t size);
 
 // returns the data for the last state, if null the undo failed
 // warning : you have to copy the data back as the pointer won't be valid after a new state

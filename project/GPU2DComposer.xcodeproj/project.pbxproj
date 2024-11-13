@@ -77,6 +77,7 @@
 		FB90E13B2BE977D2004B4083 /* Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
 		FB90E13C2BE977D2004B4083 /* shader_reader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader_reader.c; sourceTree = "<group>"; };
 		FB90E13D2BE977D2004B4083 /* shader_reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_reader.h; sourceTree = "<group>"; };
+		FB91B9A32CE4DDF2007F3853 /* serializer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = serializer.h; sourceTree = "<group>"; };
 		FB93DDE92CC93DF800608C34 /* Editor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Editor.h; sourceTree = "<group>"; };
 		FB93DDEA2CC93DF800608C34 /* Editor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Editor.cpp; sourceTree = "<group>"; };
 		FB93DDEB2CC93DF800608C34 /* Icons.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Icons.h; sourceTree = "<group>"; };
@@ -114,6 +115,7 @@
 		FB2823392BF2D8A7009FC4FD /* system */ = {
 			isa = PBXGroup;
 			children = (
+				FB91B9A32CE4DDF2007F3853 /* serializer.h */,
 				FBE0612F2CE28CA8001A1EAF /* undo.h */,
 				FBE061302CE28CA8001A1EAF /* undo.c */,
 				FB8C687C2CDB003A007875D7 /* inside.h */,

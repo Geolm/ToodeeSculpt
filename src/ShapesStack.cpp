@@ -7,11 +7,13 @@
 #include "system/palettes.h"
 #include "system/format.h"
 #include "system/inside.h"
+#include "system/undo.h"
+#include "system/serializer.h"
 
 const float shape_point_radius = 6.f;
 
 //----------------------------------------------------------------------------------------------------------------------------
-void ShapesStack::Init(aabb zone)
+void ShapesStack::Init(aabb zone, struct undo_context* undo)
 {
     cc_init(&m_Shapes);
     cc_reserve(&m_Shapes, SHAPES_STACK_RESERVATION);
@@ -24,7 +26,7 @@ void ShapesStack::Init(aabb zone)
     m_SmoothBlend = 1.f;
     m_AlphaValue = 1.f;
     m_SelectedShapeIndex = INVALID_INDEX;
-    m_UndoContext = undo_init(1<<20, 1<<17);
+    m_pUndoContext = undo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -86,7 +88,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
         new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f, .alpha = 1.f};
         cc_push(&m_Shapes, new_shape);
-        undo_store_state(m_UndoContext, cc_get(&m_Shapes, 0), cc_size(&m_Shapes) * sizeof(shape));
+        UndoSnapshot();
 
         SetState(state::IDLE);
         m_SelectedShapeIndex = uint32_t(cc_size(&m_Shapes))-1;
@@ -209,7 +211,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
 
         // if something has changed, handle undo
         if (res & MU_RES_CHANGE)
-            undo_store_state(m_UndoContext, cc_get(&m_Shapes, 0), cc_size(&m_Shapes) * sizeof(shape));
+            UndoSnapshot();
     }
     ContextualMenu(gui_context);
 }
@@ -260,19 +262,19 @@ void ShapesStack::Undo()
     // if idle, call undo manager
     else if (m_CurrentState == state::IDLE || m_CurrentState == state::SHAPE_SELECTED)
     {
-        size_t size;
-        shape* backup_data = (shape*) undo_undo(m_UndoContext, &size);
+        // size_t size;
+        // shape* backup_data = (shape*) undo_undo(m_pUndoContext, &size);
 
-        if (backup_data != nullptr)
-        {
-            if (size != 0)
-            {
-                cc_resize(&m_Shapes, size / sizeof(shape));
-                memcpy(cc_get(&m_Shapes, 0), backup_data, size);
-            }
-            else
-                cc_clear(&m_Shapes);
-        }
+        // if (backup_data != nullptr)
+        // {
+        //     if (size != 0)
+        //     {
+        //         cc_resize(&m_Shapes, size / sizeof(shape));
+        //         memcpy(cc_get(&m_Shapes, 0), backup_data, size);
+        //     }
+        //     else
+        //         cc_clear(&m_Shapes);
+        // }
     }
 }
 
@@ -340,8 +342,18 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void ShapesStack::UndoSnapshot()
+{
+    // size_t size = cc_size(&m_Shapes) * sizeof(shape) + sizeof(float) * 2;
+    // undo_buffer buffer = undo_get_buffer(m_pUndoContext, size);
+    
+    // undo_buffer_write_f32(&buffer, m_AlphaValue);
+    // undo_buffer_write_f32(&buffer, m_Roundness);
+    // undo_buffer_write_data(&buffer, cc_get(&m_Shapes), cc_size(&m_Shapes) * sizeof(shape));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Terminate()
 {
-    undo_terminate(m_UndoContext);
     cc_cleanup(&m_Shapes);
 }

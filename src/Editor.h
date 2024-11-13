@@ -4,7 +4,7 @@
 
 class Renderer;
 struct mu_Context;
-
+struct undo_context;
 
 class Editor
 {
@@ -21,5 +21,6 @@ private:
     ShapesStack m_ShapesStack;
     aabb m_Zone;
     aabb m_ExternalZone;
+    struct undo_context* m_pUndoContext;
 };
 
