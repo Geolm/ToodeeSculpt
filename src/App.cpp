@@ -106,7 +106,7 @@ void App::InitGui()
         return len * (FONT_WIDTH + FONT_SPACING);
     };
 
-    m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT + FONT_SPACING; };
+    m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT; };
 
     hueshift_ramp_desc ramp = 
     {
