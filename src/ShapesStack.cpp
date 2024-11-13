@@ -263,7 +263,6 @@ void ShapesStack::UndoSnapshot()
     serializer_write_float(&serializer, m_AlphaValue);
     serializer_write_float(&serializer, m_Roundness);
     serializer_write_array(&serializer, cc_get(&m_Shapes, 0), cc_size(&m_Shapes), sizeof(shape));
-
     undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
 }
 

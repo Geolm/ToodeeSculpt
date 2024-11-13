@@ -1,6 +1,8 @@
 #include "renderer/Renderer.h"
 #include "Editor.h"
 #include "system/undo.h"
+#include "system/microui.h"
+#include "system/format.h"
 
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -30,6 +32,21 @@ void Editor::Draw(Renderer& renderer)
     renderer.DrawBox(m_ExternalZone, draw_color(0, 0, 0, 0xff));
     renderer.DrawBox(m_Zone, draw_color(0xffffffff));
     m_ShapesStack.Draw(renderer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::DebugInterface(struct mu_Context* gui_context)
+{
+    if (mu_header(gui_context, "Undo"))
+    {
+        float undo_buffer_stat, undo_states_stat;
+        undo_stats(m_pUndoContext, &undo_buffer_stat, &undo_states_stat);
+        mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
+        mu_text(gui_context, "buffer");
+        mu_text(gui_context, format("%3.2f%%", undo_buffer_stat));
+        mu_text(gui_context, "states");
+        mu_text(gui_context, format("%3.2f%%", undo_states_stat));
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

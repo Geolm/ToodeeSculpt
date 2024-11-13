@@ -14,6 +14,7 @@ public:
     void OnMouseButton(vec2 pos, int button, int action);
     void Undo();
     void Draw(Renderer& renderer);
+    void DebugInterface(struct mu_Context* gui_context);
     void UserInterface(struct mu_Context* gui_context);
     void Terminate();
 

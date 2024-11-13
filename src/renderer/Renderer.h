@@ -19,7 +19,7 @@ public:
     void ReloadShaders();
     void BeginFrame();
     void Flush(CA::MetalDrawable* drawable);
-    void UserInterface(struct mu_Context* gui_context);
+    void DebugInterface(struct mu_Context* gui_context);
     void EndFrame();
     void Terminate();
 

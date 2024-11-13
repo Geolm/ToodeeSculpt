@@ -69,7 +69,8 @@ void* undo_undo(struct undo_context* context, size_t* output_size)
 //-----------------------------------------------------------------------------------------------------------------------------
 void undo_stats(struct undo_context* context, float* buffer_usage_percentage, float* states_usage_percentage)
 {
-
+    *buffer_usage_percentage = (float) context->current_position / (float) context->buffer_size;
+    *states_usage_percentage = (float) context->num_states / (float) context->max_states;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------

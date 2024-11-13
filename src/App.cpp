@@ -184,8 +184,17 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
     m_pEditor->Draw(m_Renderer);
     m_pEditor->UserInterface(m_pGuiContext);
-    m_Renderer.UserInterface(m_pGuiContext);
+
+    // debug interface
+    if (mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
+    {
+        m_Renderer.DebugInterface(m_pGuiContext);
+        m_pEditor->DebugInterface(m_pGuiContext);
+        mu_end_window(m_pGuiContext);
+    }
     LogUserInterface();
+
+
     mu_end(m_pGuiContext);
     DrawGui();
     m_Renderer.EndFrame();
