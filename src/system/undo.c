@@ -44,6 +44,9 @@ void* undo_begin_snapshot(struct undo_context* context, size_t* max_size)
 //-----------------------------------------------------------------------------------------------------------------------------
 void undo_end_snapshot(struct undo_context* context, void* data, size_t size)
 {
+    assert(data >= (void*)&context->buffer[context->current_position]);
+    assert(data < (void*)&context->buffer[context->buffer_size]);
+    assert(context->num_states < context->max_states);
     struct undo_state* state = &context->states[context->num_states++];
     state->start_position = context->current_position;
     state->size = size;
