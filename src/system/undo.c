@@ -74,6 +74,12 @@ void undo_stats(struct undo_context* context, float* buffer_usage_percentage, fl
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
+uint32_t undo_get_num_states(struct undo_context* context)
+{
+    return context->num_states;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
 void undo_terminate(struct undo_context* context)
 {
     free(context->states);

@@ -28,6 +28,7 @@ void undo_end_snapshot(struct undo_context* context, void* data, size_t size);
 void* undo_undo(struct undo_context* context, size_t* output_size);
 
 void undo_stats(struct undo_context* context, float* buffer_usage_percentage, float* states_usage_percentage);
+uint32_t undo_get_num_states(struct undo_context* context);
 
 // free memory
 void undo_terminate(struct undo_context* context);

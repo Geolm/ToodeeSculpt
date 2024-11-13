@@ -46,6 +46,8 @@ void Editor::DebugInterface(struct mu_Context* gui_context)
         mu_text(gui_context, format("%3.2f%%", undo_buffer_stat));
         mu_text(gui_context, "states");
         mu_text(gui_context, format("%3.2f%%", undo_states_stat));
+        mu_text(gui_context, "stack");
+        mu_text(gui_context, format("%d", undo_get_num_states(m_pUndoContext)));
     }
 }
 
