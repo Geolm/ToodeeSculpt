@@ -251,6 +251,22 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
     }
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------------
+void ShapesStack::UndoSnapshot()
+{
+    size_t max_size;
+    void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
+
+    serializer_context serializer;
+    serializer_init(&serializer, buffer, max_size);
+    serializer_write_float(&serializer, m_AlphaValue);
+    serializer_write_float(&serializer, m_Roundness);
+    serializer_write_array(&serializer, cc_get(&m_Shapes, 0), cc_size(&m_Shapes), sizeof(shape));
+
+    undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
+}
+
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Undo()
 {
@@ -339,17 +355,6 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
     default: 
         break;
     }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void ShapesStack::UndoSnapshot()
-{
-    // size_t size = cc_size(&m_Shapes) * sizeof(shape) + sizeof(float) * 2;
-    // undo_buffer buffer = undo_get_buffer(m_pUndoContext, size);
-    
-    // undo_buffer_write_f32(&buffer, m_AlphaValue);
-    // undo_buffer_write_f32(&buffer, m_Roundness);
-    // undo_buffer_write_data(&buffer, cc_get(&m_Shapes), cc_size(&m_Shapes) * sizeof(shape));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
