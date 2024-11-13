@@ -255,15 +255,19 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::UndoSnapshot()
 {
-    size_t max_size;
-    void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
-
     serializer_context serializer;
+    size_t max_size;
+
+    void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
     serializer_init(&serializer, buffer, max_size);
     serializer_write_float(&serializer, m_AlphaValue);
     serializer_write_float(&serializer, m_Roundness);
-    serializer_write_array(&serializer, cc_get(&m_Shapes, 0), cc_size(&m_Shapes), sizeof(shape));
+    serializer_write_size_t(&serializer, cc_size(&m_Shapes));
+    serializer_write_blob(&serializer, cc_get(&m_Shapes, 0), cc_size(&m_Shapes) * sizeof(shape));
     undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
+
+    if (serializer_get_status(&serializer) == serializer_write_error)
+        log_error("undo buffer is full");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -277,19 +281,18 @@ void ShapesStack::Undo()
     // if idle, call undo manager
     else if (m_CurrentState == state::IDLE || m_CurrentState == state::SHAPE_SELECTED)
     {
-        // size_t size;
-        // shape* backup_data = (shape*) undo_undo(m_pUndoContext, &size);
+        serializer_context serializer;
+        size_t max_size;
 
-        // if (backup_data != nullptr)
-        // {
-        //     if (size != 0)
-        //     {
-        //         cc_resize(&m_Shapes, size / sizeof(shape));
-        //         memcpy(cc_get(&m_Shapes, 0), backup_data, size);
-        //     }
-        //     else
-        //         cc_clear(&m_Shapes);
-        // }
+        serializer_init(&serializer, undo_undo(m_pUndoContext, &max_size), max_size);
+        m_AlphaValue = serializer_read_float(&serializer);
+        m_Roundness = serializer_read_float(&serializer);
+        size_t array_size = serializer_read_size_t(&serializer);
+        cc_resize(&m_Shapes, array_size);
+        serializer_read_blob(&serializer, cc_get(&m_Shapes, 0), array_size * sizeof(shape));
+
+        if (serializer_get_status(&serializer) == serializer_read_error)
+            log_fatal("corrupt undo buffer");
     }
 }
 
