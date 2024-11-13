@@ -68,7 +68,7 @@ static inline enum serializer_status serializer_get_status(serializer_context* c
 #define DECLARE_SERIALIZER_WRITE_FUNC(type)                                             \
 static inline void serializer_write_##type(serializer_context* context, type value)     \
 {                                                                                       \
-    if (context->position + sizeof(type) < context->buffer_size)                        \
+    if (context->position + sizeof(type) <= context->buffer_size)                       \
     {                                                                                   \
         type* cast = (type*)&context->buffer[context->position];                        \
         *cast = value;                                                                  \
@@ -103,9 +103,9 @@ static inline void serializer_write_blob(serializer_context* context, const void
 //-----------------------------------------------------------------------------------------------------------------------------
 // read functions
 #define DECLARE_SERIALIZER_READ_FUNC(type)                                              \
-static inline type serializer_read_##type(serializer_context* context)                   \
+static inline type serializer_read_##type(serializer_context* context)                  \
 {                                                                                       \
-    if (context->position + sizeof(type) < context->buffer_size)                        \
+    if (context->position + sizeof(type) <= context->buffer_size)                       \
     {                                                                                   \
         type* cast = (type*)&context->buffer[context->position];                        \
         context->position += sizeof(type);                                              \
