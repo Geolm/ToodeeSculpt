@@ -74,8 +74,6 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
         mu_input_scroll(user_ptr->m_pGuiContext, (int)xoffset, (int)yoffset);
     });
 
-    
-
     log_add_callback([] (log_Event *ev)
     {
         App* user_ptr = (App*) ev->udata;
