@@ -56,7 +56,8 @@ private:
         IDLE,
         SHAPE_SELECTED,
         ADDING_POINTS,
-        SET_ROUNDNESS
+        SET_ROUNDNESS,
+        MOVING_POINT
     };
 
 private:
@@ -90,7 +91,7 @@ private:
     command_type m_ShapeType;
     uint32_t m_SelectedShapeIndex;
     struct undo_context* m_pUndoContext;
-    vec2* m_pDraggedVertex;
+    vec2* m_pGrabbedPoint;
 };
 
 //----------------------------------------------------------------------------------------------------------------------------

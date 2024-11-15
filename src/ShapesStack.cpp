@@ -26,7 +26,7 @@ void ShapesStack::Init(aabb zone, struct undo_context* undo)
     m_AlphaValue = 1.f;
     m_SelectedShapeIndex = INVALID_INDEX;
     m_pUndoContext = undo;
-    m_pDraggedVertex = nullptr;
+    m_pGrabbedPoint = nullptr;
 
     UndoSnapshot();
 }
@@ -39,6 +39,11 @@ void ShapesStack::OnMouseMove(vec2 pos)
     if (m_CurrentState == state::SET_ROUNDNESS)
     {
         m_Roundness = vec2_distance(pos, m_RoundnessReference);
+    }
+    // moving point
+    else if (m_CurrentState == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
+    {
+        *m_pGrabbedPoint = m_MousePosition;
     }
 }
 
@@ -72,7 +77,26 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
 
         if (SelectedShapeValid())
         {
-
+            shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
+            vec2* points = s->shape_desc.points;
+            for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
+            {
+                if (point_in_disc(points[i], shape_point_radius, m_MousePosition))
+                {
+                    m_pGrabbedPoint = &points[i];
+                    *m_pGrabbedPoint = m_MousePosition;
+                    SetState(state::MOVING_POINT);
+                }
+            }
+        }
+    }
+    // moving point
+    else if (m_CurrentState == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
+    {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+        {
+            SetState(state::IDLE);
+            UndoSnapshot();
         }
     }
     // adding points
@@ -153,7 +177,7 @@ void ShapesStack::Draw(Renderer& renderer)
         if (m_ShapeType == command_type::shape_triangle_filled) 
             renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_ShapePoints[2], m_Roundness, draw_color(na16_light_blue, 128));
     }
-    else if (m_CurrentState == state::IDLE)
+    else if (m_CurrentState == state::IDLE || m_CurrentState == state::MOVING_POINT)
     {
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
         {
@@ -340,21 +364,25 @@ void ShapesStack::SetState(enum state new_state)
 //----------------------------------------------------------------------------------------------------------------------------
 bool ShapesStack::MouseCursorInShape(const shape* s)
 {
+    const vec2* points = s->shape_desc.points;
+    bool result = false;
+
     switch(s->shape_type)
     {
     case command_type::shape_triangle_filled: 
-    {
-        const vec2* points = s->shape_desc.points;
-        bool result = point_in_triangle(points[0], points[1], points[2], m_MousePosition);
-        result |= point_in_disc(points[0], shape_point_radius, m_MousePosition);
-        result |= point_in_disc(points[1], shape_point_radius, m_MousePosition);
-        result |= point_in_disc(points[2], shape_point_radius, m_MousePosition);
-        return result;
-    }
+        {
+            result = point_in_triangle(points[0], points[1], points[2], m_MousePosition);
+            break;
+        }
 
     default: 
         return false;
     }
+
+    for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
+        result |= point_in_disc(points[i], shape_point_radius, m_MousePosition);
+
+    return result;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
