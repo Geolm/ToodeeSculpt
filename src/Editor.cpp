@@ -10,7 +10,7 @@ void Editor::Init(aabb zone)
 {
     m_ExternalZone = m_Zone = zone;
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));
-    m_pUndoContext = undo_init(1<<20, 1<<17);
+    m_pUndoContext = undo_init(1<<18, 1<<10);
     m_ShapesStack.Init(zone, m_pUndoContext);
 }
 
