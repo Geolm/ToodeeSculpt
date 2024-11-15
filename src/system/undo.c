@@ -56,10 +56,14 @@ void undo_end_snapshot(struct undo_context* context, void* data, size_t size)
 //-----------------------------------------------------------------------------------------------------------------------------
 void* undo_undo(struct undo_context* context, size_t* output_size)
 {
-    if (context->num_states > 0)
+    // we need at least two states to backup one
+    if (context->num_states > 1)
     {
-        struct undo_state* state = &context->states[--context->num_states];
-        context->current_position = state->start_position + state->size;
+        context->num_states--;
+        context->current_position = context->states[context->num_states].start_position;
+
+        // get the previous state to be restored
+        struct undo_state* state = &context->states[context->num_states-1];
         *output_size = state->size;
         return &context->buffer[state->start_position];
     }

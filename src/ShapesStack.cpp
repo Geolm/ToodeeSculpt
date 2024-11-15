@@ -27,6 +27,8 @@ void ShapesStack::Init(aabb zone, struct undo_context* undo)
     m_AlphaValue = 1.f;
     m_SelectedShapeIndex = INVALID_INDEX;
     m_pUndoContext = undo;
+
+    UndoSnapshot();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -79,8 +81,6 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
     }
     else if (m_CurrentState == state::SET_ROUNDNESS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        UndoSnapshot();
-
         shape new_shape;
         new_shape.shape_type = m_ShapeType;
         new_shape.op = op_union;
@@ -93,6 +93,8 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
 
         SetState(state::IDLE);
         m_SelectedShapeIndex = uint32_t(cc_size(&m_Shapes))-1;
+
+        UndoSnapshot();
     }
 }
 
@@ -153,7 +155,7 @@ void ShapesStack::Draw(Renderer& renderer)
                 DrawShapeGizmo(renderer, s);
         }
 
-        if (m_SelectedShapeIndex != INVALID_INDEX && m_SelectedShapeIndex < cc_size(&m_Shapes))
+        if (ShapeIndexValid())
             DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
     }
 }
@@ -164,6 +166,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
     if (mu_begin_window_ex(gui_context, "shape inspector", mu_rect(50, 50, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
     {
         int res = 0;
+
         if (mu_header_ex(gui_context, "global control", MU_OPT_EXPANDED))
         {
             mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
@@ -173,8 +176,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
         }
 
-        if (m_SelectedShapeIndex != INVALID_INDEX && m_SelectedShapeIndex < cc_size(&m_Shapes)
-            && mu_header_ex(gui_context, "selected shape", MU_OPT_EXPANDED))
+        if (ShapeIndexValid() && mu_header_ex(gui_context, "selected shape", MU_OPT_EXPANDED))
         {
             shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
 
@@ -210,8 +212,9 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
 
         // if something has changed, handle undo
-        if (res & MU_RES_CHANGE)
+        if (res & MU_RES_SUBMIT)
             UndoSnapshot();
+
     }
     ContextualMenu(gui_context);
 }
@@ -262,7 +265,7 @@ void ShapesStack::UndoSnapshot()
     void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
     serializer_init(&serializer, buffer, max_size);
     serializer_write_float(&serializer, m_AlphaValue);
-    serializer_write_float(&serializer, m_Roundness);
+    serializer_write_float(&serializer, m_SmoothBlend);
     serializer_write_uint32_t(&serializer, m_SelectedShapeIndex);
     serializer_write_size_t(&serializer, cc_size(&m_Shapes));
     if (array_size != 0)
@@ -292,7 +295,7 @@ void ShapesStack::Undo()
         {
             serializer_init(&serializer, pBuffer, max_size);
             m_AlphaValue = serializer_read_float(&serializer);
-            m_Roundness = serializer_read_float(&serializer);
+            m_SmoothBlend = serializer_read_float(&serializer);
             m_SelectedShapeIndex = serializer_read_uint32_t(&serializer);
             size_t array_size = serializer_read_size_t(&serializer);
             cc_resize(&m_Shapes, array_size);

@@ -80,6 +80,7 @@ private:
     bool MouseCursorInShape(const shape* s);
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
     void UndoSnapshot();
+    inline bool ShapeIndexValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
 
 private:
     // serialized data 

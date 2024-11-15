@@ -7,7 +7,7 @@
 //-----------------------------------------------------------------------------------------------------------------------------
 // Simple undo system
 //   * store states (no compression, no delta)
-//   * undo function will return the latest state
+//   * the last state stored is the current one, when undo functions is called it returns the state before the current one
 //-----------------------------------------------------------------------------------------------------------------------------
 
 struct undo_context;
