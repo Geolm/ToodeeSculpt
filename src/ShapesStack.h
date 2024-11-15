@@ -24,37 +24,22 @@ public:
 private:
     //----------------------------------------------------------------------------------------------------------------------------
     // internal structures
-    enum {SHAPE_MAXPOINTS = 4};
+    enum {SHAPE_MAXPOINTS = 3};
     enum {SHAPES_STACK_RESERVATION = 100};
 
-    struct box_data
+    struct shape_data
     {
-        vec2 p0, p1;
-        float width;
+        vec2 points[SHAPE_MAXPOINTS];
+        union
+        {
+            float width;
+            float radius;
+        };
     };
 
-    struct triangle_data
+    struct shape_color
     {
-        vec2 p0, p1, p2;
-    };
-
-    struct disc_data
-    {
-        vec2 center;
-        float radius;
-    };
-
-    union shape_data
-    {
-        struct box_data box;
-        struct disc_data disc;
-        struct triangle_data triangle;
-    };
-
-    union shape_color
-    {
-        struct {float red, green, blue, alpha;};
-        struct {float hue, saturation, value;};
+        float red, green, blue;
     };
 
     struct shape
@@ -80,7 +65,8 @@ private:
     bool MouseCursorInShape(const shape* s);
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
     void UndoSnapshot();
-    inline bool ShapeIndexValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
+    inline bool SelectedShapeValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
+    inline uint32_t ShapeNumPoints(command_type shape);
 
 private:
     // serialized data 
@@ -97,7 +83,6 @@ private:
 
     // shape creation
     state m_CurrentState;
-    uint32_t m_ShapeNumPoints;
     uint32_t m_CurrentPoint;
     vec2 m_ShapePoints[SHAPE_MAXPOINTS];
     vec2 m_RoundnessReference;
@@ -105,5 +90,21 @@ private:
     command_type m_ShapeType;
     uint32_t m_SelectedShapeIndex;
     struct undo_context* m_pUndoContext;
+    vec2* m_pDraggedVertex;
 };
 
+//----------------------------------------------------------------------------------------------------------------------------
+inline uint32_t ShapesStack::ShapeNumPoints(command_type shape)
+{
+    switch(shape)
+    {
+    case shape_oriented_box: return 2;
+    case shape_arc:
+    case shape_arc_filled:
+    case shape_circle:
+    case shape_circle_filled: return 1;
+    case shape_triangle:
+    case shape_triangle_filled: return 3;
+    default: return 0;
+    }
+}

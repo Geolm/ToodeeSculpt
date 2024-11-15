@@ -20,13 +20,13 @@ void ShapesStack::Init(aabb zone, struct undo_context* undo)
     m_ContextualMenuOpen = false;
     m_EditionZone = zone;
     m_CurrentState = state::IDLE;
-    m_ShapeNumPoints = 0;
     m_CurrentPoint = 0;
     m_SDFOperationComboBox = 0;
     m_SmoothBlend = 1.f;
     m_AlphaValue = 1.f;
     m_SelectedShapeIndex = INVALID_INDEX;
     m_pUndoContext = undo;
+    m_pDraggedVertex = nullptr;
 
     UndoSnapshot();
 }
@@ -69,6 +69,11 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
             }
             m_SelectedShapeIndex = selection;
         }
+
+        if (SelectedShapeValid())
+        {
+
+        }
     }
     // adding points
     else if (m_CurrentState == state::ADDING_POINTS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -76,19 +81,21 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
         assert(m_CurrentPoint < SHAPE_MAXPOINTS);
         m_ShapePoints[m_CurrentPoint++] = mouse_pos;
 
-        if (m_CurrentPoint == m_ShapeNumPoints)
+        if (m_CurrentPoint == ShapeNumPoints(m_ShapeType))
             SetState(state::SET_ROUNDNESS);
     }
+    // shape creation
     else if (m_CurrentState == state::SET_ROUNDNESS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         shape new_shape;
         new_shape.shape_type = m_ShapeType;
         new_shape.op = op_union;
         new_shape.roundness = m_Roundness;
-        new_shape.shape_desc.triangle.p0 = m_ShapePoints[0];
-        new_shape.shape_desc.triangle.p1 = m_ShapePoints[1];
-        new_shape.shape_desc.triangle.p2 = m_ShapePoints[2];
-        new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f, .alpha = 1.f};
+        new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f};
+
+        for(uint32_t i=0; i<ShapeNumPoints(m_ShapeType); ++i)
+            new_shape.shape_desc.points[i] = m_ShapePoints[i];
+
         cc_push(&m_Shapes, new_shape);
 
         SetState(state::IDLE);
@@ -113,7 +120,7 @@ void ShapesStack::Draw(Renderer& renderer)
         {
         case command_type::shape_triangle_filled: 
             {
-                renderer.DrawTriangleFilled(s->shape_desc.triangle.p0, s->shape_desc.triangle.p1, s->shape_desc.triangle.p2, 
+                renderer.DrawTriangleFilled(s->shape_desc.points[0], s->shape_desc.points[1], s->shape_desc.points[2], 
                                             s->roundness, color, s->op);
                 break;
             }
@@ -155,7 +162,7 @@ void ShapesStack::Draw(Renderer& renderer)
                 DrawShapeGizmo(renderer, s);
         }
 
-        if (ShapeIndexValid())
+        if (SelectedShapeValid())
             DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
     }
 }
@@ -176,7 +183,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
         }
 
-        if (ShapeIndexValid() && mu_header_ex(gui_context, "selected shape", MU_OPT_EXPANDED))
+        if (SelectedShapeValid() && mu_header_ex(gui_context, "selected shape", MU_OPT_EXPANDED))
         {
             shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
 
@@ -188,7 +195,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             {
                 mu_text(gui_context, "disc");
                 mu_label(gui_context, "radius");
-                res |= mu_slider_ex(gui_context, &s->shape_desc.disc.radius, 0.f, 100.f, 1.f, "%3.0f", 0);
+                res |= mu_slider_ex(gui_context, &s->shape_desc.radius, 0.f, 100.f, 1.f, "%3.0f", 0);
                 break;
             }
             case command_type::shape_triangle_filled : 
@@ -245,7 +252,6 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
 
             if (mu_button_ex(gui_context, "triangle", 0, 0))
             {
-                m_ShapeNumPoints = 3;
                 m_ShapeType = command_type::shape_triangle_filled;
                 SetState(state::ADDING_POINTS);
             }
@@ -338,11 +344,11 @@ bool ShapesStack::MouseCursorInShape(const shape* s)
     {
     case command_type::shape_triangle_filled: 
     {
-        const triangle_data& tri = s->shape_desc.triangle;
-        bool result = point_in_triangle(tri.p0, tri.p1, tri.p2, m_MousePosition);
-        result |= point_in_disc(tri.p0, shape_point_radius, m_MousePosition);
-        result |= point_in_disc(tri.p1, shape_point_radius, m_MousePosition);
-        result |= point_in_disc(tri.p2, shape_point_radius, m_MousePosition);
+        const vec2* points = s->shape_desc.points;
+        bool result = point_in_triangle(points[0], points[1], points[2], m_MousePosition);
+        result |= point_in_disc(points[0], shape_point_radius, m_MousePosition);
+        result |= point_in_disc(points[1], shape_point_radius, m_MousePosition);
+        result |= point_in_disc(points[2], shape_point_radius, m_MousePosition);
         return result;
     }
 
@@ -358,11 +364,11 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
     {
     case command_type::shape_triangle_filled: 
         {
-            const triangle_data& tri = s->shape_desc.triangle;
-            renderer.DrawTriangleFilled(tri.p0, tri.p1, tri.p2, 0.f, draw_color(na16_orange, 128));
-            renderer.DrawCircleFilled(tri.p0, shape_point_radius, draw_color(na16_black, 128));
-            renderer.DrawCircleFilled(tri.p1, shape_point_radius, draw_color(na16_black, 128));
-            renderer.DrawCircleFilled(tri.p2, shape_point_radius, draw_color(na16_black, 128));
+            const vec2* points = s->shape_desc.points;
+            renderer.DrawTriangleFilled(points[0], points[1], points[2], 0.f, draw_color(na16_orange, 128));
+            renderer.DrawCircleFilled(points[0], shape_point_radius, draw_color(na16_black, 128));
+            renderer.DrawCircleFilled(points[1], shape_point_radius, draw_color(na16_black, 128));
+            renderer.DrawCircleFilled(points[2], shape_point_radius, draw_color(na16_black, 128));
             break;
         }
 
