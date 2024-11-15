@@ -758,7 +758,7 @@ int mu_checkbox(mu_Context *ctx, const char *label, int *state) {
   mu_update_control(ctx, id, r, 0);
   /* handle click */
   if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id) {
-    res |= MU_RES_CHANGE;
+    res |= MU_RES_CHANGE|MU_RES_SUBMIT;
     *state = !*state;
   }
   /* draw */
@@ -1236,7 +1236,7 @@ int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, co
             longest_index = i;
         }
     }
-    
+
     if (*expanded)
         get_layout(ctx)->size.y += (num_entries+1) * ctx->style->title_height;
 
@@ -1248,7 +1248,7 @@ int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, co
 
     if (*index >= 0 && *index < num_entries)
         mu_draw_control_text(ctx, entries[*index], text_box, MU_COLOR_TEXT, MU_OPT_NOINTERACT);
-    
+
     if (*expanded)
     {
         mu_Rect box = mu_rect(text_box.x, text_box.y + text_box.h, text_box.w, text_box.h);
@@ -1260,18 +1260,20 @@ int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, co
             // if the entry is selected, change the index and close the combo box
             if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == entry_id)
             {
-                *index = i;
+                if (*index != i)
+                {
+                  res |= MU_RES_CHANGE|MU_RES_SUBMIT;
+                  *index = i;
+                }
                 *expanded = 0;
-                res |= MU_RES_CHANGE|MU_RES_SUBMIT;
             }
-
             mu_Color color = (ctx->hover == entry_id) ? ctx->style->colors[MU_COLOR_BUTTONHOVER] : ctx->style->colors[MU_COLOR_TITLEBG];
             mu_draw_rect(ctx, box, color);
             mu_draw_control_text(ctx, entries[i], box, MU_COLOR_TEXT, MU_OPT_NOINTERACT);
             box.y += ctx->style->indent;
         }
     }
-    
+
     // draw the button and update the expanded bool
     mu_Id button_id = mu_get_id(ctx, &index, sizeof(index));
     mu_Rect icon_box = mu_rect(text_box.x + text_box.w, text_box.y, ctx->style->title_height, ctx->style->title_height);
