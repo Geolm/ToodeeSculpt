@@ -208,6 +208,7 @@ struct mu_Context {
   mu_Vec2 scroll_delta;
   int mouse_down;
   int mouse_pressed;
+  int mouse_released;
   int key_down;
   int key_pressed;
   char input_text[32];

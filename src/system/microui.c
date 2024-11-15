@@ -183,6 +183,7 @@ void mu_end(mu_Context *ctx) {
   ctx->key_pressed = 0;
   ctx->input_text[0] = '\0';
   ctx->mouse_pressed = 0;
+  ctx->mouse_released = 0;
   ctx->scroll_delta = mu_vec2(0, 0);
   ctx->last_mouse_pos = ctx->mouse_pos;
 
@@ -392,6 +393,7 @@ void mu_input_mousedown(mu_Context *ctx, int x, int y, int btn) {
 void mu_input_mouseup(mu_Context *ctx, int x, int y, int btn) {
   mu_input_mousemove(ctx, x, y);
   ctx->mouse_down &= ~btn;
+  ctx->mouse_released |= btn;
 }
 
 
@@ -872,6 +874,9 @@ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
     v = low + (ctx->mouse_pos.x - base.x) * (high - low) / base.w;
     if (step) { v = ((long long)((v + step / 2) / step)) * step; }
   }
+  if (mu_mouse_over(ctx, base) && (ctx->mouse_released&MU_MOUSE_LEFT))
+    res |= MU_RES_SUBMIT;
+
   /* clamp and store value, update res */
   *value = v = mu_clamp(v, low, high);
   if (last != v) { res |= MU_RES_CHANGE; }
@@ -1282,8 +1287,6 @@ int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, co
 int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
 {
     const float hash_array[3] = {*red, *green, *blue};
-    mu_Id     id = mu_get_id(ctx, hash_array, sizeof(hash_array));
-    
     int res = 0;
     mu_layout_row(ctx, 2, (int[]) { 100, -1 }, 0);
     mu_label(ctx, "color");
