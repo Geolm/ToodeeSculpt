@@ -179,11 +179,15 @@ void ShapesStack::Draw(Renderer& renderer)
     }
     else if (m_CurrentState == state::IDLE || m_CurrentState == state::MOVING_POINT)
     {
+        MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
         {
             shape *s = cc_get(&m_Shapes, i);
             if (MouseCursorInShape(s))
+            {
                 DrawShapeGizmo(renderer, s);
+                MouseCursors::GetInstance().Set(MouseCursors::Hand);
+            }
         }
 
         if (SelectedShapeValid())
@@ -354,6 +358,9 @@ void ShapesStack::SetState(enum state new_state)
         m_Roundness = 0.f;
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
+
+    if (new_state == state::MOVING_POINT)
+        MouseCursors::GetInstance().Set(MouseCursors::Hand);
 
     if (new_state == state::IDLE)
         MouseCursors::GetInstance().Default();
