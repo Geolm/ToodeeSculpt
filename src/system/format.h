@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-// this function is not threadsafe as it uses the only one buffer
+// this function is not threadsafe as it uses the only one global buffer
 const char* format(const char* string, ...);
 
 #ifdef __cplusplus
