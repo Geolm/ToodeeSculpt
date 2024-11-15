@@ -180,6 +180,7 @@ struct mu_Context {
   mu_Style *style;
   mu_Id hover;
   mu_Id focus;
+  mu_Id last_focus;
   mu_Id last_id;
   mu_Rect last_rect;
   int last_zindex;

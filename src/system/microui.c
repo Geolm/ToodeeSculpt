@@ -212,6 +212,7 @@ void mu_end(mu_Context *ctx) {
 
 
 void mu_set_focus(mu_Context *ctx, mu_Id id) {
+  ctx->last_focus = ctx->focus;
   ctx->focus = id;
   ctx->updated_focus = 1;
 }
@@ -874,7 +875,7 @@ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
     v = low + (ctx->mouse_pos.x - base.x) * (high - low) / base.w;
     if (step) { v = ((long long)((v + step / 2) / step)) * step; }
   }
-  if (mu_mouse_over(ctx, base) && (ctx->mouse_released&MU_MOUSE_LEFT))
+  if (ctx->last_focus == id && (ctx->mouse_released&MU_MOUSE_LEFT))
     res |= MU_RES_SUBMIT;
 
   /* clamp and store value, update res */
@@ -1261,7 +1262,7 @@ int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, co
             {
                 *index = i;
                 *expanded = 0;
-                res |= MU_RES_CHANGE;
+                res |= MU_RES_CHANGE|MU_RES_SUBMIT;
             }
 
             mu_Color color = (ctx->hover == entry_id) ? ctx->style->colors[MU_COLOR_BUTTONHOVER] : ctx->style->colors[MU_COLOR_TITLEBG];
