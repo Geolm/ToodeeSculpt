@@ -63,18 +63,6 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
     // selecting shape
     else if (m_CurrentState == state::IDLE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        if (aabb_test_point(m_EditionZone, mouse_pos))
-        {
-            uint32_t selection = INVALID_INDEX;
-            for(uint32_t i=0; i<cc_size(&m_Shapes) && selection == INVALID_INDEX; ++i)
-            {
-                shape *s = cc_get(&m_Shapes, i);
-                if (MouseCursorInShape(s))
-                    selection = i;
-            }
-            m_SelectedShapeIndex = selection;
-        }
-
         if (SelectedShapeValid())
         {
             shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
@@ -88,6 +76,18 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
                     SetState(state::MOVING_POINT);
                 }
             }
+        }
+
+        if (aabb_test_point(m_EditionZone, mouse_pos) && m_pGrabbedPoint == nullptr)
+        {
+            uint32_t selection = INVALID_INDEX;
+            for(uint32_t i=0; i<cc_size(&m_Shapes) && selection == INVALID_INDEX; ++i)
+            {
+                shape *s = cc_get(&m_Shapes, i);
+                if (MouseCursorInShape(s))
+                    selection = i;
+            }
+            m_SelectedShapeIndex = selection;
         }
     }
     // moving point
@@ -177,7 +177,7 @@ void ShapesStack::Draw(Renderer& renderer)
         if (m_ShapeType == command_type::shape_triangle_filled) 
             renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_ShapePoints[2], m_Roundness, draw_color(na16_light_blue, 128));
     }
-    else if (m_CurrentState == state::IDLE || m_CurrentState == state::MOVING_POINT)
+    else if (m_CurrentState == state::IDLE)
     {
         MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
@@ -190,6 +190,11 @@ void ShapesStack::Draw(Renderer& renderer)
             }
         }
 
+        if (SelectedShapeValid())
+            DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
+    }
+    else if (m_CurrentState == state::MOVING_POINT)
+    {
         if (SelectedShapeValid())
             DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
     }
@@ -358,6 +363,9 @@ void ShapesStack::SetState(enum state new_state)
         m_Roundness = 0.f;
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
+
+    if (m_CurrentState == state::MOVING_POINT && new_state == state::IDLE)
+        m_pGrabbedPoint = nullptr;
 
     if (new_state == state::MOVING_POINT)
         MouseCursors::GetInstance().Set(MouseCursors::Hand);
