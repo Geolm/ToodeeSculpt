@@ -10,6 +10,7 @@
 #include "system/color_ramp.h"
 #include "system/sokol_time.h"
 #include "system/palettes.h"
+#include "system/format.h"
 #include <string.h>
 #include "Editor.h"
 #include "MouseCursors.h"
@@ -186,6 +187,13 @@ void App::Update(CA::MetalDrawable* drawable)
     // debug interface
     if (mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
     {
+        if (mu_header(m_pGuiContext, "FPS"))
+        {
+            mu_layout_row(m_pGuiContext, 2, (int[]) { 150, -1 }, 0);
+            mu_text(m_pGuiContext, "deltatime");
+            mu_text(m_pGuiContext, format("%3.2f ms", m_DeltaTime*1000.f));
+        }
+
         m_Renderer.DebugInterface(m_pGuiContext);
         m_pEditor->DebugInterface(m_pGuiContext);
         mu_end_window(m_pGuiContext);
