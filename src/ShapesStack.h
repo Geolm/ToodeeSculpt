@@ -30,11 +30,7 @@ private:
     struct shape_data
     {
         vec2 points[SHAPE_MAXPOINTS];
-        union
-        {
-            float width;
-            float radius;
-        };
+        float width;
     };
 
     struct shape_color

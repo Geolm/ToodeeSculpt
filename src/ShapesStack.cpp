@@ -170,6 +170,11 @@ void ShapesStack::Draw(Renderer& renderer)
                                             s->roundness, color, s->op);
                 break;
             }
+        case command_type::shape_circle_filled:
+            {
+                renderer.DrawCircleFilled(s->shape_desc.points[0], s->roundness, color, s->op);
+                break;
+            }
         default: break;
         }
     }
@@ -196,8 +201,15 @@ void ShapesStack::Draw(Renderer& renderer)
         renderer.DrawCircleFilled(m_Reference, shape_point_radius, draw_color(na16_red, 128));
 
         // preview shape
-        if (m_ShapeType == command_type::shape_triangle_filled) 
+        switch(m_ShapeType)
+        {
+        case command_type::shape_triangle_filled:
             renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_ShapePoints[2], m_Roundness, draw_color(na16_light_blue, 128));
+            break;
+
+        case command_type::shape_circle_filled:
+            renderer.DrawCircleFilled(m_ShapePoints[0], m_Roundness, draw_color(na16_light_blue, 128));
+        }
     }
     else if (m_CurrentState == state::IDLE)
     {
@@ -251,7 +263,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             {
                 mu_text(gui_context, "disc");
                 mu_label(gui_context, "radius");
-                res |= mu_slider_ex(gui_context, &s->shape_desc.radius, 0.f, 100.f, 1.f, "%3.0f", 0);
+                res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 1000.f, 1.f, "%3.0f", 0);
                 break;
             }
             case command_type::shape_triangle_filled : 
@@ -293,7 +305,8 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
             mu_layout_row(gui_context, 1, (int[]) { 90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0))
             {
-                m_ContextualMenuOpen = false;
+                m_ShapeType = command_type::shape_circle_filled;
+                SetState(state::ADDING_POINTS);
             }
 
             if (mu_button_ex(gui_context, "circle", 0, 0))
@@ -411,6 +424,11 @@ bool ShapesStack::MouseCursorInShape(const shape* s, bool with_vertices)
             result = point_in_triangle(points[0], points[1], points[2], m_MousePosition);
             break;
         }
+    case command_type::shape_circle_filled:
+        {
+            result = point_in_disc(points[0], s->roundness, m_MousePosition);
+            break;
+        }
 
     default: 
         return false;
@@ -438,6 +456,11 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
             renderer.DrawCircleFilled(points[1], shape_point_radius, draw_color(na16_black, 128));
             renderer.DrawCircleFilled(points[2], shape_point_radius, draw_color(na16_black, 128));
             break;
+        }
+    case command_type::shape_circle_filled:
+        {
+            renderer.DrawCircleFilled(s->shape_desc.points[0], s->roundness, draw_color(na16_orange, 128));
+            renderer.DrawCircleFilled(s->shape_desc.points[0], shape_point_radius, draw_color(na16_black, 128));
         }
 
     default: 
