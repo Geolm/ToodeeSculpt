@@ -57,13 +57,14 @@ private:
         SHAPE_SELECTED,
         ADDING_POINTS,
         SET_ROUNDNESS,
-        MOVING_POINT
+        MOVING_POINT,
+        MOVING_SHAPE
     };
 
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
-    bool MouseCursorInShape(const shape* s);
+    bool MouseCursorInShape(const shape* s, bool with_vertices);
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
     void UndoSnapshot();
     inline bool SelectedShapeValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
@@ -86,7 +87,7 @@ private:
     state m_CurrentState;
     uint32_t m_CurrentPoint;
     vec2 m_ShapePoints[SHAPE_MAXPOINTS];
-    vec2 m_RoundnessReference;
+    vec2 m_Reference;
     float m_Roundness;
     command_type m_ShapeType;
     uint32_t m_SelectedShapeIndex;

@@ -38,12 +38,22 @@ void ShapesStack::OnMouseMove(vec2 pos)
 
     if (m_CurrentState == state::SET_ROUNDNESS)
     {
-        m_Roundness = vec2_distance(pos, m_RoundnessReference);
+        m_Roundness = vec2_distance(pos, m_Reference);
     }
     // moving point
     else if (m_CurrentState == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
     {
         *m_pGrabbedPoint = m_MousePosition;
+    }
+    else if (m_CurrentState == state::MOVING_SHAPE)
+    {
+        shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
+        vec2 delta = m_MousePosition - m_Reference;
+        vec2* points = s->shape_desc.points;
+        for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
+            points[i] += delta;
+
+        m_Reference = m_MousePosition;
     }
 }
 
@@ -76,6 +86,12 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
                     SetState(state::MOVING_POINT);
                 }
             }
+
+            if (m_CurrentState == state::IDLE && MouseCursorInShape(s, false))
+            {
+                m_Reference = m_MousePosition;
+                SetState(state::MOVING_SHAPE);
+            }
         }
 
         if (aabb_test_point(m_EditionZone, mouse_pos) && m_pGrabbedPoint == nullptr)
@@ -84,7 +100,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
             for(uint32_t i=0; i<cc_size(&m_Shapes) && selection == INVALID_INDEX; ++i)
             {
                 shape *s = cc_get(&m_Shapes, i);
-                if (MouseCursorInShape(s))
+                if (MouseCursorInShape(s, true))
                     selection = i;
             }
             m_SelectedShapeIndex = selection;
@@ -98,6 +114,12 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
             SetState(state::IDLE);
             UndoSnapshot();
         }
+    }
+    // moving shape
+    else if (m_CurrentState == state::MOVING_SHAPE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    {
+        SetState(state::IDLE);
+        UndoSnapshot();
     }
     // adding points
     else if (m_CurrentState == state::ADDING_POINTS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -171,7 +193,7 @@ void ShapesStack::Draw(Renderer& renderer)
     }
     else if (m_CurrentState == state::SET_ROUNDNESS)
     {
-        renderer.DrawCircleFilled(m_RoundnessReference, shape_point_radius, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_Reference, shape_point_radius, draw_color(na16_red, 128));
 
         // preview shape
         if (m_ShapeType == command_type::shape_triangle_filled) 
@@ -183,10 +205,11 @@ void ShapesStack::Draw(Renderer& renderer)
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
         {
             shape *s = cc_get(&m_Shapes, i);
-            if (MouseCursorInShape(s))
+            if (MouseCursorInShape(s, true))
             {
                 DrawShapeGizmo(renderer, s);
-                MouseCursors::GetInstance().Set(MouseCursors::Hand);
+                if (i == m_SelectedShapeIndex)
+                    MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
@@ -293,7 +316,6 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
     }
 }
 
-
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::UndoSnapshot()
 {
@@ -359,7 +381,7 @@ void ShapesStack::SetState(enum state new_state)
 
     if (m_CurrentState == state::ADDING_POINTS && new_state == state::SET_ROUNDNESS)
     {
-        m_RoundnessReference = m_MousePosition;
+        m_Reference = m_MousePosition;
         m_Roundness = 0.f;
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
@@ -377,7 +399,7 @@ void ShapesStack::SetState(enum state new_state)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-bool ShapesStack::MouseCursorInShape(const shape* s)
+bool ShapesStack::MouseCursorInShape(const shape* s, bool with_vertices)
 {
     const vec2* points = s->shape_desc.points;
     bool result = false;
@@ -394,8 +416,11 @@ bool ShapesStack::MouseCursorInShape(const shape* s)
         return false;
     }
 
-    for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
-        result |= point_in_disc(points[i], shape_point_radius, m_MousePosition);
+    if (with_vertices)
+    {
+        for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
+            result |= point_in_disc(points[i], shape_point_radius, m_MousePosition);
+    }
 
     return result;
 }
