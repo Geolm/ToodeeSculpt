@@ -10,10 +10,10 @@ typedef struct
 {
     float hue;  // [0; 360]
     float hue_shift;
-    float saturation_min;
-    float saturation_max;
-    float value_min;
-    float value_max;
+    float saturation;
+    float saturation_shift;
+    float value;
+    float value_shift;
 } hueshift_ramp_desc;
 
 // ----------------------------------------------------------------------------
@@ -53,26 +53,33 @@ static inline uint32_t hsv_to_rgba(float hue, float saturation, float value, flo
 }
 
 // ----------------------------------------------------------------------------
-uint32_t hueshift_ramp(hueshift_ramp_desc* desc, float t, float alpha)
+static inline uint32_t hueshift_ramp(const hueshift_ramp_desc* desc, float t, float alpha)
 {
     assert(desc->hue >= 0.f && desc->hue <= 360.f);
-    assert(desc->hue_shift >= 0.f && desc->hue_shift <= 180.f);
-    assert(desc->saturation_min >= 0.f && desc->saturation_max <= 1.f);
     assert(t >= 0.f && t <= 1.f);
-    assert(desc->value_min < desc->value_max);
 
-    float value = fmaf(desc->value_max - desc->value_min, t, desc->value_min);
-    float saturation = fmaf(desc->saturation_max - desc->saturation_min, t, desc->saturation_min);
-
-    t = (t * 2.f) - 1.f;
-    float hue = desc->hue + (t * desc->hue_shift);
+    float value = desc->value + t * desc->value_shift;
+    float saturation = desc->saturation + t * desc->saturation_shift;
+    float hue = desc->hue + t * desc->hue_shift;
 
     if (hue>360.f)
         hue -= 360.f;
     else if (hue<0.f)
         hue += 360.f;
 
+    saturation = fminf(fmaxf(saturation, 0.f), 1.f);
+    value = fminf(fmaxf(value, 0.f), 1.f);
+
     return hsv_to_rgba(hue, saturation, value, alpha);
+}
+
+// ----------------------------------------------------------------------------
+static inline uint32_t palette_ramp(const uint32_t* palette, uint32_t num_palette_entries, float t, uint8_t alpha)
+{
+    // clamp t
+    t = fmaxf(fminf(t, 1.f), 0.f);
+    uint32_t index = ((float)num_palette_entries) * t;
+    return (palette[index] & 0x00ffffff) | (alpha<<24);
 }
 
 #endif

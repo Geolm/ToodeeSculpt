@@ -9,15 +9,21 @@
 #include "system/microui.h"
 #include "system/color_ramp.h"
 #include "system/sokol_time.h"
+#include "system/palettes.h"
+#include "system/format.h"
 #include <string.h>
 #include "Editor.h"
+#include "MouseCursors.h"
+#include "Icons.h"
 
-static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.b, color.g, color.a);}
+static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.g, color.b, color.a);}
 static inline mu_Color to_mu_color(uint32_t packed_color) 
 {
-    mu_Color result; 
-    uint32_t* packed = (uint32_t*)&result.r;
-    *packed = packed_color;
+    mu_Color result;
+    result.a = (packed_color>>24)&0xff;
+    result.b = (packed_color>>16)&0xff;
+    result.g = (packed_color>>8)&0xff;
+    result.r = packed_color&0xff;
     return result;
 }
 
@@ -63,12 +69,21 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
         user_ptr->OnMouseButton(button, action, mods);
     });
 
+    glfwSetScrollCallback(window, [] (GLFWwindow* window, double xoffset, double yoffset)
+    {
+        App* user_ptr = (App*) glfwGetWindowUserPointer(window);
+        mu_input_scroll(user_ptr->m_pGuiContext, (int)xoffset, (int)yoffset);
+    });
+
     log_add_callback([] (log_Event *ev)
     {
         App* user_ptr = (App*) ev->udata;
 
         snprintf(user_ptr->m_pLogBuffer, user_ptr->m_LogSize, ev->fmt, ev->ap);
     }, this, 0);
+
+    MouseCursors::CreateInstance();
+    MouseCursors::GetInstance().Init(window);
 
     stm_setup();
     m_LastTime = m_StartTime = stm_now();
@@ -89,20 +104,19 @@ void App::InitGui()
     {
         if (len == -1)
             len = (int)strlen(text);
-
-        return len * FONT_SPACING;
+        return len * (FONT_WIDTH + FONT_SPACING);
     };
 
     m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT; };
 
     hueshift_ramp_desc ramp = 
     {
-        .hue = 220.0f,
-        .hue_shift = 60.0f,
-        .saturation_min = 0.1f,
-        .saturation_max = 0.9f,
-        .value_min = 0.2f,
-        .value_max = 1.0f
+        .hue = 216.0f,
+        .saturation = 0.65f,
+        .value = 0.15f,
+        .hue_shift = -150.f,
+        .saturation_shift = -1.f,
+        .value_shift = 1.0f
     };
 
     for(uint32_t i=0; i<MU_COLOR_MAX; ++i)
@@ -143,6 +157,20 @@ void App::DrawGui()
                                     (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
             break;
         }
+        case MU_COMMAND_ICON :
+        {
+            aabb box = (aabb){.min = (vec2) {(float)cmd->icon.rect.x, (float)cmd->icon.rect.y},
+                              .max = (vec2) {(float)(cmd->icon.rect.x + cmd->icon.rect.w), (float)(cmd->icon.rect.y + cmd->icon.rect.h)}};
+            switch(cmd->icon.id)
+            {
+                case MU_ICON_CLOSE : DrawIcon(m_Renderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
+                case MU_ICON_COLLAPSED : DrawIcon(m_Renderer, box, ICON_COLLAPSED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                case MU_ICON_EXPANDED : DrawIcon(m_Renderer, box, ICON_EXPANDED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+            }
+
+            break;
+        }
+
         }
     }
 }
@@ -157,8 +185,24 @@ void App::Update(CA::MetalDrawable* drawable)
     m_Renderer.BeginFrame();
     m_pEditor->Draw(m_Renderer);
     m_pEditor->UserInterface(m_pGuiContext);
-    m_Renderer.UserInterface(m_pGuiContext);
+
+    // debug interface
+    if (mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
+    {
+        if (mu_header(m_pGuiContext, "FPS"))
+        {
+            mu_layout_row(m_pGuiContext, 2, (int[]) { 150, -1 }, 0);
+            mu_text(m_pGuiContext, "deltatime");
+            mu_text(m_pGuiContext, format("%3.2f ms", m_DeltaTime*1000.f));
+        }
+
+        m_Renderer.DebugInterface(m_pGuiContext);
+        m_pEditor->DebugInterface(m_pGuiContext);
+        mu_end_window(m_pGuiContext);
+    }
     LogUserInterface();
+
+
     mu_end(m_pGuiContext);
     DrawGui();
     m_Renderer.EndFrame();
@@ -178,15 +222,43 @@ void App::LogUserInterface()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnKeyEvent(int key, int scancode, int action, int mods)
 {
-    // TODO : add keycode conversion
+    if (key >= GLFW_KEY_SPACE && key <= GLFW_KEY_Z && action == GLFW_PRESS)
+    {
+        char text[2] = {(char)key, 0};
+        
+        if (!(mods&GLFW_MOD_SHIFT))
+            text[0] = tolower(key);
+
+        mu_input_text(m_pGuiContext, text);
+    }
+
+    int ui_key = 0;
+    if (key == GLFW_KEY_BACKSPACE)
+        ui_key |= MU_KEY_BACKSPACE;
+
+    if (key == GLFW_KEY_ENTER)
+        ui_key |= MU_KEY_RETURN;
+
+    if (key == GLFW_KEY_RIGHT_SHIFT || key == GLFW_KEY_LEFT_SHIFT)
+        ui_key |= MU_KEY_SHIFT;
+
+    if (key == GLFW_KEY_RIGHT_CONTROL || key == GLFW_KEY_LEFT_CONTROL)
+        ui_key |= MU_KEY_CTRL;
+
+    if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
+        ui_key |= MU_KEY_ALT;
+
     if (action == GLFW_PRESS)
-        mu_input_keydown(m_pGuiContext, key);
+        mu_input_keydown(m_pGuiContext, ui_key);
 
     if (action == GLFW_RELEASE)
-        mu_input_keyup(m_pGuiContext, key);
+        mu_input_keyup(m_pGuiContext, ui_key);
 
-    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    if (key == GLFW_KEY_R && action == GLFW_PRESS && mods&GLFW_MOD_CONTROL)
         m_Renderer.ReloadShaders();
+        
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        m_pEditor->Undo();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -202,7 +274,8 @@ void App::OnMouseMove(float x, float y)
 {
     x *= m_ScaleX; y *= m_ScaleY;
     mu_input_mousemove(m_pGuiContext, (int)x, (int)y);
-    m_MouseX = x; m_MouseY = y;
+    m_MousePos = (vec2) {x, y};
+    m_pEditor->OnMouseMove(m_MousePos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -217,16 +290,17 @@ void App::OnMouseButton(int button, int action, int mods)
     }
 
     if (action == GLFW_PRESS)
-        mu_input_mousedown(m_pGuiContext, (int)m_MouseX, (int)m_MouseY, mu_button);
+        mu_input_mousedown(m_pGuiContext, (int)m_MousePos.x, (int)m_MousePos.y, mu_button);
     else if (action == GLFW_RELEASE)
-        mu_input_mouseup(m_pGuiContext, (int)m_MouseX, (int)m_MouseY, mu_button);
+        mu_input_mouseup(m_pGuiContext, (int)m_MousePos.x, (int)m_MousePos.y, mu_button);
 
-    m_pEditor->OnMouseButton(m_MouseX, m_MouseY, button, action);
+    m_pEditor->OnMouseButton(m_MousePos, button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Terminate()
 {
+    MouseCursors::GetInstance().Terminate();
     m_pEditor->Terminate();
     delete m_pEditor;
     m_Renderer.Terminate();

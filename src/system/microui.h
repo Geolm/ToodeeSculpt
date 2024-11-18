@@ -180,6 +180,7 @@ struct mu_Context {
   mu_Style *style;
   mu_Id hover;
   mu_Id focus;
+  mu_Id last_focus;
   mu_Id last_id;
   mu_Rect last_rect;
   int last_zindex;
@@ -208,6 +209,7 @@ struct mu_Context {
   mu_Vec2 scroll_delta;
   int mouse_down;
   int mouse_pressed;
+  int mouse_released;
   int key_down;
   int key_pressed;
   char input_text[32];
@@ -297,7 +299,8 @@ int mu_begin_popup(mu_Context *ctx, const char *name);
 void mu_end_popup(mu_Context *ctx);
 void mu_begin_panel_ex(mu_Context *ctx, const char *name, int opt);
 void mu_end_panel(mu_Context *ctx);
-void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries, int expand_layout);
+int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries);
+int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue);
 
 #ifdef __cplusplus
 }

@@ -7,6 +7,7 @@
 #include "shader_reader.h"
 #include "../system/microui.h"
 #include "../system/aabb.h"
+#include "../system/format.h"
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 #define TEXT_BUFFER_SIZE (1024)
@@ -335,26 +336,19 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::UserInterface(struct mu_Context* gui_context)
+void Renderer::DebugInterface(struct mu_Context* gui_context)
 {
-    char buffer[TEXT_BUFFER_SIZE];
-
-    if (mu_begin_window_ex(gui_context, "Renderer Debug View", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
+    if (mu_header(gui_context, "Renderer"))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_text(gui_context, "frame count");
-        snprintf(buffer, TEXT_BUFFER_SIZE, "%6d", m_FrameIndex);
-        mu_text(gui_context, buffer);
+        mu_text(gui_context, format("%6d", m_FrameIndex));
         mu_text(gui_context, "draw cmd count");
-        snprintf(buffer, TEXT_BUFFER_SIZE, "%6d/%d", m_Commands.GetNumElements(), m_Commands.GetMaxElements());
-        mu_text(gui_context, buffer);
+        mu_text(gui_context, format("%6d/%d", m_Commands.GetNumElements(), m_Commands.GetMaxElements()));
         mu_text(gui_context, "draw data buffer");
-        snprintf(buffer, TEXT_BUFFER_SIZE, "%6d/%d", m_DrawData.GetNumElements(), m_DrawData.GetMaxElements());
-        mu_text(gui_context, buffer);
+        mu_text(gui_context, format("%6d/%d", m_DrawData.GetNumElements(), m_DrawData.GetMaxElements()));
         mu_text(gui_context, "aa width");
         mu_slider(gui_context, &m_AAWidth, 0.f, 4.f);
-
-        mu_end_window(gui_context);
     }
 }
 
@@ -567,6 +561,9 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op)
 {
+    if (x0 == x1 && y1 == y0)
+        return;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -667,6 +664,10 @@ void Renderer::DrawText(float x, float y, const char* text, draw_color color)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op)
 {
+    // exclude invalid triangle
+    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
+        return;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -698,6 +699,10 @@ void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, dr
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op)
 {
+    // exclude invalid triangle
+    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
+        return;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {

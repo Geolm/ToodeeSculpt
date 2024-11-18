@@ -31,7 +31,7 @@ private:
     uint32_t m_ViewportWidth;
     float m_ScaleX, m_ScaleY;
     mu_Context* m_pGuiContext {nullptr};
-    float m_MouseX, m_MouseY;
+    vec2 m_MousePos;
     char* m_pLogBuffer;
     size_t m_LogSize;
     uint64_t m_StartTime;

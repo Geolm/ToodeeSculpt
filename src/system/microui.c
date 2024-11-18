@@ -183,6 +183,7 @@ void mu_end(mu_Context *ctx) {
   ctx->key_pressed = 0;
   ctx->input_text[0] = '\0';
   ctx->mouse_pressed = 0;
+  ctx->mouse_released = 0;
   ctx->scroll_delta = mu_vec2(0, 0);
   ctx->last_mouse_pos = ctx->mouse_pos;
 
@@ -211,6 +212,7 @@ void mu_end(mu_Context *ctx) {
 
 
 void mu_set_focus(mu_Context *ctx, mu_Id id) {
+  ctx->last_focus = ctx->focus;
   ctx->focus = id;
   ctx->updated_focus = 1;
 }
@@ -392,6 +394,7 @@ void mu_input_mousedown(mu_Context *ctx, int x, int y, int btn) {
 void mu_input_mouseup(mu_Context *ctx, int x, int y, int btn) {
   mu_input_mousemove(ctx, x, y);
   ctx->mouse_down &= ~btn;
+  ctx->mouse_released |= btn;
 }
 
 
@@ -755,7 +758,7 @@ int mu_checkbox(mu_Context *ctx, const char *label, int *state) {
   mu_update_control(ctx, id, r, 0);
   /* handle click */
   if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id) {
-    res |= MU_RES_CHANGE;
+    res |= MU_RES_CHANGE|MU_RES_SUBMIT;
     *state = !*state;
   }
   /* draw */
@@ -872,6 +875,9 @@ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
     v = low + (ctx->mouse_pos.x - base.x) * (high - low) / base.w;
     if (step) { v = ((long long)((v + step / 2) / step)) * step; }
   }
+  if (ctx->last_focus == id && (ctx->mouse_released&MU_MOUSE_LEFT))
+    res |= MU_RES_SUBMIT;
+
   /* clamp and store value, update res */
   *value = v = mu_clamp(v, low, high);
   if (last != v) { res |= MU_RES_CHANGE; }
@@ -1207,11 +1213,16 @@ void mu_end_panel(mu_Context *ctx) {
   pop_container(ctx);
 }
 
-void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries, int expand_layout)
+//----------------------------------------------------------------------------------------------------------------------------
+// Custom controls, probably requires C99
+//----------------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------------------------
+int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries)
 {
     // bad parameters check
     if (expanded == NULL || index == NULL || entries == NULL || num_entries < 1)
-        return;
+        return 0;
 
     // look for the longest string in the entries to size the combo box
     int longest_entry = -1;
@@ -1226,12 +1237,10 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
         }
     }
 
-    if (expand_layout && *expanded)
-    {
-        mu_Layout *layout = get_layout(ctx);
-        layout->size.y += (num_entries+1) * ctx->style->title_height;
-    }
+    if (*expanded)
+        get_layout(ctx)->size.y += (num_entries+1) * ctx->style->title_height;
 
+    int res = 0;
     mu_Rect rect = mu_layout_next(ctx);
     mu_Font font = ctx->style->font;
     mu_Rect text_box = mu_rect(rect.x, rect.y, ctx->text_width(font, entries[longest_index], longest_entry) + ctx->style->padding, ctx->style->indent);
@@ -1239,7 +1248,7 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
 
     if (*index >= 0 && *index < num_entries)
         mu_draw_control_text(ctx, entries[*index], text_box, MU_COLOR_TEXT, MU_OPT_NOINTERACT);
-    
+
     if (*expanded)
     {
         mu_Rect box = mu_rect(text_box.x, text_box.y + text_box.h, text_box.w, text_box.h);
@@ -1251,17 +1260,20 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
             // if the entry is selected, change the index and close the combo box
             if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == entry_id)
             {
-                *index = i;
+                if (*index != i)
+                {
+                  res |= MU_RES_CHANGE|MU_RES_SUBMIT;
+                  *index = i;
+                }
                 *expanded = 0;
             }
-
             mu_Color color = (ctx->hover == entry_id) ? ctx->style->colors[MU_COLOR_BUTTONHOVER] : ctx->style->colors[MU_COLOR_TITLEBG];
             mu_draw_rect(ctx, box, color);
             mu_draw_control_text(ctx, entries[i], box, MU_COLOR_TEXT, MU_OPT_NOINTERACT);
             box.y += ctx->style->indent;
         }
     }
-    
+
     // draw the button and update the expanded bool
     mu_Id button_id = mu_get_id(ctx, &index, sizeof(index));
     mu_Rect icon_box = mu_rect(text_box.x + text_box.w, text_box.y, ctx->style->title_height, ctx->style->title_height);
@@ -1271,5 +1283,24 @@ void mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, c
     if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == button_id)
         *expanded = !*expanded;
 
-    return;
+    return res;
 }
+
+//----------------------------------------------------------------------------------------------------------------------------
+int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
+{
+    const float hash_array[3] = {*red, *green, *blue};
+    int res = 0;
+    mu_layout_row(ctx, 2, (int[]) { 100, -1 }, 0);
+    mu_label(ctx, "color");
+    mu_Rect r = mu_layout_next(ctx);
+    mu_draw_rect(ctx, r, mu_color((int)(*red*255.f), (int)(*green*255.f), (int)(*blue*255.f), 255));
+    mu_label(ctx, "red");
+    res |= mu_slider_ex(ctx, red, 0.f, 1.f, 0.001f, "%1.2f", 0);
+    mu_label(ctx, "green");
+    res |= mu_slider_ex(ctx, green, 0.f, 1.f, 0.001f, "%1.2f", 0);
+    mu_label(ctx, "blue");
+    res |= mu_slider_ex(ctx, blue, 0.f, 1.f, 0.001f, "%1.2f", 0);
+    return res;
+}
+

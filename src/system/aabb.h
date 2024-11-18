@@ -6,10 +6,20 @@
 
 typedef struct {vec2 min, max;} aabb;
 
+enum aabb_corners
+{
+    aabb_top_left,
+    aabb_top_right,
+    aabb_bottom_left,
+    aabb_botton_right
+};
+
 static aabb aabb_invalid(void);
 static void aabb_grow(aabb* box, vec2 amount);
 static void aabb_encompass(aabb* box, vec2 point);
 static aabb aabb_merge(aabb box0, aabb box1);
+static void aabb_scale(aabb* box, float scale);
+static vec2 aabb_get_vertex(aabb* box, enum aabb_corners corner);
 static aabb aabb_from_bezier(vec2 p0, vec2 p1, vec2 p2);
 static aabb aabb_from_capsule(vec2 p0, vec2 p1, float radius);
 static aabb aabb_from_obb(vec2 p0, vec2 p1, float width);
@@ -49,6 +59,27 @@ static inline void aabb_encompass(aabb* box, vec2 point)
 {
     box->min = vec2_min(box->min, point);
     box->max = vec2_max(box->max, point);
+}
+
+//-----------------------------------------------------------------------------
+static inline void aabb_scale(aabb* box, float scale)
+{
+    vec2 extent = vec2_scale(vec2_sub(box->max, box->min), .5f * scale);
+    vec2 center = vec2_scale(vec2_add(box->max, box->min), .5f);
+    box->min = vec2_sub(center, extent);
+    box->max = vec2_add(center, extent);
+}
+
+//-----------------------------------------------------------------------------
+static inline vec2 aabb_get_vertex(aabb* box, enum aabb_corners corner)
+{
+    switch(corner)
+    {
+    case aabb_top_left : return box->min;
+    case aabb_top_right : return (vec2) {box->max.x, box->min.y};
+    case aabb_bottom_left : return (vec2) {box->min.x, box->max.y};
+    default: return box->max;
+    }
 }
 
 //-----------------------------------------------------------------------------

@@ -6,7 +6,6 @@
 #include "system/aabb.h"
 #include "shaders/common.h"
 
-
 struct mu_Context;
 class Renderer;
 
@@ -14,41 +13,29 @@ class Renderer;
 class ShapesStack
 {
 public:
-    void Init(aabb zone);
-    void OnMouseButton(float x, float y, int button, int action);
+    void Init(aabb zone, struct undo_context* undo);
+    void OnMouseMove(vec2 pos);
+    void OnMouseButton(vec2 pos, int button, int action);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
+    void Undo();
     void Terminate();
 
 private:
-    void ContextualMenu(struct mu_Context* gui_context);
-
-private:
-
     //----------------------------------------------------------------------------------------------------------------------------
     // internal structures
-    struct box_data
+    enum {SHAPE_MAXPOINTS = 3};
+    enum {SHAPES_STACK_RESERVATION = 100};
+
+    struct shape_data
     {
-        vec2 p0, p1;
+        vec2 points[SHAPE_MAXPOINTS];
         float width;
     };
 
-    struct triangle_data
+    struct shape_color
     {
-        vec2 p0, p1, p2;
-    };
-
-    struct disc_data
-    {
-        vec2 center;
-        float radius;
-    };
-
-    union shape_data
-    {
-        struct box_data box;
-        struct disc_data disc;
-        struct triangle_data triangle;
+        float red, green, blue;
     };
 
     struct shape
@@ -57,19 +44,65 @@ private:
         command_type shape_type;
         float roundness;
         sdf_operator op;
+        shape_color color;
     };
 
-    enum mode
+    enum state
     {
-        MODE_IDLE,
-        MODE_NEW_SHAPE
+        IDLE,
+        SHAPE_SELECTED,
+        ADDING_POINTS,
+        SET_ROUNDNESS,
+        MOVING_POINT,
+        MOVING_SHAPE
     };
 
-    //----------------------------------------------------------------------------------------------------------------------------
-    // private properties
+private:
+    void ContextualMenu(struct mu_Context* gui_context);
+    void SetState(enum state new_state);
+    bool MouseCursorInShape(const shape* s, bool with_vertices);
+    void DrawShapeGizmo(Renderer& renderer, const shape* s);
+    void UndoSnapshot();
+    inline bool SelectedShapeValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
+    inline uint32_t ShapeNumPoints(command_type shape);
+
+private:
+    // serialized data 
     cc_vec(shape) m_Shapes;
+    float m_SmoothBlend;
+    float m_AlphaValue;
+
+    // ui
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_ContextualMenuOpen;
+    int m_SDFOperationComboBox;
+    vec2 m_MousePosition;
+
+    // shape creation
+    state m_CurrentState;
+    uint32_t m_CurrentPoint;
+    vec2 m_ShapePoints[SHAPE_MAXPOINTS];
+    vec2 m_Reference;
+    float m_Roundness;
+    command_type m_ShapeType;
+    uint32_t m_SelectedShapeIndex;
+    struct undo_context* m_pUndoContext;
+    vec2* m_pGrabbedPoint;
 };
 
+//----------------------------------------------------------------------------------------------------------------------------
+inline uint32_t ShapesStack::ShapeNumPoints(command_type shape)
+{
+    switch(shape)
+    {
+    case shape_oriented_box: return 2;
+    case shape_arc:
+    case shape_arc_filled:
+    case shape_circle:
+    case shape_circle_filled: return 1;
+    case shape_triangle:
+    case shape_triangle_filled: return 3;
+    default: return 0;
+    }
+}

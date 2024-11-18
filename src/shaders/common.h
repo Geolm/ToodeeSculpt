@@ -47,13 +47,23 @@ struct draw_color
     uint32_t packed_data;
 
 #if !defined(__METAL_VERSION__) && defined(__cplusplus)
-    draw_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
+    draw_color() = default;
+    explicit draw_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
     {
         packed_data = (alpha<<24) | (blue<<16) | (green<<8) | red;
     }
-    explicit draw_color(uint32_t color) 
+    explicit draw_color(uint32_t color)
     {
         packed_data = color;
+    }
+    draw_color(uint32_t rgb, uint8_t alpha)
+    {
+        packed_data = (alpha<<24) | (rgb&0x00ffffff);
+    }
+
+    void from_float(float red, float green, float blue, float alpha)
+    {
+        packed_data = (uint8_t(alpha * 255.f)<<24) | (uint8_t(blue * 255.f)<<16) | (uint8_t(green*255.f)<<8) | uint8_t(red*255.f);
     }
 #endif
 };
