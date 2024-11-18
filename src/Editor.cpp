@@ -12,6 +12,7 @@ void Editor::Init(aabb zone)
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));
     m_pUndoContext = undo_init(1<<18, 1<<10);
     m_ShapesStack.Init(zone, m_pUndoContext);
+    m_MenuBarState = MenuBar_None;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -54,7 +55,58 @@ void Editor::DebugInterface(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::UserInterface(struct mu_Context* gui_context)
 {
+    MenuBar(gui_context);
     m_ShapesStack.UserInterface(gui_context);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::MenuBar(struct mu_Context* gui_context)
+{
+    int text_height = gui_context->style->title_height;
+    int padding = gui_context->style->padding;
+    int row_size = gui_context->text_width(NULL, NULL, 10);
+    int window_options = MU_OPT_NOSCROLL|MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOTITLE;
+
+    if (mu_begin_window_ex(gui_context, "shape combiner", mu_rect(0, 0, row_size*3 + 20, text_height + padding), window_options))
+    {
+        mu_layout_row(gui_context, 3, (int[]) {row_size, row_size,  row_size}, 0);
+        
+        if (mu_button(gui_context, "File"))
+            m_MenuBarState = (m_MenuBarState == MenuBar_File) ? MenuBar_None : MenuBar_File;
+        
+        if (mu_button(gui_context, "Edit"))
+            m_MenuBarState = (m_MenuBarState == MenuBar_Edit) ? MenuBar_None : MenuBar_Edit;
+
+        if (mu_button(gui_context, "View"))
+            m_MenuBarState = (m_MenuBarState == MenuBar_View) ? MenuBar_None : MenuBar_View;
+
+        if (m_MenuBarState == MenuBar_File)
+        {
+            if (mu_begin_window_ex(gui_context, "files", mu_rect(0, text_height, row_size + padding, text_height * 4 + padding), window_options))
+            {
+                mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
+                if (mu_button(gui_context, "New"))
+                {
+                    
+                }
+                if (mu_button(gui_context, "Load"))
+                {
+                    
+                }
+                if (mu_button(gui_context, "Save"))
+                {
+                    
+                }
+                if (mu_button(gui_context, "Export"))
+                {
+                    
+                }
+                mu_end_window(gui_context);
+            }
+        }
+
+        mu_end_window(gui_context);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

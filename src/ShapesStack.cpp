@@ -239,7 +239,7 @@ void ShapesStack::Draw(Renderer& renderer)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::UserInterface(struct mu_Context* gui_context)
 {
-    if (mu_begin_window_ex(gui_context, "shape inspector", mu_rect(50, 50, 400, 600), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+    if (mu_begin_window_ex(gui_context, "shape inspector", mu_rect(50, 500, 400, 400), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
     {
         int res = 0;
 
@@ -280,7 +280,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
 
             _Static_assert(sizeof(s->op) == sizeof(int));
             mu_label(gui_context, "operation");
-            const char* op_names[op_last] = {"add", "smooth blend", "subtraction", "overlap"};
+            const char* op_names[op_last] = {"add", "blend", "sub", "overlap"};
             res |= mu_combo_box(gui_context, &m_SDFOperationComboBox, (int*)&s->op, op_last, op_names);
             res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
         }
@@ -413,7 +413,7 @@ void ShapesStack::SetState(enum state new_state)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-bool ShapesStack::MouseCursorInShape(const shape* s, bool with_vertices)
+bool ShapesStack::MouseCursorInShape(const shape* s, bool test_vertices)
 {
     const vec2* points = s->shape_desc.points;
     bool result = false;
@@ -435,7 +435,7 @@ bool ShapesStack::MouseCursorInShape(const shape* s, bool with_vertices)
         return false;
     }
 
-    if (with_vertices)
+    if (test_vertices)
     {
         for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
             result |= point_in_disc(points[i], shape_point_radius, m_MousePosition);

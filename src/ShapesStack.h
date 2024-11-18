@@ -60,7 +60,7 @@ private:
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
-    bool MouseCursorInShape(const shape* s, bool with_vertices);
+    bool MouseCursorInShape(const shape* s, bool test_vertices);
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
     void UndoSnapshot();
     inline bool SelectedShapeValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
