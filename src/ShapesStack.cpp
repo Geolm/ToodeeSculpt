@@ -209,6 +209,7 @@ void ShapesStack::Draw(Renderer& renderer)
 
         case command_type::shape_circle_filled:
             renderer.DrawCircleFilled(m_ShapePoints[0], m_Roundness, draw_color(na16_light_blue, 128));
+        default:break;
         }
     }
     else if (m_CurrentState == state::IDLE)

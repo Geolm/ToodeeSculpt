@@ -38,6 +38,7 @@ void DrawIcon(Renderer& renderer, aabb box, icon_type icon, draw_color primaray_
                                         aabb_get_vertex(&safe_box, aabb_top_right), center, 0.f, primaray_color);
             break;
         }
+    default: break;
     }
 
 }
