@@ -24,7 +24,7 @@ private:
         MenuBar_None,
         MenuBar_File,
         MenuBar_Edit,
-        MenuBar_View
+        MenuBar_Options
     };
 
     void MenuBar(struct mu_Context* gui_context);
@@ -34,6 +34,10 @@ private:
     aabb m_Zone;
     aabb m_ExternalZone;
     struct undo_context* m_pUndoContext;
+
     MenuBarState m_MenuBarState;
+    int m_SnapToGrid;
+    int m_ShowGrid;
+    float m_GridSubdivision;
 };
 
