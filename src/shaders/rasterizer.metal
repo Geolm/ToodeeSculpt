@@ -59,7 +59,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
     half4 output = BLACK_COLOR;
     float previous_distance;
     half4 previous_color;
-    float smooth_factor;
+    float combination_smoothness;
     bool combining = false;
 
     tile_node node = tiles.head[in.tile_index];
@@ -79,12 +79,11 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
             {
                 previous_color = 0.h;
                 previous_distance = LARGE_DISTANCE;
-                smooth_factor = data[0];
+                combination_smoothness = data[0];
                 combining = true;
             }
             else
             {
-
                 switch(cmd.type)
                 {
                 case shape_circle :
@@ -161,8 +160,10 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 // blend distance / color and skip writing output
                 if (combining)
                 {
+                    float smooth_factor = (cmd.op == op_union) ? combination_smoothness : input.aa_width;
                     switch(cmd.op)
                     {
+                    case op_add :
                     case op_union :
                     {
                         float2 smooth = smooth_minimum(distance, max(previous_distance, 0.f), smooth_factor);

@@ -246,7 +246,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
         if (mu_header_ex(gui_context, "global control", MU_OPT_EXPANDED))
         {
             mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-            mu_label(gui_context,"smooth blend");
+            mu_label(gui_context,"smoothness");
             res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
             mu_label(gui_context, "alpha");
             res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
@@ -279,9 +279,9 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             }
 
             _Static_assert(sizeof(s->op) == sizeof(int));
-            mu_label(gui_context, "sdf op");
-            const char* op_names[3] = {"union", "substraction", "intersection"};
-            res |= mu_combo_box(gui_context, &m_SDFOperationComboBox, (int*)&s->op, 3, op_names);
+            mu_label(gui_context, "operation");
+            const char* op_names[op_last] = {"add", "smooth blend", "subtraction", "overlap"};
+            res |= mu_combo_box(gui_context, &m_SDFOperationComboBox, (int*)&s->op, op_last, op_names);
             res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
         }
 
