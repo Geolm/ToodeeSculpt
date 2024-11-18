@@ -75,6 +75,8 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 
     m_pEditor = new Editor;
     m_pEditor->Init((aabb) {.min = (vec2) {510.f, 100.f}, .max = (vec2) {1410.f, 900.f}});
+
+    glfwGetWindowContentScale(window, &m_ScaleX, &m_ScaleY);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -198,6 +200,7 @@ void App::OnWindowResize(int width, int height)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnMouseMove(float x, float y)
 {
+    x *= m_ScaleX; y *= m_ScaleY;
     mu_input_mousemove(m_pGuiContext, (int)x, (int)y);
     m_MouseX = x; m_MouseY = y;
 }

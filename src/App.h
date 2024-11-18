@@ -29,6 +29,7 @@ private:
     GLFWwindow* m_Window;
     uint32_t m_ViewportHeight;
     uint32_t m_ViewportWidth;
+    float m_ScaleX, m_ScaleY;
     mu_Context* m_pGuiContext {nullptr};
     float m_MouseX, m_MouseY;
     char* m_pLogBuffer;
