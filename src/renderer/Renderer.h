@@ -97,6 +97,15 @@ private:
 //----------------------------------------------------------------------------------------------------------------------------
 inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y)
 {
+    // avoid redundant clip rect
+    if (m_ClipsCount>0)
+    {
+        uint32_t index = m_ClipsCount-1;
+        if (m_Clips[index].min_x == min_x && m_Clips[index].min_y == min_y &&
+            m_Clips[index].max_x == max_x && m_Clips[index].max_y == max_y)
+            return;
+    }
+
     if (m_ClipsCount < MAX_CLIPS)
         m_Clips[m_ClipsCount++] = (clip_rect) {.min_x = min_x, .min_y = min_y, .max_x = max_x, .max_y = max_y};
     else
