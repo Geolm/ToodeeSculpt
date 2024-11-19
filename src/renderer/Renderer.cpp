@@ -457,6 +457,7 @@ void Renderer::BeginCombination(float smooth_value)
     {
         cmd->type = combination_begin;
         cmd->data_index = m_DrawData.GetNumElements();
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
 
         float* k = m_DrawData.NewElement(); // just one float for the smooth
         m_CombinationAABB = m_CommandsAABB.NewElement();
@@ -485,7 +486,8 @@ void Renderer::EndCombination()
     if (cmd != nullptr)
     {
         cmd->type = combination_end;
-        cmd->data_index = m_DrawData.GetNumElements();;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
 
         // we put also the smooth value as we traverse the list in reverse order on the gpu
         float* k = m_DrawData.NewElement(); 

@@ -130,6 +130,7 @@ void App::InitGui()
 void App::DrawGui()
 {
     m_Renderer.ResetCanvas();
+    m_Renderer.SetClipRect(0, 0, UINT16_MAX, UINT16_MAX);
 
     mu_Command *cmd = NULL;
     while (mu_next_command(m_pGuiContext, &cmd))

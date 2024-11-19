@@ -35,7 +35,9 @@ void Editor::Draw(Renderer& renderer)
 {
     renderer.DrawBox(m_ExternalZone, draw_color(0, 0, 0, 0xff));
     renderer.DrawBox(m_Zone, draw_color(0xffffffff));
+    renderer.SetClipRect((int)m_Zone.min.x, (int)m_Zone.min.y, (int)m_Zone.max.x, (int)m_Zone.max.y);
     m_ShapesStack.Draw(renderer);
+    renderer.SetClipRect(0, 0, UINT16_MAX, UINT16_MAX);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +87,8 @@ void Editor::MenuBar(struct mu_Context* gui_context)
 
         if (m_MenuBarState == MenuBar_File)
         {
-            if (mu_begin_window_ex(gui_context, "files", mu_rect(0, text_height, row_size + padding, text_height * 4 + padding), window_options))
+            if (mu_begin_window_ex(gui_context, "files", 
+                mu_rect(0, text_height + padding, row_size + padding, text_height * 4 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
                 if (mu_button(gui_context, "New"))
@@ -110,7 +113,8 @@ void Editor::MenuBar(struct mu_Context* gui_context)
 
         if (m_MenuBarState == MenuBar_Edit)
         {
-            if (mu_begin_window_ex(gui_context, "edit", mu_rect(row_size + padding, text_height, row_size + padding, text_height * 4 + padding), window_options))
+            if (mu_begin_window_ex(gui_context, "edit", 
+                mu_rect(row_size + padding, text_height + padding, row_size + padding, text_height * 4 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
                 if (mu_button_ex(gui_context, "Undo ~Z", 0, 0))
@@ -136,7 +140,8 @@ void Editor::MenuBar(struct mu_Context* gui_context)
 
         if (m_MenuBarState == MenuBar_Options)
         {
-            if (mu_begin_window_ex(gui_context, "edit", mu_rect(row_size * 2 + 10, text_height, 250.f, text_height * 4 + padding), window_options))
+            if (mu_begin_window_ex(gui_context, "edit", 
+                mu_rect(row_size * 2 + 10, text_height + padding, 250.f, text_height * 4 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
                 mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid);
