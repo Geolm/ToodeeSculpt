@@ -10,7 +10,10 @@
 #include "../system/format.h"
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
-#define TEXT_BUFFER_SIZE (1024)
+
+template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
+template<class T> T min(T a, T b) {return (a<b) ? a : b;}
+template<class T> T max(T a, T b) {return (a>b) ? a : b;}
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
@@ -212,6 +215,7 @@ void Renderer::EndFrame()
     m_CommandsAABBBuffer.Unmap(m_FrameIndex, 0, m_CommandsAABB.GetNumElements() * sizeof(quantized_aabb));
     m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
     m_NumDrawCommands = m_Commands.GetNumElements();
+    m_PeakNumDrawCommands = max(m_PeakNumDrawCommands, m_NumDrawCommands);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -345,6 +349,8 @@ void Renderer::DebugInterface(struct mu_Context* gui_context)
         mu_text(gui_context, format("%6d", m_FrameIndex));
         mu_text(gui_context, "draw cmd count");
         mu_text(gui_context, format("%6d/%d", m_Commands.GetNumElements(), m_Commands.GetMaxElements()));
+        mu_text(gui_context, "peak cmd count");
+        mu_text(gui_context, format("%6d", m_PeakNumDrawCommands));
         mu_text(gui_context, "draw data buffer");
         mu_text(gui_context, format("%6d/%d", m_DrawData.GetNumElements(), m_DrawData.GetMaxElements()));
         mu_text(gui_context, "aa width");
@@ -394,10 +400,6 @@ void canvas_to_screen(float scale, T& var, Args & ... args)
     var *= scale;
     canvas_to_screen(scale, args...);
 }
-
-template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
-template<class T> T min(T a, T b) {return (a<b) ? a : b;}
-template<class T> T max(T a, T b) {return (a>b) ? a : b;}
 
 //----------------------------------------------------------------------------------------------------------------------------
 static inline void write_aabb(quantized_aabb* box, float min_x, float min_y, float max_x, float max_y)

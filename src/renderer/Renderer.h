@@ -89,6 +89,9 @@ private:
     float m_CanvasScale {1.f};
     float m_SmoothValue {0.f};
     quantized_aabb* m_CombinationAABB {nullptr};
+
+    // stats
+    uint32_t m_PeakNumDrawCommands {0};
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
