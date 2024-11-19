@@ -1,5 +1,6 @@
 #include "Icons.h"
 #include "system/stateless.h"
+#include "system/vec2.h"
 
 
 void DrawIcon(Renderer& renderer, aabb box, icon_type icon, draw_color primaray_color, draw_color secondary_color, float time_in_second)
@@ -36,6 +37,17 @@ void DrawIcon(Renderer& renderer, aabb box, icon_type icon, draw_color primaray_
             aabb_scale(&safe_box, .4f);
             renderer.DrawTriangleFilled(aabb_get_vertex(&safe_box, aabb_top_left), 
                                         aabb_get_vertex(&safe_box, aabb_top_right), center, 0.f, primaray_color);
+            break;
+        }
+    case ICON_CHECK:
+        {
+            vec2 a = vec2_add(center, vec2_scale((vec2){ 0.7f, -0.6f}, max_radius));
+            vec2 b = vec2_add(center, vec2_scale((vec2){-0.2f,  0.5f}, max_radius));
+            vec2 c = vec2_add(center, vec2_scale((vec2){-0.65f, 0.0f}, max_radius));
+            renderer.BeginCombination(1.f);
+            renderer.DrawOrientedBox(a, b, 0.f, max_radius * .1f, primaray_color);
+            renderer.DrawOrientedBox(b, c, 0.f, max_radius * .1f, primaray_color);
+            renderer.EndCombination();
             break;
         }
     default: break;
