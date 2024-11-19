@@ -23,6 +23,9 @@ void Editor::Init(aabb zone)
 void Editor::OnMouseMove(vec2 pos)
 {
     m_ShapesStack.OnMouseMove(pos);
+
+    if (aabb_test_point(m_ExternalZone, pos))
+        m_MenuBarState = MenuBar_None;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
