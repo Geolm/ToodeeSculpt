@@ -11,6 +11,7 @@
 #include "system/serializer.h"
 
 const float shape_point_radius = 6.f;
+const vec2 contextual_menu_size = {100.f, 140.f};
 
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::Init(aabb zone, struct undo_context* undo)
@@ -61,6 +62,13 @@ void ShapesStack::OnMouseMove(vec2 pos)
 void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
 {
     // contextual menu
+    if (m_ContextualMenuOpen && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        aabb contextual_bbox = (aabb) {.min = m_ContextualMenuPosition, .max = m_ContextualMenuPosition + contextual_menu_size};
+
+        if (!aabb_test_point(contextual_bbox, mouse_pos))
+            m_ContextualMenuOpen = false;
+    }
     if (m_CurrentState == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
         if (aabb_test_point(m_EditionZone, mouse_pos))
@@ -301,7 +309,8 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
     if (m_ContextualMenuOpen)
     {
         if (mu_begin_window_ex(gui_context, "new shape", mu_rect((int)m_ContextualMenuPosition.x,
-           (int)m_ContextualMenuPosition.y, 100, 140), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+            (int)m_ContextualMenuPosition.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y), 
+            MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
             mu_layout_row(gui_context, 1, (int[]) { 90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0))
