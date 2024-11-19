@@ -3,6 +3,7 @@
 #include "system/undo.h"
 #include "system/microui.h"
 #include "system/format.h"
+#include "system/palettes.h"
 
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -35,6 +36,18 @@ void Editor::Draw(Renderer& renderer)
 {
     renderer.DrawBox(m_ExternalZone, draw_color(0, 0, 0, 0xff));
     renderer.DrawBox(m_Zone, draw_color(0xffffffff));
+
+    if (m_ShowGrid)
+    {
+        vec2 step = vec2_scale(m_Zone.max - m_Zone.min, 1.f / m_GridSubdivision);
+        
+        for(float x = m_Zone.min.x; x<m_Zone.max.x; x += step.x)
+            renderer.DrawBox(x, m_Zone.min.y, x+1, m_Zone.max.y, draw_color(na16_light_grey, 64));
+        
+        for(float y = m_Zone.min.y; y<m_Zone.max.y; y += step.y)
+            renderer.DrawBox(m_Zone.min.x, y, m_Zone.max.x, y+1, draw_color(na16_light_grey, 128));
+    }
+
     renderer.SetClipRect((int)m_Zone.min.x, (int)m_Zone.min.y, (int)m_Zone.max.x, (int)m_Zone.max.y);
     m_ShapesStack.Draw(renderer);
     renderer.SetClipRect(0, 0, UINT16_MAX, UINT16_MAX);
