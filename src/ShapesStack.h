@@ -19,6 +19,7 @@ public:
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
     void Undo();
+    void DeleteSelected();
     void Terminate();
 
 private:

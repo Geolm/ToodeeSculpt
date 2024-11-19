@@ -393,6 +393,17 @@ void ShapesStack::Undo()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void ShapesStack::DeleteSelected()
+{
+    if (m_CurrentState == state::IDLE && SelectedShapeValid())
+    {
+        cc_erase(&m_Shapes, m_SelectedShapeIndex);
+        m_SelectedShapeIndex = INVALID_INDEX;
+        UndoSnapshot();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::SetState(enum state new_state)
 {
     if (m_CurrentState == state::IDLE && new_state == state::ADDING_POINTS)

@@ -135,10 +135,12 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
                 if (mu_button_ex(gui_context, "Undo ~Z", 0, 0))
                 {
+                    Undo();
                     m_MenuBarState = MenuBar_None;
                 }
                 if (mu_button_ex(gui_context, "Delete", 0, 0))
                 {
+                    Delete();
                     m_MenuBarState = MenuBar_None;
                 }
                 if (mu_button_ex(gui_context, "Copy ~C", 0, 0))
@@ -178,6 +180,12 @@ void Editor::MenuBar(struct mu_Context* gui_context)
 void Editor::Undo()
 {
     m_ShapesStack.Undo();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::Delete()
+{
+    m_ShapesStack.DeleteSelected();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
