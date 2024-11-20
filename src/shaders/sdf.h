@@ -45,3 +45,28 @@ float sd_triangle(float2 p, float2 p0, float2 p1, float2 p2 )
 
     return -sqrt(d.x)*sign(d.y);
 }
+
+//-----------------------------------------------------------------------------
+// based on https://www.shadertoy.com/view/tt3yz7
+float sd_ellipse(float2 p, float2 e)
+{
+    float2 pAbs = abs(p);
+    float2 ei = 1.f / e;
+    float2 e2 = e*e;
+    float2 ve = ei * float2(e2.x - e2.y, e2.y - e2.x);
+    
+    float2 t = float2(0.70710678118654752f, 0.70710678118654752f);
+
+    // hopefully unroll by the compiler
+    for (int i = 0; i < 3; i++) 
+    {
+        float2 v = ve*t*t*t;
+        float2 u = normalize(pAbs - v) * length(t * e - v);
+        float2 w = ei * (v + u);
+        t = normalize(clamp(w, 0.0, 1.0));
+    }
+    
+    float2 nearestAbs = t * e;
+    float dist = length(pAbs - nearestAbs);
+    return dot(pAbs, pAbs) < dot(nearestAbs, nearestAbs) ? -dist : dist;
+}
