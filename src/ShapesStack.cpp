@@ -41,7 +41,7 @@ void ShapesStack::OnMouseMove(vec2 pos)
     {
         vec2 size = m_EditionZone.max - m_EditionZone.min;
         pos = vec2_div(pos - m_EditionZone.min, size);
-        pos = vec2_floor(vec2_scale(pos, m_GridSubdivision));
+        pos = vec2_floor(vec2_add(vec2_scale(pos, m_GridSubdivision), vec2_splat(.5f)));
         pos = vec2_mul(vec2_scale(pos, 1.f / m_GridSubdivision), size);
         pos += m_EditionZone.min;
     }
