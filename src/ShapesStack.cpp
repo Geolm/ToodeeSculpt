@@ -39,10 +39,9 @@ void ShapesStack::OnMouseMove(vec2 pos)
 {
     if ((m_CurrentState == state::ADDING_POINTS || m_CurrentState == state::MOVING_POINT) && m_SnapToGrid)
     {
-        vec2 size = m_EditionZone.max - m_EditionZone.min;
-        pos = vec2_div(pos - m_EditionZone.min, size);
+        pos = vec2_div(pos - m_EditionZone.min, aabb_get_size(&m_EditionZone));
         pos = vec2_floor(vec2_add(vec2_scale(pos, m_GridSubdivision), vec2_splat(.5f)));
-        pos = vec2_mul(vec2_scale(pos, 1.f / m_GridSubdivision), size);
+        pos = vec2_mul(vec2_scale(pos, 1.f / m_GridSubdivision), aabb_get_size(&m_EditionZone));
         pos += m_EditionZone.min;
     }
 
