@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------------------------------------------------------
 // Simple serializer
 //  * does not allocate/deallocate memory
-//  * allow to write/read basic values, array, struct (POD)
+//  * allow to write/read basic values, struct (POD)
 //  * avoid overflow
 //-----------------------------------------------------------------------------------------------------------------------------
 
