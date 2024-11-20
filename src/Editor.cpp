@@ -29,9 +29,9 @@ void Editor::OnMouseMove(vec2 pos)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::OnMouseButton(vec2 pos, int button, int action)
+void Editor::OnMouseButton(int button, int action)
 {
-    m_ShapesStack.OnMouseButton(pos, button, action);
+    m_ShapesStack.OnMouseButton(button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -162,11 +162,15 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_rect(row_size * 2 + 10, text_height + padding, 250.f, text_height * 4 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
-                mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid);
+                if (mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid))
+                    m_ShapesStack.SetSnapToGrid((bool)m_SnapToGrid);
+
                 mu_checkbox(gui_context, "Show grid", &m_ShowGrid);
                 mu_layout_row(gui_context, 2, (int[]) {100, -1}, 0);
                 mu_label(gui_context, "Grid sub");
-                mu_slider_ex(gui_context, &m_GridSubdivision, 1.f, 50.f, 1.f, "%2.0f", 0);
+
+                if (mu_slider_ex(gui_context, &m_GridSubdivision, 4.f, 50.f, 1.f, "%2.0f", 0)&MU_RES_SUBMIT)
+                    m_ShapesStack.SetGridSubdivision(m_GridSubdivision);
                 
                 mu_end_window(gui_context);
             }

@@ -299,7 +299,7 @@ void App::OnMouseButton(int button, int action, int mods)
     else if (action == GLFW_RELEASE)
         mu_input_mouseup(m_pGuiContext, (int)m_MousePos.x, (int)m_MousePos.y, mu_button);
 
-    m_pEditor->OnMouseButton(m_MousePos, button, action);
+    m_pEditor->OnMouseButton(button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ class Editor
 public:
     void Init(aabb zone);
     void OnMouseMove(vec2 pos);
-    void OnMouseButton(vec2 pos, int button, int action);
+    void OnMouseButton(int button, int action);
     void Undo();
     void Delete();
     void Draw(Renderer& renderer);

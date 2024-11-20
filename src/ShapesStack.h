@@ -15,12 +15,15 @@ class ShapesStack
 public:
     void Init(aabb zone, struct undo_context* undo);
     void OnMouseMove(vec2 pos);
-    void OnMouseButton(vec2 pos, int button, int action);
+    void OnMouseButton(int button, int action);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
     void Undo();
     void DeleteSelected();
     void Terminate();
+
+    void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
+    void SetGridSubdivision(float f) {m_GridSubdivision = f;}
 
 private:
     //----------------------------------------------------------------------------------------------------------------------------
@@ -90,6 +93,8 @@ private:
     uint32_t m_SelectedShapeIndex;
     struct undo_context* m_pUndoContext;
     vec2* m_pGrabbedPoint;
+    bool m_SnapToGrid;
+    float m_GridSubdivision;
 };
 
 //----------------------------------------------------------------------------------------------------------------------------

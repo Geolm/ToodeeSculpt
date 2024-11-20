@@ -28,6 +28,8 @@ void ShapesStack::Init(aabb zone, struct undo_context* undo)
     m_SelectedShapeIndex = INVALID_INDEX;
     m_pUndoContext = undo;
     m_pGrabbedPoint = nullptr;
+    m_SnapToGrid = false;
+    m_GridSubdivision = 20.f;
 
     UndoSnapshot();
 }
@@ -35,6 +37,15 @@ void ShapesStack::Init(aabb zone, struct undo_context* undo)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::OnMouseMove(vec2 pos) 
 {
+    if ((m_CurrentState == state::ADDING_POINTS || m_CurrentState == state::MOVING_POINT) && m_SnapToGrid)
+    {
+        vec2 size = m_EditionZone.max - m_EditionZone.min;
+        pos = vec2_div(pos - m_EditionZone.min, size);
+        pos = vec2_floor(vec2_scale(pos, m_GridSubdivision));
+        pos = vec2_mul(vec2_scale(pos, 1.f / m_GridSubdivision), size);
+        pos += m_EditionZone.min;
+    }
+
     m_MousePosition = pos;
 
     if (m_CurrentState == state::SET_ROUNDNESS)
@@ -59,22 +70,22 @@ void ShapesStack::OnMouseMove(vec2 pos)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
+void ShapesStack::OnMouseButton(int button, int action)
 {
     // contextual menu
     if (m_ContextualMenuOpen && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         aabb contextual_bbox = (aabb) {.min = m_ContextualMenuPosition, .max = m_ContextualMenuPosition + contextual_menu_size};
 
-        if (!aabb_test_point(contextual_bbox, mouse_pos))
+        if (!aabb_test_point(contextual_bbox, m_MousePosition))
             m_ContextualMenuOpen = false;
     }
     if (m_CurrentState == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        if (aabb_test_point(m_EditionZone, mouse_pos))
+        if (aabb_test_point(m_EditionZone, m_MousePosition))
         {
             m_ContextualMenuOpen = !m_ContextualMenuOpen;
-            m_ContextualMenuPosition = mouse_pos;
+            m_ContextualMenuPosition = m_MousePosition;
             m_SelectedShapeIndex = INVALID_INDEX;
         }
     }
@@ -102,7 +113,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
             }
         }
 
-        if (aabb_test_point(m_EditionZone, mouse_pos) && m_pGrabbedPoint == nullptr)
+        if (aabb_test_point(m_EditionZone, m_MousePosition) && m_pGrabbedPoint == nullptr)
         {
             uint32_t selection = INVALID_INDEX;
             for(uint32_t i=0; i<cc_size(&m_Shapes) && selection == INVALID_INDEX; ++i)
@@ -133,7 +144,7 @@ void ShapesStack::OnMouseButton(vec2 mouse_pos, int button, int action)
     else if (m_CurrentState == state::ADDING_POINTS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         assert(m_CurrentPoint < SHAPE_MAXPOINTS);
-        m_ShapePoints[m_CurrentPoint++] = mouse_pos;
+        m_ShapePoints[m_CurrentPoint++] = m_MousePosition;
 
         if (m_CurrentPoint == ShapeNumPoints(m_ShapeType))
             SetState(state::SET_ROUNDNESS);
