@@ -20,6 +20,10 @@ static void aabb_encompass(aabb* box, vec2 point);
 static aabb aabb_merge(aabb box0, aabb box1);
 static void aabb_scale(aabb* box, float scale);
 static vec2 aabb_get_vertex(aabb* box, enum aabb_corners corner);
+static vec2 aabb_get_size(aabb* box);
+static vec2 aabb_get_uv(aabb* box, vec2 pos);
+static vec2 aabb_get_uv_clamped(aabb* box, vec2 pos);
+static vec2 aabb_bilinear(aabb* box, vec2 uv);
 static aabb aabb_from_bezier(vec2 p0, vec2 p1, vec2 p2);
 static aabb aabb_from_capsule(vec2 p0, vec2 p1, float radius);
 static aabb aabb_from_obb(vec2 p0, vec2 p1, float width);
@@ -80,6 +84,31 @@ static inline vec2 aabb_get_vertex(aabb* box, enum aabb_corners corner)
     case aabb_bottom_left : return (vec2) {box->min.x, box->max.y};
     default: return box->max;
     }
+}
+
+//-----------------------------------------------------------------------------
+static inline vec2 aabb_get_size(aabb* box)
+{
+    return vec2_sub(box->max, box->min);
+}
+
+//-----------------------------------------------------------------------------
+static inline vec2 aabb_get_uv(aabb* box, vec2 pos)
+{
+    vec2 uv = vec2_sub(pos, box->min);
+    return vec2_div(uv, aabb_get_size(box));
+}
+
+//-----------------------------------------------------------------------------
+static inline vec2 aabb_get_uv_clamped(aabb* box, vec2 pos)
+{
+    return vec2_saturate(aabb_get_uv(box, pos));
+}
+
+//-----------------------------------------------------------------------------
+static inline vec2 aabb_bilinear(aabb* box, vec2 uv)
+{
+    return vec2_add(vec2_mul(box->min, vec2_sub(vec2_splat(1.f), uv)), vec2_mul(box->max, uv));
 }
 
 //-----------------------------------------------------------------------------
