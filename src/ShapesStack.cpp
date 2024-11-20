@@ -143,6 +143,9 @@ void ShapesStack::OnMouseButton(int button, int action)
     // adding points
     else if (m_CurrentState == state::ADDING_POINTS && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
+        if (!aabb_test_point(m_EditionZone, m_MousePosition))
+            SetState(state::IDLE);
+
         assert(m_CurrentPoint < SHAPE_MAXPOINTS);
         m_ShapePoints[m_CurrentPoint++] = m_MousePosition;
 
