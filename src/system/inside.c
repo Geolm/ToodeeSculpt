@@ -16,8 +16,8 @@ bool point_in_triangle(vec2 p0, vec2 p1, vec2 p2, vec2 point)
     d2 = edge_sign(point, p1, p2);
     d3 = edge_sign(point, p2, p0);
 
-    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+    has_neg = (d1 < 0.f) || (d2 < 0.f) || (d3 < 0.f);
+    has_pos = (d1 > 0.f) || (d2 > 0.f) || (d3 > 0.f);
 
     return !(has_neg && has_pos);
 }
