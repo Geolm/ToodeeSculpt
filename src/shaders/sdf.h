@@ -63,7 +63,7 @@ float sd_ellipse(float2 p, float2 e)
         float2 v = ve*t*t*t;
         float2 u = normalize(pAbs - v) * length(t * e - v);
         float2 w = ei * (v + u);
-        t = normalize(clamp(w, 0.0, 1.0));
+        t = normalize(saturate(w));
     }
     
     float2 nearestAbs = t * e;
