@@ -22,4 +22,22 @@ bool point_in_triangle(vec2 p0, vec2 p1, vec2 p2, vec2 point)
     return !(has_neg && has_pos);
 }
 
+//-----------------------------------------------------------------------------
+bool point_in_oriented_box(vec2 p0, vec2 p1, float width, vec2 point)
+{
+    vec2 center = vec2_scale(vec2_add(p0, p1), .5f);
+    vec2 axis_j = vec2_sub(p1, center);
+    float half_height = vec2_normalize(&axis_j);
+    vec2 axis_i = vec2_skew(axis_j);
+    float half_width = width * .5f;
+
+    if (fabsf(vec2_dot(axis_j, point) - vec2_dot(axis_j, center)) > half_height)
+        return false;
+
+    if (fabsf(vec2_dot(axis_i, point) - vec2_dot(axis_i, center)) > half_width)
+        return false;
+
+    return true;
+}
+
 
