@@ -1,3 +1,5 @@
+float2 skew(float2 v) {return float2(-v.y, v.x);}
+
 //-----------------------------------------------------------------------------
 float sd_disc(float2 position, float2 center, float radius)
 {
@@ -13,13 +15,13 @@ float sd_segment(float2 position, float2 a, float2 b)
 }
 
 //-----------------------------------------------------------------------------
-float sd_oriented_box(float2 position, float2 a, float2 b, float height)
+float sd_oriented_box(float2 position, float2 a, float2 b, float width)
 {
     float l = length(b-a);
     float2  d = (b-a)/l;
     float2  q = (position-(a+b)*0.5);
     q = float2x2(d.x,-d.y,d.y,d.x)*q;
-    q = abs(q)-float2(l,height)*0.5;
+    q = abs(q)-float2(l,width)*0.5;
     return length(max(q,0.0)) + min(max(q.x,q.y),0.0);
 }
 
@@ -69,4 +71,14 @@ float sd_ellipse(float2 p, float2 e)
     float2 nearestAbs = t * e;
     float dist = length(pAbs - nearestAbs);
     return dot(pAbs, pAbs) < dot(nearestAbs, nearestAbs) ? -dist : dist;
+}
+
+//-----------------------------------------------------------------------------
+float sd_oriented_ellipse(float2 position, float2 a, float2 b, float width)
+{
+    float height = length(b-a);
+    float2  axis = (b-a)/height;
+    float2  position_translated = (position-(a+b)*.5f);
+    float2 position_boxspace = float2x2(axis.x,-axis.y, axis.y, axis.x)*position_translated;
+    return sd_ellipse(position_boxspace, float2(width, height));
 }

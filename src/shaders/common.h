@@ -31,6 +31,7 @@ enum command_type
     shape_triangle = 6,
     shape_triangle_filled = 7,
     shape_char = 8,
+    shape_ellipse = 9,
     combination_begin = 16,
     combination_end = 17
 };

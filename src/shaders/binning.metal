@@ -18,8 +18,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
     tile_aabb.min *= TILE_SIZE; tile_aabb.max *= TILE_SIZE;
     
     // grow the bounding box for anti-aliasing
-    aabb tile_enlarge_aabb = tile_aabb;
-    tile_enlarge_aabb.min -= input.aa_width; tile_enlarge_aabb.max += input.aa_width;
+    aabb tile_enlarge_aabb = aabb_grow(tile_aabb, input.aa_width);
 
     float smooth_border = 0.f;
     bool draw_something = false;
@@ -48,6 +47,15 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[5] + smooth_border);
+                to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
+                break;
+            }
+            case shape_ellipse :
+            {
+                float2 p0 = float2(data[0], data[1]);
+                float2 p1 = float2(data[2], data[3]);
+                float width = data[4];
+                aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border);
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
