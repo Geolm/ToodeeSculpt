@@ -282,7 +282,7 @@ void ShapesStack::Draw(Renderer& renderer)
         if (SelectedShapeValid())
             DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
     }
-    else if (m_CurrentState == state::MOVING_POINT)
+    else if (m_CurrentState == state::MOVING_POINT || m_CurrentState == state::MOVING_SHAPE)
     {
         if (SelectedShapeValid())
             DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
