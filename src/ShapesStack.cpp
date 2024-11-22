@@ -53,7 +53,7 @@ void ShapesStack::OnMouseMove(vec2 pos)
     }
     else if (m_CurrentState == state::SET_WIDTH)
     {
-        m_Width = vec2_distance(pos, m_Reference);
+        m_Width = vec2_distance(pos, m_Reference) * 2.f;
     }
     // moving point
     else if (m_CurrentState == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
@@ -163,7 +163,7 @@ void ShapesStack::OnMouseButton(int button, int action)
     }
     else if (m_CurrentState == state::SET_WIDTH && left_button_pressed)
     {
-
+        SetState(state::SET_ROUNDNESS);
     }
     // shape creation
     else if (m_CurrentState == state::SET_ROUNDNESS && left_button_pressed)
@@ -173,6 +173,7 @@ void ShapesStack::OnMouseButton(int button, int action)
         new_shape.op = op_union;
         new_shape.roundness = m_Roundness;
         new_shape.color = (shape_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f};
+        new_shape.shape_desc.width = m_Width;
 
         for(uint32_t i=0; i<ShapeNumPoints(m_ShapeType); ++i)
             new_shape.shape_desc.points[i] = m_ShapePoints[i];
@@ -236,6 +237,13 @@ void ShapesStack::Draw(Renderer& renderer)
 
             renderer.DrawCircleFilled(m_MousePosition, shape_point_radius, draw_color(na16_red, 128));
         }
+        else if (m_ShapeType == command_type::shape_oriented_box && m_CurrentPoint == 1)
+            renderer.DrawOrientedBox(m_ShapePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
+    }
+    else if (m_CurrentState == state::SET_WIDTH)
+    {
+        renderer.DrawCircleFilled(m_Reference, shape_point_radius, draw_color(na16_red, 128));
+        renderer.DrawOrientedBox(m_ShapePoints[0], m_ShapePoints[1], m_Width, 0.f, draw_color(na16_light_blue, 128));
     }
     else if (m_CurrentState == state::SET_ROUNDNESS)
     {
@@ -460,11 +468,17 @@ void ShapesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
     }
 
-    if (new_state == state::SET_ROUNDNESS || new_state == state::SET_WIDTH)
+    if (new_state == state::SET_ROUNDNESS)
     {
         m_Reference = m_MousePosition;
         m_Roundness = 0.f;
+        MouseCursors::GetInstance().Set(MouseCursors::HResize);
+    }
+
+    if (new_state == state::SET_WIDTH)
+    {
         m_Width = 0.f;
+        m_Reference = m_MousePosition;
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
 
@@ -531,6 +545,12 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
     case command_type::shape_circle_filled:
         {
             renderer.DrawCircleFilled(s->shape_desc.points[0], s->roundness, draw_color(na16_orange, 128));
+            break;
+        }
+    case command_type::shape_oriented_box:
+        {
+            renderer.DrawOrientedBox(s->shape_desc.points[0], s->shape_desc.points[1], 
+                                     s->shape_desc.width, 0.f, draw_color(na16_orange, 128));
             break;
         }
 
