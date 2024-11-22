@@ -81,12 +81,12 @@ void ShapesStack::OnMouseButton(int button, int action)
     {
         aabb contextual_bbox = (aabb) {.min = m_ContextualMenuPosition, .max = m_ContextualMenuPosition + contextual_menu_size};
 
-        if (!aabb_test_point(contextual_bbox, m_MousePosition))
+        if (!aabb_test_point(&contextual_bbox, m_MousePosition))
             m_ContextualMenuOpen = false;
     }
     if (m_CurrentState == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        if (aabb_test_point(m_EditionZone, m_MousePosition))
+        if (aabb_test_point(&m_EditionZone, m_MousePosition))
         {
             m_ContextualMenuOpen = !m_ContextualMenuOpen;
             m_ContextualMenuPosition = m_MousePosition;
@@ -117,7 +117,7 @@ void ShapesStack::OnMouseButton(int button, int action)
             }
         }
 
-        if (aabb_test_point(m_EditionZone, m_MousePosition) && m_pGrabbedPoint == nullptr)
+        if (aabb_test_point(&m_EditionZone, m_MousePosition) && m_pGrabbedPoint == nullptr)
         {
             uint32_t selection = INVALID_INDEX;
             for(uint32_t i=0; i<cc_size(&m_Shapes) && selection == INVALID_INDEX; ++i)
@@ -147,7 +147,7 @@ void ShapesStack::OnMouseButton(int button, int action)
     // adding points
     else if (m_CurrentState == state::ADDING_POINTS && left_button_pressed)
     {
-        if (!aabb_test_point(m_EditionZone, m_MousePosition))
+        if (!aabb_test_point(&m_EditionZone, m_MousePosition))
             SetState(state::IDLE);
 
         assert(m_CurrentPoint < SHAPE_MAXPOINTS);
@@ -234,11 +234,11 @@ void ShapesStack::Draw(Renderer& renderer)
                 renderer.DrawOrientedBox(m_ShapePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
             else if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_ShapePoints[1], m_ShapePoints[2], 0.001f)))
                 renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
-
-            renderer.DrawCircleFilled(m_MousePosition, shape_point_radius, draw_color(na16_red, 128));
         }
         else if (m_ShapeType == command_type::shape_oriented_box && m_CurrentPoint == 1)
             renderer.DrawOrientedBox(m_ShapePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
+        
+        renderer.DrawCircleFilled(m_MousePosition, shape_point_radius, draw_color(na16_red, 128));
     }
     else if (m_CurrentState == state::SET_WIDTH)
     {
