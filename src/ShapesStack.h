@@ -56,6 +56,7 @@ private:
         IDLE,
         SHAPE_SELECTED,
         ADDING_POINTS,
+        SET_WIDTH,
         SET_ROUNDNESS,
         MOVING_POINT,
         MOVING_SHAPE
@@ -88,6 +89,7 @@ private:
     uint32_t m_CurrentPoint;
     vec2 m_ShapePoints[SHAPE_MAXPOINTS];
     vec2 m_Reference;
+    float m_Width;
     float m_Roundness;
     command_type m_ShapeType;
     uint32_t m_SelectedShapeIndex;
