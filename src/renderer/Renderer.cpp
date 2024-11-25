@@ -594,6 +594,37 @@ void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float wid
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawEllipse(float x0, float y0, float x1, float y1, float width, draw_color color, sdf_operator op)
+{
+    if (x0 == x1 && y1 == y0)
+        return;
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = shape_ellipse;
+
+        float* data = m_DrawData.NewMultiple(5);
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width);
+            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, m_AAWidth + m_SmoothValue);
+            write_float(data,  x0, y0, x1, y1, width);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
+            return;
+        }
+        m_Commands.RemoveLast();
+    }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
 {
     if (x0>x1) swap(x0, x1);
