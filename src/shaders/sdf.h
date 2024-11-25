@@ -80,5 +80,5 @@ float sd_oriented_ellipse(float2 position, float2 a, float2 b, float width)
     float2  axis = (b-a)/height;
     float2  position_translated = (position-(a+b)*.5f);
     float2 position_boxspace = float2x2(axis.x,-axis.y, axis.y, axis.x)*position_translated;
-    return sd_ellipse(position_boxspace, float2(height * .5f, width));
+    return sd_ellipse(position_boxspace, float2(height * .5f, width * .5f));
 }

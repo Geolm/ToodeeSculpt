@@ -56,8 +56,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border);
-                //to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
-                to_be_added = true;
+                to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
             case shape_circle :
