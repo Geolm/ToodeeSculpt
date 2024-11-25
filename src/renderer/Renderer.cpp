@@ -599,29 +599,34 @@ void Renderer::DrawEllipse(float x0, float y0, float x1, float y1, float width, 
     if (x0 == x1 && y1 == y0)
         return;
 
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
+    if (width <= 0.f)
+        DrawOrientedBox(x0, y0, x1, y1, 0.f, 0.f, color, op);
+    else
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op;
-        cmd->type = shape_ellipse;
-
-        float* data = m_DrawData.NewMultiple(5);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
-        if (data != nullptr && aabox != nullptr)
+        draw_command* cmd = m_Commands.NewElement();
+        if (cmd != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width);
-            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, m_AAWidth + m_SmoothValue);
-            write_float(data,  x0, y0, x1, y1, width);
-            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
-            return;
+            cmd->clip_index = (uint8_t) m_ClipsCount-1;
+            cmd->color = color;
+            cmd->data_index = m_DrawData.GetNumElements();
+            cmd->op = op;
+            cmd->type = shape_ellipse;
+
+            float* data = m_DrawData.NewMultiple(5);
+            quantized_aabb* aabox = m_CommandsAABB.NewElement();
+            if (data != nullptr && aabox != nullptr)
+            {
+                canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width);
+                aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, m_AAWidth + m_SmoothValue);
+                write_float(data,  x0, y0, x1, y1, width);
+                write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+                merge_aabb(m_CombinationAABB, aabox);
+                return;
+            }
+            m_Commands.RemoveLast();
         }
-        m_Commands.RemoveLast();
+        log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
     }
-    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
