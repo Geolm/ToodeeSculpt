@@ -16,13 +16,13 @@
 		FB6341C32C1099A1003F8DE7 /* microui.c in Sources */ = {isa = PBXBuildFile; fileRef = FB6341C12C10963E003F8DE7 /* microui.c */; };
 		FB6C49712BE9BFAE00F2926D /* MetalLayerHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB6C496F2BE9BFAE00F2926D /* MetalLayerHelper.mm */; };
 		FB6C49742BE9C15600F2926D /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB6C49722BE9C15600F2926D /* App.cpp */; };
-		FB8C687F2CDB003A007875D7 /* inside.c in Sources */ = {isa = PBXBuildFile; fileRef = FB8C687D2CDB003A007875D7 /* inside.c */; };
 		FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13A2BE977D2004B4083 /* Renderer.cpp */; };
 		FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13C2BE977D2004B4083 /* shader_reader.c */; };
 		FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDEA2CC93DF800608C34 /* Editor.cpp */; };
 		FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */; };
 		FBA57B472CB081460033DD9A /* sokol_time.c in Sources */ = {isa = PBXBuildFile; fileRef = FBA57B462CB081460033DD9A /* sokol_time.c */; };
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
+		FBB5EB562CF4FAFD00BC434C /* point_in.c in Sources */ = {isa = PBXBuildFile; fileRef = FBB5EB552CF4FAFD00BC434C /* point_in.c */; };
 		FBB617702CD31A6000B80BA3 /* format.c in Sources */ = {isa = PBXBuildFile; fileRef = FBB6176E2CD31A6000B80BA3 /* format.c */; };
 		FBE0612E2CE245B4001A1EAF /* Icons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FBE0612D2CE245B4001A1EAF /* Icons.cpp */; };
 		FBE061312CE28CA8001A1EAF /* undo.c in Sources */ = {isa = PBXBuildFile; fileRef = FBE061302CE28CA8001A1EAF /* undo.c */; };
@@ -69,8 +69,6 @@
 		FB8255512C8B9836005C34C1 /* float16.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = float16.h; sourceTree = "<group>"; };
 		FB8255522C8B9836005C34C1 /* vec2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vec2.h; sourceTree = "<group>"; };
 		FB861FA72CA20A9F00C63D00 /* operators.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = operators.h; sourceTree = "<group>"; };
-		FB8C687C2CDB003A007875D7 /* inside.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inside.h; sourceTree = "<group>"; };
-		FB8C687D2CDB003A007875D7 /* inside.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = inside.c; sourceTree = "<group>"; };
 		FB8C687E2CDB003A007875D7 /* palettes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = palettes.h; sourceTree = "<group>"; };
 		FB90E1392BE977D2004B4083 /* DynamicBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicBuffer.h; sourceTree = "<group>"; };
 		FB90E13A2BE977D2004B4083 /* Renderer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Renderer.cpp; sourceTree = "<group>"; };
@@ -88,6 +86,8 @@
 		FBA57B462CB081460033DD9A /* sokol_time.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sokol_time.c; sourceTree = "<group>"; };
 		FBA5CD0D2BE931EB00398435 /* collision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = collision.h; sourceTree = "<group>"; };
 		FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
+		FBB5EB542CF4FAFD00BC434C /* point_in.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = point_in.h; sourceTree = "<group>"; };
+		FBB5EB552CF4FAFD00BC434C /* point_in.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = point_in.c; sourceTree = "<group>"; };
 		FBB60DDF2BDC03E50029473C /* GPU2DComposer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GPU2DComposer; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBB6176D2CD31A6000B80BA3 /* format.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = format.h; sourceTree = "<group>"; };
 		FBB6176E2CD31A6000B80BA3 /* format.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = format.c; sourceTree = "<group>"; };
@@ -115,11 +115,11 @@
 		FB2823392BF2D8A7009FC4FD /* system */ = {
 			isa = PBXGroup;
 			children = (
+				FBB5EB542CF4FAFD00BC434C /* point_in.h */,
+				FBB5EB552CF4FAFD00BC434C /* point_in.c */,
 				FB91B9A32CE4DDF2007F3853 /* serializer.h */,
 				FBE0612F2CE28CA8001A1EAF /* undo.h */,
 				FBE061302CE28CA8001A1EAF /* undo.c */,
-				FB8C687C2CDB003A007875D7 /* inside.h */,
-				FB8C687D2CDB003A007875D7 /* inside.c */,
 				FB8C687E2CDB003A007875D7 /* palettes.h */,
 				FBB6176D2CD31A6000B80BA3 /* format.h */,
 				FBB6176E2CD31A6000B80BA3 /* format.c */,
@@ -286,10 +286,10 @@
 				FBA57B472CB081460033DD9A /* sokol_time.c in Sources */,
 				FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */,
 				FBE0612E2CE245B4001A1EAF /* Icons.cpp in Sources */,
-				FB8C687F2CDB003A007875D7 /* inside.c in Sources */,
 				FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */,
 				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,
 				FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */,
+				FBB5EB562CF4FAFD00BC434C /* point_in.c in Sources */,
 				FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */,
 				FBB617702CD31A6000B80BA3 /* format.c in Sources */,
 				FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */,

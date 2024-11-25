@@ -1,5 +1,5 @@
-#ifndef _INSIDE_H_
-#define _INSIDE_H_
+#ifndef _POINT_IN_H_
+#define _POINT_IN_H_
 
 #include "vec2.h"
 

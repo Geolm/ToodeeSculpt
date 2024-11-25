@@ -6,7 +6,7 @@
 #include "MouseCursors.h"
 #include "system/palettes.h"
 #include "system/format.h"
-#include "system/inside.h"
+#include "system/point_in.h"
 #include "system/undo.h"
 #include "system/serializer.h"
 
@@ -205,33 +205,7 @@ void ShapesStack::Draw(Renderer& renderer)
         shape *s = cc_get(&m_Shapes, i);
         draw_color color;
         color.from_float(s->color.red, s->color.green, s->color.blue, m_AlphaValue);
-
-        switch(s->shape_type)
-        {
-        case command_type::shape_triangle_filled: 
-            {
-                renderer.DrawTriangleFilled(s->shape_desc.points[0], s->shape_desc.points[1], s->shape_desc.points[2], 
-                                            s->roundness, color, s->op);
-                break;
-            }
-        case command_type::shape_circle_filled:
-            {
-                renderer.DrawCircleFilled(s->shape_desc.points[0], s->roundness, color, s->op);
-                break;
-            }
-        case command_type::shape_oriented_box:
-            {
-                renderer.DrawOrientedBox(s->shape_desc.points[0], s->shape_desc.points[1],
-                                            s->shape_desc.width, s->roundness, color, s->op);
-                break;
-            }
-        case command_type::shape_ellipse:
-            {
-                renderer.DrawEllipse(s->shape_desc.points[0], s->shape_desc.points[1], s->shape_desc.width, color, s->op);
-                break;
-            }
-        default: break;
-        }
+        DrawShape(renderer, s, s->roundness, color, s->op);
     }
     renderer.EndCombination();
 
@@ -567,37 +541,37 @@ bool ShapesStack::MouseCursorInShape(const shape* s, bool test_vertices)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
 {
+    DrawShape(renderer, s, 0.f, draw_color(na16_orange, 128), op_add);
+
+    for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
+        renderer.DrawCircleFilled(s->shape_desc.points[i], shape_point_radius, draw_color(na16_black, 128));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void ShapesStack::DrawShape(Renderer& renderer, const shape* s, float roundness, draw_color color, sdf_operator op)
+{
+    const vec2* points = s->shape_desc.points;
     switch(s->shape_type)
     {
     case command_type::shape_triangle_filled: 
-        {
-            const vec2* points = s->shape_desc.points;
-            renderer.DrawTriangleFilled(points[0], points[1], points[2], 0.f, draw_color(na16_orange, 128));
-            break;
-        }
+        renderer.DrawTriangleFilled(points[0], points[1], points[2], roundness, color, op);
+        break;
+
     case command_type::shape_circle_filled:
-        {
-            renderer.DrawCircleFilled(s->shape_desc.points[0], s->roundness, draw_color(na16_orange, 128));
-            break;
-        }
+        renderer.DrawCircleFilled(points[0], roundness, color, op);
+        break;
+
     case command_type::shape_ellipse:
-        {
-            renderer.DrawEllipse(s->shape_desc.points[0], s->shape_desc.points[1], s->shape_desc.width, draw_color(na16_orange, 128), s->op);
-            break;
-        }
+        renderer.DrawEllipse(points[0], points[1], s->shape_desc.width, color, op);
+        break;
+
     case command_type::shape_oriented_box:
-        {
-            renderer.DrawOrientedBox(s->shape_desc.points[0], s->shape_desc.points[1], 
-                                     s->shape_desc.width, 0.f, draw_color(na16_orange, 128));
-            break;
-        }
+        renderer.DrawOrientedBox(points[0], points[1], s->shape_desc.width, roundness, color, op);
+        break;
 
     default: 
         break;
     }
-
-    for(uint32_t i=0; i<ShapeNumPoints(s->shape_type); ++i)
-        renderer.DrawCircleFilled(s->shape_desc.points[i], shape_point_radius, draw_color(na16_black, 128));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

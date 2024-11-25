@@ -69,6 +69,7 @@ private:
     enum state GetState() const {return m_CurrentState;}
     bool MouseCursorInShape(const shape* s, bool test_vertices);
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
+    void DrawShape(Renderer& renderer, const shape* s, float roundness, draw_color color, sdf_operator op);
     void UndoSnapshot();
     inline bool SelectedShapeValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
     inline uint32_t ShapeNumPoints(command_type shape);
