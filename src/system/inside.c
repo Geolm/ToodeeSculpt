@@ -32,7 +32,6 @@ bool point_in_oriented_box(vec2 p0, vec2 p1, float width, vec2 point)
     float half_width = width * .5f;
 
     point = vec2_sub(point, center);
-
     if (fabsf(vec2_dot(axis_j, point)) > half_height)
         return false;
 
@@ -40,6 +39,25 @@ bool point_in_oriented_box(vec2 p0, vec2 p1, float width, vec2 point)
         return false;
 
     return true;
+}
+
+//-----------------------------------------------------------------------------
+bool point_in_ellipse(vec2 p0, vec2 p1, float width, vec2 point)
+{
+    vec2 center = vec2_scale(vec2_add(p0, p1), .5f);
+    vec2 axis_j = vec2_sub(p1, center);
+    float half_height = vec2_normalize(&axis_j);
+    vec2 axis_i = vec2_skew(axis_j);
+    float half_width = width * .5f;
+
+    // transform point in ellipse space
+    point = vec2_sub(point, center);
+    vec2 point_ellipse_space = {.x = fabsf(vec2_dot(axis_i, point)), fabsf(vec2_dot(axis_j, point))};
+
+    float distance =  float_square(point_ellipse_space.x) / float_square(half_height) +
+                      float_square(point_ellipse_space.y) / float_square(half_width);
+
+    return (distance <= 1.f);
 }
 
 
