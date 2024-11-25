@@ -54,8 +54,8 @@ bool point_in_ellipse(vec2 p0, vec2 p1, float width, vec2 point)
     point = vec2_sub(point, center);
     vec2 point_ellipse_space = {.x = fabsf(vec2_dot(axis_i, point)), fabsf(vec2_dot(axis_j, point))};
 
-    float distance =  float_square(point_ellipse_space.x) / float_square(half_height) +
-                      float_square(point_ellipse_space.y) / float_square(half_width);
+    float distance =  float_square(point_ellipse_space.x) / float_square(half_width) +
+                      float_square(point_ellipse_space.y) / float_square(half_height);
 
     return (distance <= 1.f);
 }
