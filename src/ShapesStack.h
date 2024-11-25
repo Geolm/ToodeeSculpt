@@ -58,6 +58,7 @@ private:
         ADDING_POINTS,
         SET_WIDTH,
         SET_ROUNDNESS,
+        CREATE_SHAPE,
         MOVING_POINT,
         MOVING_SHAPE
     };
@@ -65,6 +66,7 @@ private:
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
+    enum state GetState() const {return m_CurrentState;}
     bool MouseCursorInShape(const shape* s, bool test_vertices);
     void DrawShapeGizmo(Renderer& renderer, const shape* s);
     void UndoSnapshot();
@@ -80,7 +82,7 @@ private:
     // ui
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
-    bool m_ContextualMenuOpen;
+    bool m_NewShapeContextualMenuOpen;
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
 
@@ -104,6 +106,7 @@ inline uint32_t ShapesStack::ShapeNumPoints(command_type shape)
 {
     switch(shape)
     {
+    case shape_ellipse:
     case shape_oriented_box: return 2;
     case shape_arc:
     case shape_arc_filled:

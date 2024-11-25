@@ -18,7 +18,7 @@ void ShapesStack::Init(aabb zone, struct undo_context* undo)
 {
     cc_init(&m_Shapes);
     cc_reserve(&m_Shapes, SHAPES_STACK_RESERVATION);
-    m_ContextualMenuOpen = false;
+    m_NewShapeContextualMenuOpen = false;
     m_EditionZone = zone;
     m_CurrentState = state::IDLE;
     m_CurrentPoint = 0;
@@ -37,7 +37,7 @@ void ShapesStack::Init(aabb zone, struct undo_context* undo)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::OnMouseMove(vec2 pos) 
 {
-    if ((m_CurrentState == state::ADDING_POINTS || m_CurrentState == state::MOVING_POINT) && m_SnapToGrid)
+    if ((GetState() == state::ADDING_POINTS || GetState() == state::MOVING_POINT) && m_SnapToGrid)
     {
         pos = vec2_div(pos - m_EditionZone.min, aabb_get_size(&m_EditionZone));
         pos = vec2_floor(vec2_add(vec2_scale(pos, m_GridSubdivision), vec2_splat(.5f)));
@@ -47,20 +47,20 @@ void ShapesStack::OnMouseMove(vec2 pos)
 
     m_MousePosition = pos;
 
-    if (m_CurrentState == state::SET_ROUNDNESS)
+    if (GetState() == state::SET_ROUNDNESS)
     {
         m_Roundness = vec2_distance(pos, m_Reference);
     }
-    else if (m_CurrentState == state::SET_WIDTH)
+    else if (GetState() == state::SET_WIDTH)
     {
         m_Width = vec2_distance(pos, m_Reference) * 2.f;
     }
     // moving point
-    else if (m_CurrentState == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
+    else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
     {
         *m_pGrabbedPoint = m_MousePosition;
     }
-    else if (m_CurrentState == state::MOVING_SHAPE)
+    else if (GetState() == state::MOVING_SHAPE)
     {
         shape *s = cc_get(&m_Shapes, m_SelectedShapeIndex);
         vec2 delta = m_MousePosition - m_Reference;
@@ -77,24 +77,24 @@ void ShapesStack::OnMouseButton(int button, int action)
 {
     bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS);
     // contextual menu
-    if (m_ContextualMenuOpen && left_button_pressed)
+    if (m_NewShapeContextualMenuOpen && left_button_pressed)
     {
         aabb contextual_bbox = (aabb) {.min = m_ContextualMenuPosition, .max = m_ContextualMenuPosition + contextual_menu_size};
 
         if (!aabb_test_point(&contextual_bbox, m_MousePosition))
-            m_ContextualMenuOpen = false;
+            m_NewShapeContextualMenuOpen = false;
     }
-    if (m_CurrentState == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
         if (aabb_test_point(&m_EditionZone, m_MousePosition))
         {
-            m_ContextualMenuOpen = !m_ContextualMenuOpen;
+            m_NewShapeContextualMenuOpen = !m_NewShapeContextualMenuOpen;
             m_ContextualMenuPosition = m_MousePosition;
             m_SelectedShapeIndex = INVALID_INDEX;
         }
     }
     // selecting shape
-    else if (m_CurrentState == state::IDLE && left_button_pressed)
+    else if (GetState() == state::IDLE && left_button_pressed)
     {
         if (SelectedShapeValid())
         {
@@ -110,7 +110,7 @@ void ShapesStack::OnMouseButton(int button, int action)
                 }
             }
 
-            if (m_CurrentState == state::IDLE && MouseCursorInShape(s, false))
+            if (GetState() == state::IDLE && MouseCursorInShape(s, false))
             {
                 m_Reference = m_MousePosition;
                 SetState(state::MOVING_SHAPE);
@@ -130,7 +130,7 @@ void ShapesStack::OnMouseButton(int button, int action)
         }
     }
     // moving point
-    else if (m_CurrentState == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
+    else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
     {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
         {
@@ -139,13 +139,13 @@ void ShapesStack::OnMouseButton(int button, int action)
         }
     }
     // moving shape
-    else if (m_CurrentState == state::MOVING_SHAPE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    else if (GetState() == state::MOVING_SHAPE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {
         SetState(state::IDLE);
         UndoSnapshot();
     }
     // adding points
-    else if (m_CurrentState == state::ADDING_POINTS && left_button_pressed)
+    else if (GetState() == state::ADDING_POINTS && left_button_pressed)
     {
         if (!aabb_test_point(&m_EditionZone, m_MousePosition))
             SetState(state::IDLE);
@@ -155,18 +155,26 @@ void ShapesStack::OnMouseButton(int button, int action)
 
         if (m_CurrentPoint == ShapeNumPoints(m_ShapeType))
         {
-            if (m_ShapeType == command_type::shape_oriented_box)
+            if (m_ShapeType == command_type::shape_oriented_box || m_ShapeType == command_type::shape_ellipse)
                 SetState(state::SET_WIDTH);
             else
                 SetState(state::SET_ROUNDNESS);
         }
     }
-    else if (m_CurrentState == state::SET_WIDTH && left_button_pressed)
+    else if (GetState() == state::SET_WIDTH && left_button_pressed)
     {
-        SetState(state::SET_ROUNDNESS);
+        if (m_ShapeType == command_type::shape_oriented_box)
+            SetState(state::SET_ROUNDNESS);
+        else if (m_ShapeType == command_type::shape_ellipse)
+            SetState(state::CREATE_SHAPE);
     }
+    else if (GetState() == state::SET_ROUNDNESS && left_button_pressed)
+    {
+        SetState(state::CREATE_SHAPE);
+    }
+
     // shape creation
-    else if (m_CurrentState == state::SET_ROUNDNESS && left_button_pressed)
+    if (GetState() == state::CREATE_SHAPE)
     {
         shape new_shape;
         new_shape.shape_type = m_ShapeType;
@@ -214,7 +222,12 @@ void ShapesStack::Draw(Renderer& renderer)
         case command_type::shape_oriented_box:
             {
                 renderer.DrawOrientedBox(s->shape_desc.points[0], s->shape_desc.points[1],
-                                         s->shape_desc.width, s->roundness, color, s->op);
+                                            s->shape_desc.width, s->roundness, color, s->op);
+                break;
+            }
+        case command_type::shape_ellipse:
+            {
+                renderer.DrawEllipse(s->shape_desc.points[0], s->shape_desc.points[1], s->shape_desc.width, color, s->op);
                 break;
             }
         default: break;
@@ -222,7 +235,7 @@ void ShapesStack::Draw(Renderer& renderer)
     }
     renderer.EndCombination();
 
-    if (m_CurrentState == state::ADDING_POINTS)
+    if (GetState() == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
             renderer.DrawCircleFilled(m_ShapePoints[i], shape_point_radius, draw_color(na16_red, 128));
@@ -235,17 +248,23 @@ void ShapesStack::Draw(Renderer& renderer)
             else if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_ShapePoints[1], m_ShapePoints[2], 0.001f)))
                 renderer.DrawTriangleFilled(m_ShapePoints[0], m_ShapePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
         }
-        else if (m_ShapeType == command_type::shape_oriented_box && m_CurrentPoint == 1)
+        else if ((m_ShapeType == command_type::shape_oriented_box || m_ShapeType == command_type::shape_ellipse)
+                  && m_CurrentPoint == 1)
+        {
             renderer.DrawOrientedBox(m_ShapePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
-        
+        }
         renderer.DrawCircleFilled(m_MousePosition, shape_point_radius, draw_color(na16_red, 128));
     }
-    else if (m_CurrentState == state::SET_WIDTH)
+    else if (GetState() == state::SET_WIDTH)
     {
         renderer.DrawCircleFilled(m_Reference, shape_point_radius, draw_color(na16_red, 128));
-        renderer.DrawOrientedBox(m_ShapePoints[0], m_ShapePoints[1], m_Width, 0.f, draw_color(na16_light_blue, 128));
+
+        if (m_ShapeType == command_type::shape_oriented_box)
+            renderer.DrawOrientedBox(m_ShapePoints[0], m_ShapePoints[1], m_Width, 0.f, draw_color(na16_light_blue, 128));
+        else if (m_ShapeType == command_type::shape_ellipse)
+            renderer.DrawEllipse(m_ShapePoints[0], m_ShapePoints[1], m_Width, draw_color(na16_light_blue, 128));
     }
-    else if (m_CurrentState == state::SET_ROUNDNESS)
+    else if (GetState() == state::SET_ROUNDNESS)
     {
         renderer.DrawCircleFilled(m_Reference, shape_point_radius, draw_color(na16_red, 128));
 
@@ -260,12 +279,13 @@ void ShapesStack::Draw(Renderer& renderer)
             renderer.DrawCircleFilled(m_ShapePoints[0], m_Roundness, draw_color(na16_light_blue, 128));break;
 
         case command_type::shape_oriented_box:
-            renderer.DrawOrientedBox(m_ShapePoints[0], m_ShapePoints[1], m_Width, m_Roundness, draw_color(na16_light_blue, 128));break;
+            renderer.DrawOrientedBox(m_ShapePoints[0], m_ShapePoints[1], m_Width, m_Roundness, draw_color(na16_light_blue, 128));
+            break;
 
         default:break;
         }
     }
-    else if (m_CurrentState == state::IDLE)
+    else if (GetState() == state::IDLE)
     {
         MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<cc_size(&m_Shapes); ++i)
@@ -282,7 +302,7 @@ void ShapesStack::Draw(Renderer& renderer)
         if (SelectedShapeValid())
             DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
     }
-    else if (m_CurrentState == state::MOVING_POINT || m_CurrentState == state::MOVING_SHAPE)
+    else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_SHAPE)
     {
         if (SelectedShapeValid())
             DrawShapeGizmo(renderer, cc_get(&m_Shapes, m_SelectedShapeIndex));
@@ -314,28 +334,35 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
             switch(s->shape_type)
             {
             case command_type::shape_circle_filled : 
-            {
-                mu_text(gui_context, "disc");
-                mu_label(gui_context, "radius");
-                res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 1000.f, 1.f, "%3.0f", 0);
-                break;
-            }
+                {
+                    mu_text(gui_context, "disc");
+                    mu_label(gui_context, "radius");
+                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 1000.f, 1.f, "%3.0f", 0);
+                    break;
+                }
+            case command_type::shape_ellipse :
+                {
+                    mu_text(gui_context, "ellipse");
+                    mu_label(gui_context, "width");
+                    res |= mu_slider_ex(gui_context, &s->shape_desc.width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
+                    break;
+                }
             case command_type::shape_triangle_filled : 
-            {
-                mu_text(gui_context, "triangle");
-                mu_label(gui_context, "roundness");
-                res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
-                break;
-            }
+                {
+                    mu_text(gui_context, "triangle");
+                    mu_label(gui_context, "roundness");
+                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
+                    break;
+                }
             case command_type::shape_oriented_box : 
-            {
-                mu_text(gui_context, "box");
-                mu_label(gui_context, "width");
-                res |= mu_slider_ex(gui_context, &s->shape_desc.width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
-                mu_label(gui_context, "roundness");
-                res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
-                break;
-            }
+                {
+                    mu_text(gui_context, "box");
+                    mu_label(gui_context, "width");
+                    res |= mu_slider_ex(gui_context, &s->shape_desc.width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
+                    mu_label(gui_context, "roundness");
+                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
+                    break;
+                }
 
             default : break;
             }
@@ -360,7 +387,7 @@ void ShapesStack::UserInterface(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
 {
-    if (m_ContextualMenuOpen)
+    if (m_NewShapeContextualMenuOpen)
     {
         if (mu_begin_window_ex(gui_context, "new shape", mu_rect((int)m_ContextualMenuPosition.x,
             (int)m_ContextualMenuPosition.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y), 
@@ -373,9 +400,10 @@ void ShapesStack::ContextualMenu(struct mu_Context* gui_context)
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "circle", 0, 0))
+            if (mu_button_ex(gui_context, "ellipse", 0, 0))
             {
-                m_ContextualMenuOpen = false;
+                m_ShapeType = command_type::shape_ellipse;
+                SetState(state::ADDING_POINTS);
             }
             
             if (mu_button_ex(gui_context, "box", 0, 0))
@@ -419,12 +447,12 @@ void ShapesStack::UndoSnapshot()
 void ShapesStack::Undo()
 {
     // cancel shape creation
-    if (m_CurrentState == state::ADDING_POINTS || m_CurrentState == state::SET_ROUNDNESS)
+    if (GetState() == state::ADDING_POINTS || GetState() == state::SET_ROUNDNESS)
     {
         SetState(state::IDLE);
     }
     // if idle, call undo manager
-    else if (m_CurrentState == state::IDLE || m_CurrentState == state::SHAPE_SELECTED)
+    else if (GetState() == state::IDLE || GetState() == state::SHAPE_SELECTED)
     {
         serializer_context serializer;
         size_t max_size;
@@ -450,7 +478,7 @@ void ShapesStack::Undo()
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::DeleteSelected()
 {
-    if (m_CurrentState == state::IDLE && SelectedShapeValid())
+    if (GetState() == state::IDLE && SelectedShapeValid())
     {
         cc_erase(&m_Shapes, m_SelectedShapeIndex);
         m_SelectedShapeIndex = INVALID_INDEX;
@@ -461,10 +489,10 @@ void ShapesStack::DeleteSelected()
 //----------------------------------------------------------------------------------------------------------------------------
 void ShapesStack::SetState(enum state new_state)
 {
-    if (m_CurrentState == state::IDLE && new_state == state::ADDING_POINTS)
+    if (GetState() == state::IDLE && new_state == state::ADDING_POINTS)
     {
         m_CurrentPoint = 0;
-        m_ContextualMenuOpen = false;
+        m_NewShapeContextualMenuOpen = false;
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
     }
 
@@ -482,7 +510,7 @@ void ShapesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
 
-    if (m_CurrentState == state::MOVING_POINT && new_state == state::IDLE)
+    if (GetState() == state::MOVING_POINT && new_state == state::IDLE)
         m_pGrabbedPoint = nullptr;
 
     if (new_state == state::MOVING_POINT)
@@ -510,6 +538,11 @@ bool ShapesStack::MouseCursorInShape(const shape* s, bool test_vertices)
     case command_type::shape_circle_filled:
         {
             result = point_in_disc(points[0], s->roundness, m_MousePosition);
+            break;
+        }
+    case command_type::shape_ellipse:
+        {
+            result = point_in_ellipse(points[0], points[1], s->shape_desc.width, m_MousePosition);
             break;
         }
     case command_type::shape_oriented_box:
@@ -545,6 +578,11 @@ void ShapesStack::DrawShapeGizmo(Renderer& renderer, const shape* s)
     case command_type::shape_circle_filled:
         {
             renderer.DrawCircleFilled(s->shape_desc.points[0], s->roundness, draw_color(na16_orange, 128));
+            break;
+        }
+    case command_type::shape_ellipse:
+        {
+            renderer.DrawEllipse(s->shape_desc.points[0], s->shape_desc.points[1], s->shape_desc.width, draw_color(na16_orange, 128), s->op);
             break;
         }
     case command_type::shape_oriented_box:
