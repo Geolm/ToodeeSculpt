@@ -4,15 +4,19 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 
 ![2024-11 screenshot](/images/Screenshot%202024-11-25%20at%2016.55.53.png)
 
+## Why
+* analytical shape, can adapt any resolution
+* can produce smooth shapes without tesselation
+* lightweight vs PNG image
+* fast to render on GPU compared to bezier curves
+* out of the box anti-aliasing
 
 ## Features
-* Primitives : disc, triangle, oriented box, ellipse, _arc_, _pie_
+* Primitives : disc, triangle, oriented box, ellipse, 
 * Primitive can be rounded
-* Boolean operator : union, substraction, _intersection_
-* [Smooth blend](https://iquilezles.org/articles/smin/)
-* _Export to shader, image_
+* Boolean operator : union, substraction, [smooth blend](https://iquilezles.org/articles/smin/)
+* Intuitive editor, undo support, grid snapping
 
-_Italic_ denotes planned features.
 
 ## GPU driven SDF renderer
 
@@ -21,3 +25,10 @@ This editor render everything with a gpu-driven renderer
 * binning, rasterization, blending is all done on GPU (i.e Compute shader + Draw Indirect)
 * pixel are rendered just once, all blending is done in the shader (a.k.a free alpha blending)
 * anti-aliasing based on sdf
+
+## Planned Dev
+
+* more primitives : arc, pie
+* export to PNG, shadertoy shader
+* editor : multiple selection, copy/paste, zoom
+* save/load
