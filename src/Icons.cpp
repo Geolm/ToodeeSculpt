@@ -2,9 +2,11 @@
 #include "system/stateless.h"
 #include "system/vec2.h"
 
+#define UNUSED_VARIABLE(a) (void)(a)
 
 void DrawIcon(Renderer& renderer, aabb box, icon_type icon, draw_color primaray_color, draw_color secondary_color, float time_in_second)
 {
+    UNUSED_VARIABLE(time_in_second);
     vec2 center = vec2_scale(box.min + box.max, .5f);
     vec2 extent = vec2_scale(box.max - box.min, .5f);
     float max_radius = fminf(extent.x, extent.y);

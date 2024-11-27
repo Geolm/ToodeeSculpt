@@ -34,4 +34,4 @@ target_link_libraries(ToodeeSculpt
         "-framework QuartzCore"
         )
 
-target_compile_options(ToodeeSculpt PRIVATE -O3)
+target_compile_options(ToodeeSculpt PRIVATE -O3 -Wall -Wextra -Wno-missing-braces)

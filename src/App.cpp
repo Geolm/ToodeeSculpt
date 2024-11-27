@@ -16,6 +16,8 @@
 #include "MouseCursors.h"
 #include "Icons.h"
 
+#define UNUSED_VARIABLE(a) (void)(a)
+
 static inline draw_color from_mu_color(mu_Color color) {return draw_color(color.r, color.g, color.b, color.a);}
 static inline mu_Color to_mu_color(uint32_t packed_color) 
 {
@@ -102,12 +104,13 @@ void App::InitGui()
 
     m_pGuiContext->text_width = [](mu_Font font, const char *text, int len)  -> int
     {
+        UNUSED_VARIABLE(font);
         if (len == -1)
             len = (int)strlen(text);
         return len * (FONT_WIDTH + FONT_SPACING);
     };
 
-    m_pGuiContext->text_height = [] (mu_Font font) -> int { return FONT_HEIGHT; };
+    m_pGuiContext->text_height = [] (mu_Font font) -> int { UNUSED_VARIABLE(font); return FONT_HEIGHT; };
 
     hueshift_ramp_desc ramp = 
     {
@@ -224,6 +227,7 @@ void App::LogUserInterface()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnKeyEvent(int key, int scancode, int action, int mods)
 {
+    UNUSED_VARIABLE(scancode);
     if (key >= GLFW_KEY_SPACE && key <= GLFW_KEY_Z && action == GLFW_PRESS)
     {
         char text[2] = {(char)key, 0};
@@ -286,6 +290,7 @@ void App::OnMouseMove(float x, float y)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnMouseButton(int button, int action, int mods)
 {
+    UNUSED_VARIABLE(mods);
     int mu_button = 0;
     switch(button)
     {

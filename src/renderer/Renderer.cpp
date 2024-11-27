@@ -11,6 +11,7 @@
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 #define SHADER_PATH "/Users/geolm/Code/Geolm/ToodeeSculpt/src/shaders/"
+#define UNUSED_VARIABLE(a) (void)(a)
 
 template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 template<class T> T min(T a, T b) {return (a<b) ? a : b;}
@@ -330,6 +331,7 @@ void Renderer::Flush(CA::MetalDrawable* pDrawable)
     Renderer* pRenderer = this;
     m_pCommandBuffer->addCompletedHandler(^void( MTL::CommandBuffer* pCmd )
     {
+        UNUSED_VARIABLE(pCmd);
         dispatch_semaphore_signal( pRenderer->m_Semaphore );
     });
 
