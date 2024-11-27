@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ShapesStack.h"
+#include "PrimitivesStack.h"
 
 class Renderer;
 struct mu_Context;
@@ -31,7 +31,7 @@ private:
     void MenuBar(struct mu_Context* gui_context);
 
 private:
-    ShapesStack m_ShapesStack;
+    PrimitivesStack m_PrimitivesStack;
     aabb m_Zone;
     aabb m_ExternalZone;
     struct undo_context* m_pUndoContext;

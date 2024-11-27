@@ -22,16 +22,16 @@ using namespace metal;
 
 enum command_type
 {
-    shape_aabox = 0,
-    shape_oriented_box = 1,
-    shape_circle = 2,
-    shape_circle_filled = 3,
-    shape_arc = 4,
-    shape_arc_filled = 5,
-    shape_triangle = 6,
-    shape_triangle_filled = 7,
-    shape_char = 8,
-    shape_ellipse = 9,
+    primitive_aabox = 0,
+    primitive_oriented_box = 1,
+    primitive_circle = 2,
+    primitive_circle_filled = 3,
+    primitive_arc = 4,
+    primitive_arc_filled = 5,
+    primitive_triangle = 6,
+    primitive_triangle_filled = 7,
+    primitive_char = 8,
+    primitive_ellipse = 9,
     combination_begin = 16,
     combination_end = 17
 };

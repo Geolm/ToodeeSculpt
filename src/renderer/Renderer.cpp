@@ -517,7 +517,7 @@ void Renderer::DrawCircle(float x, float y, float radius, float width, draw_colo
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = shape_circle;
+        cmd->type = primitive_circle;
 
         float* data = m_DrawData.NewMultiple(4);
         quantized_aabb* aabb = m_CommandsAABB.NewElement();
@@ -545,7 +545,7 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = shape_circle_filled;
+        cmd->type = primitive_circle_filled;
 
         float* data = m_DrawData.NewMultiple(3);
         quantized_aabb* aabb = m_CommandsAABB.NewElement();
@@ -576,7 +576,7 @@ void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float wid
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = shape_oriented_box;
+        cmd->type = primitive_oriented_box;
 
         float* data = m_DrawData.NewMultiple(6);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -611,7 +611,7 @@ void Renderer::DrawEllipse(float x0, float y0, float x1, float y1, float width, 
             cmd->color = color;
             cmd->data_index = m_DrawData.GetNumElements();
             cmd->op = op;
-            cmd->type = shape_ellipse;
+            cmd->type = primitive_ellipse;
 
             float* data = m_DrawData.NewMultiple(5);
             quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -643,7 +643,7 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op_union;
-        cmd->type = shape_aabox;
+        cmd->type = primitive_aabox;
 
         float* data = m_DrawData.NewMultiple(4);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -673,7 +673,7 @@ void Renderer::DrawChar(float x, float y, char c, draw_color color)
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op_union;
-        cmd->type = shape_char;
+        cmd->type = primitive_char;
         cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
 
         float* data = m_DrawData.NewMultiple(2);
@@ -716,7 +716,7 @@ void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, dr
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = shape_triangle_filled;
+        cmd->type = primitive_triangle_filled;
 
         float* data = m_DrawData.NewMultiple(7);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -751,7 +751,7 @@ void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color c
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = shape_triangle;
+        cmd->type = primitive_triangle;
 
         float* data = m_DrawData.NewMultiple(7);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();

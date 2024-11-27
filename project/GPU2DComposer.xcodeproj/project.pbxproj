@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB174E572CF76FCB004C33A1 /* PrimitivesStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB174E562CF76FCB004C33A1 /* PrimitivesStack.cpp */; };
 		FB28233A2BF2D8A7009FC4FD /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = FB2823352BF2D8A7009FC4FD /* log.c */; };
 		FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = FB3F5D122BDC04BC00BC4892 /* main.mm */; };
 		FB3F5D172BDC05DA00BC4892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB3F5D162BDC05DA00BC4892 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -19,7 +20,6 @@
 		FB90E13F2BE977D2004B4083 /* Renderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13A2BE977D2004B4083 /* Renderer.cpp */; };
 		FB90E1402BE977D2004B4083 /* shader_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = FB90E13C2BE977D2004B4083 /* shader_reader.c */; };
 		FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDEA2CC93DF800608C34 /* Editor.cpp */; };
-		FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */; };
 		FBA57B472CB081460033DD9A /* sokol_time.c in Sources */ = {isa = PBXBuildFile; fileRef = FBA57B462CB081460033DD9A /* sokol_time.c */; };
 		FBA5CD142BE9628500398435 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBA5CD132BE9628500398435 /* libglfw.3.4.dylib */; };
 		FBB5EB562CF4FAFD00BC434C /* point_in.c in Sources */ = {isa = PBXBuildFile; fileRef = FBB5EB552CF4FAFD00BC434C /* point_in.c */; };
@@ -41,6 +41,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FB174E552CF76FCB004C33A1 /* PrimitivesStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrimitivesStack.h; sourceTree = "<group>"; };
+		FB174E562CF76FCB004C33A1 /* PrimitivesStack.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PrimitivesStack.cpp; sourceTree = "<group>"; };
 		FB2646BE2BF7F630009B2403 /* rasterizer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = rasterizer.metal; sourceTree = "<group>"; };
 		FB2646BF2BF7F630009B2403 /* sdf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sdf.h; sourceTree = "<group>"; };
 		FB2823352BF2D8A7009FC4FD /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
@@ -79,8 +81,6 @@
 		FB93DDE92CC93DF800608C34 /* Editor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Editor.h; sourceTree = "<group>"; };
 		FB93DDEA2CC93DF800608C34 /* Editor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Editor.cpp; sourceTree = "<group>"; };
 		FB93DDEB2CC93DF800608C34 /* Icons.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Icons.h; sourceTree = "<group>"; };
-		FB93DDEC2CC93DF800608C34 /* ShapesStack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShapesStack.h; sourceTree = "<group>"; };
-		FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ShapesStack.cpp; sourceTree = "<group>"; };
 		FBA57B442CB081460033DD9A /* aabb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aabb.h; sourceTree = "<group>"; };
 		FBA57B452CB081460033DD9A /* sokol_time.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sokol_time.h; sourceTree = "<group>"; };
 		FBA57B462CB081460033DD9A /* sokol_time.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sokol_time.c; sourceTree = "<group>"; };
@@ -158,14 +158,14 @@
 		FB3F5D132BDC04BC00BC4892 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				FB174E552CF76FCB004C33A1 /* PrimitivesStack.h */,
+				FB174E562CF76FCB004C33A1 /* PrimitivesStack.cpp */,
 				FB4011B52CD27CF00018C19C /* MouseCursors.h */,
 				FB4011B62CD27CF00018C19C /* MouseCursors.cpp */,
 				FB93DDE92CC93DF800608C34 /* Editor.h */,
 				FB93DDEA2CC93DF800608C34 /* Editor.cpp */,
 				FBE0612D2CE245B4001A1EAF /* Icons.cpp */,
 				FB93DDEB2CC93DF800608C34 /* Icons.h */,
-				FB93DDEC2CC93DF800608C34 /* ShapesStack.h */,
-				FB93DDED2CC93DF800608C34 /* ShapesStack.cpp */,
 				FB3C530C2BE2702700240FA8 /* shaders */,
 				FB90E13E2BE977D2004B4083 /* renderer */,
 				FB2823392BF2D8A7009FC4FD /* system */,
@@ -290,9 +290,9 @@
 				FB6C49742BE9C15600F2926D /* App.cpp in Sources */,
 				FB93DDEE2CC93DF800608C34 /* Editor.cpp in Sources */,
 				FBB5EB562CF4FAFD00BC434C /* point_in.c in Sources */,
-				FB93DDEF2CC93DF800608C34 /* ShapesStack.cpp in Sources */,
 				FBB617702CD31A6000B80BA3 /* format.c in Sources */,
 				FB3F5D142BDC04BC00BC4892 /* main.mm in Sources */,
+				FB174E572CF76FCB004C33A1 /* PrimitivesStack.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

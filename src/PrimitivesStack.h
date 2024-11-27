@@ -10,7 +10,7 @@ struct mu_Context;
 class Renderer;
 
 //----------------------------------------------------------------------------------------------------------------------------
-class ShapesStack
+class PrimitivesStack
 {
 public:
     void Init(aabb zone, struct undo_context* undo);
@@ -28,74 +28,74 @@ public:
 private:
     //----------------------------------------------------------------------------------------------------------------------------
     // internal structures
-    enum {SHAPE_MAXPOINTS = 3};
-    enum {SHAPES_STACK_RESERVATION = 100};
+    enum {PRIMITIVE_MAXPOINTS = 3};
+    enum {PRIMITIVES_STACK_RESERVATION = 100};
 
-    struct shape_data
+    struct primitive_data
     {
-        vec2 points[SHAPE_MAXPOINTS];
+        vec2 points[PRIMITIVE_MAXPOINTS];
         float width;
     };
 
-    struct shape_color
+    struct primitive_color
     {
         float red, green, blue;
     };
 
-    struct shape
+    struct primitive
     {
-        shape_data shape_desc;
-        command_type shape_type;
+        primitive_data primitive_desc;
+        command_type primitive_type;
         float roundness;
         sdf_operator op;
-        shape_color color;
+        primitive_color color;
     };
 
     enum state
     {
         IDLE,
-        SHAPE_SELECTED,
+        PRIMITIVE_SELECTED,
         ADDING_POINTS,
         SET_WIDTH,
         SET_ROUNDNESS,
-        CREATE_SHAPE,
+        CREATE_PRIMITIVE,
         MOVING_POINT,
-        MOVING_SHAPE
+        MOVING_PRIMITIVE
     };
 
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
-    bool MouseCursorInShape(const shape* s, bool test_vertices);
-    void DrawShapeGizmo(Renderer& renderer, const shape* s);
-    void DrawShape(Renderer& renderer, const shape* s, float roundness, draw_color color, sdf_operator op);
+    bool MouseCursorInPrimitive(const primitive* s, bool test_vertices);
+    void DrawPrimitiveGizmo(Renderer& renderer, const primitive* s);
+    void DrawPrimitive(Renderer& renderer, const primitive* s, float roundness, draw_color color, sdf_operator op);
     void UndoSnapshot();
-    inline bool SelectedShapeValid() {return m_SelectedShapeIndex < cc_size(&m_Shapes);}
-    inline uint32_t ShapeNumPoints(command_type shape);
+    inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
+    inline uint32_t PrimitiveNumPoints(command_type primitive);
 
 private:
     // serialized data 
-    cc_vec(shape) m_Shapes;
+    cc_vec(primitive) m_Primitives;
     float m_SmoothBlend;
     float m_AlphaValue;
 
     // ui
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
-    bool m_NewShapeContextualMenuOpen;
+    bool m_NewPrimitiveContextualMenuOpen;
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
 
-    // shape creation
+    // primitive creation
     state m_CurrentState;
     uint32_t m_CurrentPoint;
-    vec2 m_ShapePoints[SHAPE_MAXPOINTS];
+    vec2 m_PrimitivePoints[PRIMITIVE_MAXPOINTS];
     vec2 m_Reference;
     float m_Width;
     float m_Roundness;
-    command_type m_ShapeType;
-    uint32_t m_SelectedShapeIndex;
+    command_type m_PrimitiveType;
+    uint32_t m_SelectedPrimitiveIndex;
     struct undo_context* m_pUndoContext;
     vec2* m_pGrabbedPoint;
     bool m_SnapToGrid;
@@ -103,18 +103,18 @@ private:
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline uint32_t ShapesStack::ShapeNumPoints(command_type shape)
+inline uint32_t PrimitivesStack::PrimitiveNumPoints(command_type primitive)
 {
-    switch(shape)
+    switch(primitive)
     {
-    case shape_ellipse:
-    case shape_oriented_box: return 2;
-    case shape_arc:
-    case shape_arc_filled:
-    case shape_circle:
-    case shape_circle_filled: return 1;
-    case shape_triangle:
-    case shape_triangle_filled: return 3;
+    case primitive_ellipse:
+    case primitive_oriented_box: return 2;
+    case primitive_arc:
+    case primitive_arc_filled:
+    case primitive_circle:
+    case primitive_circle_filled: return 1;
+    case primitive_triangle:
+    case primitive_triangle_filled: return 3;
     default: return 0;
     }
 }

@@ -12,7 +12,7 @@ void Editor::Init(aabb zone)
     m_ExternalZone = m_Zone = zone;
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));
     m_pUndoContext = undo_init(1<<18, 1<<10);
-    m_ShapesStack.Init(zone, m_pUndoContext);
+    m_PrimitivesStack.Init(zone, m_pUndoContext);
     m_MenuBarState = MenuBar_None;
     m_SnapToGrid = 0;
     m_ShowGrid = 0;
@@ -22,7 +22,7 @@ void Editor::Init(aabb zone)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::OnMouseMove(vec2 pos)
 {
-    m_ShapesStack.OnMouseMove(pos);
+    m_PrimitivesStack.OnMouseMove(pos);
 
     if (aabb_test_point(&m_ExternalZone, pos))
         m_MenuBarState = MenuBar_None;
@@ -31,7 +31,7 @@ void Editor::OnMouseMove(vec2 pos)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::OnMouseButton(int button, int action)
 {
-    m_ShapesStack.OnMouseButton(button, action);
+    m_PrimitivesStack.OnMouseButton(button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ void Editor::Draw(Renderer& renderer)
     }
 
     renderer.SetClipRect((int)m_Zone.min.x, (int)m_Zone.min.y, (int)m_Zone.max.x, (int)m_Zone.max.y);
-    m_ShapesStack.Draw(renderer);
+    m_PrimitivesStack.Draw(renderer);
     renderer.SetClipRect(0, 0, UINT16_MAX, UINT16_MAX);
 }
 
@@ -77,7 +77,7 @@ void Editor::DebugInterface(struct mu_Context* gui_context)
 void Editor::UserInterface(struct mu_Context* gui_context)
 {
     MenuBar(gui_context);
-    m_ShapesStack.UserInterface(gui_context);
+    m_PrimitivesStack.UserInterface(gui_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -163,14 +163,14 @@ void Editor::MenuBar(struct mu_Context* gui_context)
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
                 if (mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid))
-                    m_ShapesStack.SetSnapToGrid((bool)m_SnapToGrid);
+                    m_PrimitivesStack.SetSnapToGrid((bool)m_SnapToGrid);
 
                 mu_checkbox(gui_context, "Show grid", &m_ShowGrid);
                 mu_layout_row(gui_context, 2, (int[]) {100, -1}, 0);
                 mu_label(gui_context, "Grid sub");
 
                 if (mu_slider_ex(gui_context, &m_GridSubdivision, 4.f, 50.f, 1.f, "%2.0f", 0)&MU_RES_SUBMIT)
-                    m_ShapesStack.SetGridSubdivision(m_GridSubdivision);
+                    m_PrimitivesStack.SetGridSubdivision(m_GridSubdivision);
                 
                 mu_end_window(gui_context);
             }
@@ -183,18 +183,18 @@ void Editor::MenuBar(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Undo()
 {
-    m_ShapesStack.Undo();
+    m_PrimitivesStack.Undo();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Delete()
 {
-    m_ShapesStack.DeleteSelected();
+    m_PrimitivesStack.DeleteSelected();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Terminate()
 {
     undo_terminate(m_pUndoContext);
-    m_ShapesStack.Terminate();
+    m_PrimitivesStack.Terminate();
 }

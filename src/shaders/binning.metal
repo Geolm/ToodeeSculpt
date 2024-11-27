@@ -41,7 +41,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         constant float* data = &input.draw_data[data_index];
         switch(input.commands[i].type)
         {
-            case shape_oriented_box :
+            case primitive_oriented_box :
             {
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
@@ -50,7 +50,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
-            case shape_ellipse :
+            case primitive_ellipse :
             {
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
@@ -59,7 +59,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
-            case shape_circle :
+            case primitive_circle :
             {
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];
@@ -67,7 +67,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
                 break;
             }
-            case shape_circle_filled :
+            case primitive_circle_filled :
             {
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2] + input.aa_width + smooth_border;
@@ -75,8 +75,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
                 break;
             }
-            case shape_triangle_filled :
-            case shape_triangle :
+            case primitive_triangle_filled :
+            case primitive_triangle :
             {
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
@@ -84,7 +84,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6] + smooth_border);
                 to_be_added = intersection_aabb_triangle(tile_rounded, p0, p1, p2);
 
-                if (input.commands[i].type == shape_triangle)
+                if (input.commands[i].type == primitive_triangle)
                 {
                     bool corners_inside = test_point_triangle(p0, p1, p2, tile_rounded.min);
                     corners_inside &= test_point_triangle(p0, p1, p2, tile_rounded.max);
@@ -106,8 +106,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = true;
                 break;
             }
-            case shape_aabox :
-            case shape_char : to_be_added = true; break;
+            case primitive_aabox :
+            case primitive_char : to_be_added = true; break;
         }
 
         if (to_be_added)
