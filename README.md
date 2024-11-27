@@ -17,7 +17,6 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 * Boolean operator : union, substraction, [smooth blend](https://iquilezles.org/articles/smin/)
 * Intuitive editor, undo support, grid snapping
 
-
 ## GPU driven SDF renderer
 
 This editor renders everything with a gpu-driven pipeline

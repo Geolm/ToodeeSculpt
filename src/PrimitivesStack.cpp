@@ -558,7 +558,7 @@ void PrimitivesStack::DrawPrimitive(Renderer& renderer, const primitive* s, floa
         break;
 
     case command_type::primitive_circle_filled:
-        renderer.DrawCircleFilled(points[0], roundness, color, op);
+        renderer.DrawCircleFilled(points[0], s->roundness, color, op);
         break;
 
     case command_type::primitive_ellipse:
