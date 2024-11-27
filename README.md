@@ -20,10 +20,10 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 
 ## GPU driven SDF renderer
 
-This editor render everything with a gpu-driven renderer
+This editor renders everything with a gpu-driven pipeline
 * only a list of command is uploaded to the GPU
 * binning, rasterization, blending is all done on GPU (i.e Compute shader + Draw Indirect)
-* pixel are rendered just once, all blending is done in the shader (a.k.a free alpha blending)
+* pixels are rendered once, all [blending](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles) is done in the shader (a.k.a free alpha blending)
 * anti-aliasing based on sdf
 
 ## Planned Dev
