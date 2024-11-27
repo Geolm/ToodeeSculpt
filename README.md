@@ -4,6 +4,10 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 
 ![2024-11 screenshot](/images/Screenshot%202024-11-25%20at%2016.55.53.png)
 
+###### Work in progress
+* only available on macOS Apple Silicon
+* lot of bugs, missing features
+
 ## Why
 * analytical shape, can adapt any resolution
 * can produce smooth shapes without tesselation
@@ -24,6 +28,7 @@ This editor renders everything with a gpu-driven pipeline
 * binning, rasterization, blending is all done on GPU (i.e Compute shader + Draw Indirect)
 * pixels are rendered once, all [blending](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles) is done in the shader (a.k.a free alpha blending)
 * anti-aliasing based on sdf
+* uses the metal API (until sokol_graphics supports gpu-driven features, nudge nudge)
 
 ## Planned Dev
 
