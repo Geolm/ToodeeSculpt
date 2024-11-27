@@ -10,6 +10,7 @@
 #include "../system/format.h"
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
+#define SHADER_PATH "/Users/geolm/Code/Geolm/ToodeeSculpt/src/shaders/"
 
 template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 template<class T> T min(T a, T b) {return (a<b) ? a : b;}
@@ -118,7 +119,7 @@ void Renderer::BuildPSO()
     SAFE_RELEASE(m_pDrawPSO);
     SAFE_RELEASE(m_pWriteIcbPSO);
 
-    MTL::Library* pLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "binning.metal");
+    MTL::Library* pLibrary = BuildShader(SHADER_PATH, "binning.metal");
     if (pLibrary != nullptr)
     {
         MTL::Function* pBinningFunction = pLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
@@ -159,7 +160,7 @@ void Renderer::BuildPSO()
         pLibrary->release();
     }
 
-    pLibrary = BuildShader("/Users/geolm/Code/Geolm/GPU2DComposer/src/shaders/", "rasterizer.metal");
+    pLibrary = BuildShader(SHADER_PATH, "rasterizer.metal");
     if (pLibrary != nullptr)
     {
         MTL::Function* pVertexFunction = pLibrary->newFunction(NS::String::string("tile_vs", NS::UTF8StringEncoding));
