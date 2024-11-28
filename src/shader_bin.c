@@ -11,18 +11,23 @@
 bool bin_shader(const char* shader_name)
 {
     bool result = false;
-    char* shader_buffer = read_shader_include("./src/shaders/", format("%s.metal", shader_name));
+    char* shader_buffer = read_shader_include("src/shaders/", format("%s.metal", shader_name));
 
-    fprintf(stdout, "opening ./src/shaders/%s.metal ", shader_name);
+    fprintf(stdout, "opening src/shaders/%s.metal ", shader_name);
 
     if (shader_buffer != NULL)
     {
+        
         fprintf(stdout, "ok\n");
-        fprintf(stdout, "writting ./src/shaders/%s.h ", shader_name);
-        result = bin2h(format("./src/shaders/%s.h", shader_name), format("%s_shader", shader_name), shader_buffer, strlen(shader_buffer));
+        char* shader_fullname = strdup(format("src/shaders/%s.h", shader_name));
+        fprintf(stdout, "%s ", shader_fullname);
+        result = bin2h(shader_fullname, format("%s_shader", shader_name), shader_buffer, strlen(shader_buffer));
         fprintf(stdout, result ? "ok\n" : "error\n");
         free(shader_buffer);
+        free(shader_fullname);
     }
+    else
+        fprintf(stdout, "error\n");
 
     return result;
 }

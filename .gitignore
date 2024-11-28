@@ -74,3 +74,8 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+# ToodeeSculpt specific
+shader_bin_output.txt
+shader_bin
+ToodeeSculpt
