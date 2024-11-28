@@ -30,9 +30,24 @@ This editor renders everything with a gpu-driven pipeline
 * anti-aliasing based on sdf
 * uses the metal API (until sokol_graphics supports gpu-driven features, nudge nudge)
 
+More details to come in the documentation.
+
 ## Planned Dev
 
 * more primitives : arc, pie
 * export to PNG, shadertoy shader
 * editor : multiple selection, copy/paste, zoom
 * save/load
+
+## How to build
+### Prerequisite
+* a macOS dev environment (xcode tools)
+* glfw installed via homebrew
+* cmake
+### Compilation
+* open a terminal in the folder
+* cmake .
+* cmake --build .
+* ./ToodeeSculpt
+
+It only has been tested on a M2 Max running macOS 12.7.1
