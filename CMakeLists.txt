@@ -5,6 +5,19 @@ set(CMAKE_C_STANDARD 11)
 
 project(ToodeeSculpt)
 
+# --- Build the shader_bin ---
+add_executable(shader_bin ./src/shader_bin.c ./src/system/bin2h.c ./src/system/format.c ./src/renderer/shader_reader.c)
+
+# --- Prebuild step ---
+add_custom_command(
+        OUTPUT shader_bin_output.txt
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMAND shader_bin > shader_bin_output.txt
+        DEPENDS shader_bin
+)
+
+# --- Build ToodeeSculpt ---
+
 find_package(glfw3 3.3 REQUIRED)
 
 add_executable(ToodeeSculpt
@@ -24,6 +37,9 @@ add_executable(ToodeeSculpt
 ./src/system/sokol_time.c
 ./src/system/undo.c
 )
+
+add_custom_target(prebuild_step DEPENDS shader_bin_output.txt)
+add_dependencies(ToodeeSculpt prebuild_step)
 
 target_link_libraries(ToodeeSculpt glfw)
 target_link_libraries(ToodeeSculpt

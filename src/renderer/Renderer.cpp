@@ -109,7 +109,6 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
     {
         log_error("error while compiling : %s\n%s", name, pError->localizedDescription()->utf8String());
     }
-    
     return pLibrary;
 }
 
