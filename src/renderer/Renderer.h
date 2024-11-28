@@ -47,7 +47,12 @@ private:
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
+
+#ifdef SHADERS_IN_EXECUTABLE
+    MTL::Library* BuildShader(const char* shader_buffer, const char* name);
+#else
     MTL::Library* BuildShader(const char* path, const char* name);
+#endif
 
 private:
     MTL::Device* m_pDevice;

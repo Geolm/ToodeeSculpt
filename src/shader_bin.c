@@ -17,12 +17,12 @@ bool bin_shader(const char* shader_name)
 
     if (shader_buffer != NULL)
     {
-        
         fprintf(stdout, "ok\n");
         char* shader_fullname = strdup(format("src/shaders/%s.h", shader_name));
         fprintf(stdout, "%s ", shader_fullname);
-        result = bin2h(shader_fullname, format("%s_shader", shader_name), shader_buffer, strlen(shader_buffer));
+        result = bin2h(shader_fullname, format("%s_shader", shader_name), shader_buffer, strlen(shader_buffer)+1);
         fprintf(stdout, result ? "ok\n" : "error\n");
+
         free(shader_buffer);
         free(shader_fullname);
     }

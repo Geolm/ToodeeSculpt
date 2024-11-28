@@ -9,6 +9,12 @@
 #include "../system/aabb.h"
 #include "../system/format.h"
 
+#ifdef SHADERS_IN_EXECUTABLE
+#include "../shaders/binning.h"
+#include "../shaders/rasterizer.h"
+#endif
+
+
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 #define SHADER_PATH "/Users/geolm/Code/Geolm/ToodeeSculpt/src/shaders/"
 #define UNUSED_VARIABLE(a) (void)(a)
@@ -73,8 +79,10 @@ void Renderer::Resize(uint32_t width, uint32_t height)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::ReloadShaders()
 {
+#ifndef SHADERS_IN_EXECUTABLE
     log_info("reloading shaders");
     BuildPSO();
+#endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -91,6 +99,19 @@ void Renderer::BuildDepthStencilState()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+#ifdef SHADERS_IN_EXECUTABLE
+MTL::Library* Renderer::BuildShader(const char* shader_buffer, const char* name)
+{
+    NS::Error* pError = nullptr;
+    MTL::Library* pLibrary = m_pDevice->newLibrary( NS::String::string(shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
+
+    if (pLibrary == nullptr)
+    {
+        log_error("error while compiling : %s\n%s", name, pError->localizedDescription()->utf8String());
+    }
+    return pLibrary;
+}
+#else
 MTL::Library* Renderer::BuildShader(const char* path, const char* name)
 {
     char* shader_buffer = read_shader_include(path, name);
@@ -112,6 +133,8 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
     return pLibrary;
 }
 
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::BuildPSO()
 {
@@ -119,7 +142,11 @@ void Renderer::BuildPSO()
     SAFE_RELEASE(m_pDrawPSO);
     SAFE_RELEASE(m_pWriteIcbPSO);
 
+#ifdef SHADERS_IN_EXECUTABLE
+    MTL::Library* pLibrary = BuildShader(binning_shader, "binning");
+#else
     MTL::Library* pLibrary = BuildShader(SHADER_PATH, "binning.metal");
+#endif
     if (pLibrary != nullptr)
     {
         MTL::Function* pBinningFunction = pLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
@@ -160,7 +187,11 @@ void Renderer::BuildPSO()
         pLibrary->release();
     }
 
+#ifdef SHADERS_IN_EXECUTABLE
+    pLibrary = BuildShader(rasterizer_shader, "rasterizer");
+#else
     pLibrary = BuildShader(SHADER_PATH, "rasterizer.metal");
+#endif
     if (pLibrary != nullptr)
     {
         MTL::Function* pVertexFunction = pLibrary->newFunction(NS::String::string("tile_vs", NS::UTF8StringEncoding));

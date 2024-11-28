@@ -10,9 +10,9 @@ bool bin2h(const char* filename, const char* variable, const void* buffer, size_
 
     fprintf(f, "#ifndef __%s__H__\n", variable);
     fprintf(f, "#define __%s__H__\n\n", variable);
-    fprintf(f, "const uint8_t %s[] =\n{\n    ", variable);
+    fprintf(f, "const char %s[] =\n{\n    ", variable);
 
-    const uint8_t* input = (const uint8_t*)buffer;
+    const char* input = (const char*)buffer;
     size_t index = 0;
 
     while (index<length-1)

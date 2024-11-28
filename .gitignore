@@ -76,6 +76,6 @@ CTestTestfile.cmake
 _deps
 
 # ToodeeSculpt specific
-shader_bin_output.txt
-shader_bin
-ToodeeSculpt
+/shader_bin_output.txt
+/shader_bin
+/ToodeeSculpt
