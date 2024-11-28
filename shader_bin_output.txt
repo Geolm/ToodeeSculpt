@@ -1,8 +1,0 @@
-shader_bin
-opening ./src/shaders/binning.metal ok
-writting ./src/shaders/binning.h ok
-opening ./src/shaders/rasterizer.metal ok
-writting ./src/shaders/rasterizer.h ok
-
-
-all good
