@@ -46,7 +46,9 @@ More details to come in the documentation.
 * cmake
 ### Compilation
 * open a terminal in the folder
-* cmake .
+* mkdir build
+* cd build
+* cmake ..
 * cmake --build .
 * ./ToodeeSculpt
 
