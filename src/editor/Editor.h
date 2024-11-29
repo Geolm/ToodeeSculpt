@@ -9,15 +9,17 @@ struct undo_context;
 class Editor
 {
 public:
-    void Init(aabb zone);
+    void Init(aabb zone, const char* folder_path);
     void OnMouseMove(vec2 pos);
     void OnMouseButton(int button, int action);
-    void Undo();
-    void Delete();
     void Draw(Renderer& renderer);
     void DebugInterface(struct mu_Context* gui_context);
     void UserInterface(struct mu_Context* gui_context);
     void Terminate();
+
+    void Save();
+    void Undo();
+    void Delete();
 
 private:
     enum MenuBarState
@@ -40,5 +42,6 @@ private:
     int m_SnapToGrid;
     int m_ShowGrid;
     float m_GridSubdivision;
+    const char* m_pFolderPath;
 };
 

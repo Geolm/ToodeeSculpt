@@ -3,11 +3,12 @@
 #include "../system/microui.h"
 #include "../system/format.h"
 #include "../system/palettes.h"
+#include "../system/nfd.h"
 #include "Editor.h"
 
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::Init(aabb zone)
+void Editor::Init(aabb zone, const char* folder_path)
 {
     m_ExternalZone = m_Zone = zone;
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));
@@ -17,6 +18,7 @@ void Editor::Init(aabb zone)
     m_SnapToGrid = 0;
     m_ShowGrid = 0;
     m_GridSubdivision = 20.f;
+    m_pFolderPath = folder_path;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -117,6 +119,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button(gui_context, "Save"))
                 {
+                    Save();
                     m_MenuBarState = MenuBar_None;
                 }
                 if (mu_button(gui_context, "Export"))
@@ -177,6 +180,26 @@ void Editor::MenuBar(struct mu_Context* gui_context)
         }
 
         mu_end_window(gui_context);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::Save()
+{
+    nfdchar_t *save_path = NULL;
+    nfdresult_t result = NFD_SaveDialog( "tds", m_pFolderPath, &save_path );
+    if (result == NFD_OKAY)
+    {
+        // TODO : save the primitivestack
+        free(save_path);
+    }
+    else if (result == NFD_CANCEL)
+    {
+        
+    }
+    else 
+    {
+        log_error("file dialog error: %s", NFD_GetError());
     }
 }
 

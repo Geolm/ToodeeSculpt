@@ -20,6 +20,7 @@ public:
 
 private:
     void InitGui();
+    void RetrieveFolderPath();
     void LogUserInterface();
     void DrawGui();
 
@@ -38,6 +39,7 @@ private:
     uint64_t m_LastTime;
     float m_Time;
     float m_DeltaTime;
+    char* m_pFolderPath {nullptr};
 
     Editor* m_pEditor;
 };

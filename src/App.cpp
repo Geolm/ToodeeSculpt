@@ -11,6 +11,7 @@
 #include "system/sokol_time.h"
 #include "system/palettes.h"
 #include "system/format.h"
+#include "system/whereami.h"
 #include <string.h>
 #include "editor/Editor.h"
 #include "MouseCursors.h"
@@ -90,10 +91,23 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     stm_setup();
     m_LastTime = m_StartTime = stm_now();
 
+    RetrieveFolderPath();
+
     m_pEditor = new Editor;
-    m_pEditor->Init((aabb) {.min = (vec2) {510.f, 100.f}, .max = (vec2) {1410.f, 900.f}});
+    m_pEditor->Init((aabb) {.min = (vec2) {510.f, 100.f}, .max = (vec2) {1410.f, 900.f}}, m_pFolderPath);
 
     glfwGetWindowContentScale(window, &m_ScaleX, &m_ScaleY);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void App::RetrieveFolderPath()
+{
+    size_t path_length = wai_getExecutablePath(NULL, 0, NULL);
+    m_pFolderPath = (char*)malloc(path_length + 1);
+    int dirname_length;
+    wai_getExecutablePath(m_pFolderPath, path_length, &dirname_length);
+    m_pFolderPath[dirname_length] = '\0';
+    log_info("folder path : %s", m_pFolderPath);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -316,4 +330,5 @@ void App::Terminate()
     m_Renderer.Terminate();
     free(m_pGuiContext);
     free(m_pLogBuffer);
+    free(m_pFolderPath);
 }
