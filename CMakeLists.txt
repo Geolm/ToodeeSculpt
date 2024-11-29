@@ -37,6 +37,7 @@ add_executable(ToodeeSculpt
 ./src/system/point_in.c
 ./src/system/sokol_time.c
 ./src/system/undo.c
+./src/system/whereami.c
 )
 
 add_custom_target(prebuild_step DEPENDS shader_bin_output.txt)
@@ -49,6 +50,7 @@ target_link_libraries(ToodeeSculpt
         "-framework AppKit"
         "-framework Foundation"
         "-framework QuartzCore"
+        ${CMAKE_SOURCE_DIR}/lib/libnfd.a
         )
 
 target_compile_options(ToodeeSculpt PRIVATE -O3 -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno-missing-braces)
