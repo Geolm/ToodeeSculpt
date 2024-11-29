@@ -6,7 +6,6 @@
 #include "../system/palettes.h"
 #include "../system/point_in.h"
 #include "../system/undo.h"
-#include "../system/serializer.h"
 #include "PrimitivesStack.h"
 
 const vec2 contextual_menu_size = {100.f, 140.f};
@@ -333,20 +332,44 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+size_t PrimitivesStack::GetSerializedDataLength()
+{
+    return 2 * sizeof(float) + sizeof(uint32_t) + sizeof(size_t) + cc_size(&m_Primitives) * sizeof(Primitive);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::Serialize(serializer_context* context)
+{
+    size_t array_size = cc_size(&m_Primitives);
+    serializer_write_float(context, m_AlphaValue);
+    serializer_write_float(context, m_SmoothBlend);
+    serializer_write_uint32_t(context, m_SelectedPrimitiveIndex);
+    serializer_write_size_t(context, cc_size(&m_Primitives));
+    if (array_size != 0)
+        serializer_write_blob(context, cc_get(&m_Primitives, 0), cc_size(&m_Primitives) * sizeof(Primitive));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::Deserialize(serializer_context* context)
+{
+    m_AlphaValue = serializer_read_float(context);
+    m_SmoothBlend = serializer_read_float(context);
+    m_SelectedPrimitiveIndex = serializer_read_uint32_t(context);
+    size_t array_size = serializer_read_size_t(context);
+    cc_resize(&m_Primitives, array_size);
+    if (array_size != 0)
+        serializer_read_blob(context, cc_get(&m_Primitives, 0), array_size * sizeof(Primitive));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::UndoSnapshot()
 {
     serializer_context serializer;
     size_t max_size;
-    size_t array_size = cc_size(&m_Primitives);
 
     void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
     serializer_init(&serializer, buffer, max_size);
-    serializer_write_float(&serializer, m_AlphaValue);
-    serializer_write_float(&serializer, m_SmoothBlend);
-    serializer_write_uint32_t(&serializer, m_SelectedPrimitiveIndex);
-    serializer_write_size_t(&serializer, cc_size(&m_Primitives));
-    if (array_size != 0)
-        serializer_write_blob(&serializer, cc_get(&m_Primitives, 0), cc_size(&m_Primitives) * sizeof(Primitive));
+    Serialize(&serializer);
     undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
 
     if (serializer_get_status(&serializer) == serializer_write_error)
@@ -371,14 +394,7 @@ void PrimitivesStack::Undo()
         if (pBuffer != nullptr)
         {
             serializer_init(&serializer, pBuffer, max_size);
-            m_AlphaValue = serializer_read_float(&serializer);
-            m_SmoothBlend = serializer_read_float(&serializer);
-            m_SelectedPrimitiveIndex = serializer_read_uint32_t(&serializer);
-            size_t array_size = serializer_read_size_t(&serializer);
-            cc_resize(&m_Primitives, array_size);
-            if (array_size != 0)
-                serializer_read_blob(&serializer, cc_get(&m_Primitives, 0), array_size * sizeof(Primitive));
-
+            Deserialize(&serializer);
             if (serializer_get_status(&serializer) == serializer_read_error)
                 log_fatal("corrupt undo buffer");
         }

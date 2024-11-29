@@ -4,6 +4,7 @@
 #define CC_NO_SHORT_NAMES
 #include "../system/cc.h"
 #include "../system/aabb.h"
+#include "../system/serializer.h"
 #include "../shaders/common.h"
 #include "Primitive.h"
 
@@ -22,6 +23,9 @@ public:
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
     void Undo();
+    size_t GetSerializedDataLength();
+    void Serialize(serializer_context* context);
+    void Deserialize(serializer_context* context);
     void DeleteSelected();
     void Terminate();
 

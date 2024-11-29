@@ -213,26 +213,41 @@ void Editor::Save()
     nfdresult_t result = NFD_SaveDialog( "tds", m_pFolderPath, &save_path );
     if (result == NFD_OKAY)
     {
-        FILE* f = fopen(save_path, "wb");
-        if (f != NULL)
+        // prepare the file in memory
+        size_t length = m_PrimitivesStack.GetSerializedDataLength() + sizeof(uint32_t) + 2 * sizeof(uint16_t);
+        void* buffer = malloc(length);
+        serializer_context serializer;
+
+        serializer_init(&serializer, buffer, length);
+        serializer_write_uint32_t(&serializer, TDS_FOURCC);
+        serializer_write_uint16_t(&serializer, TDS_MAJOR);
+        serializer_write_uint16_t(&serializer, TDS_MINOR);
+        m_PrimitivesStack.Serialize(&serializer);
+
+        if (serializer_get_status(&serializer) == serializer_no_error)
         {
-
-
-            fclose(f);
+            FILE* f = fopen(save_path, "wb");
+            if (f != NULL)
+            {
+                fwrite(serializer.buffer, length, 1, f);
+                fclose(f);
+            }
+            else
+            {
+                log_error("cannot open/create file : %s", save_path);
+                m_PopupOpen = true;
+                m_SaveFailed = true;
+            }
         }
         else
         {
-            log_error("cannot open/create file : %s", save_path);
-            m_PopupOpen = true;
-            m_SaveFailed = true;
+            log_error("cannot save shape");
         }
+
+        free(buffer);
         free(save_path);
     }
-    else if (result == NFD_CANCEL)
-    {
-        
-    }
-    else 
+    else if (result == NFD_ERROR)
     {
         log_error("file dialog error: %s", NFD_GetError());
         m_PopupOpen = true;

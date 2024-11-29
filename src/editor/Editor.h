@@ -49,5 +49,8 @@ private:
     const char* m_pFolderPath;
     bool m_SaveFailed;
     bool m_PopupOpen;
+    static constexpr const uint32_t TDS_FOURCC = 0x32534446;    // 2SDF
+    static constexpr const uint16_t TDS_MAJOR = 0;
+    static constexpr const uint16_t TDS_MINOR = 1;
 };
 
