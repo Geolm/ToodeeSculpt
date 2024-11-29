@@ -24,6 +24,7 @@ static vec2 aabb_get_size(const aabb* box);
 static vec2 aabb_get_uv(const aabb* box, vec2 pos);
 static vec2 aabb_get_uv_clamped(const aabb* box, vec2 pos);
 static vec2 aabb_bilinear(const aabb* box, vec2 uv);
+static vec2 aabb_get_center(const aabb* box);
 static aabb aabb_from_bezier(vec2 p0, vec2 p1, vec2 p2);
 static aabb aabb_from_capsule(vec2 p0, vec2 p1, float radius);
 static aabb aabb_from_obb(vec2 p0, vec2 p1, float width);
@@ -109,6 +110,12 @@ static inline vec2 aabb_get_uv_clamped(const aabb* box, vec2 pos)
 static inline vec2 aabb_bilinear(const aabb* box, vec2 uv)
 {
     return vec2_add(vec2_mul(box->min, vec2_sub(vec2_splat(1.f), uv)), vec2_mul(box->max, uv));
+}
+
+//-----------------------------------------------------------------------------
+static vec2 aabb_get_center(const aabb* box)
+{
+    return vec2_scale(vec2_add(box->min, box->max), .5f);
 }
 
 //-----------------------------------------------------------------------------
