@@ -12,7 +12,7 @@
 #include "system/palettes.h"
 #include "system/format.h"
 #include <string.h>
-#include "Editor.h"
+#include "editor/Editor.h"
 #include "MouseCursors.h"
 #include "Icons.h"
 

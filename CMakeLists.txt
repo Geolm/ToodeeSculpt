@@ -22,12 +22,12 @@ find_package(glfw3 3.3 REQUIRED)
 
 add_executable(ToodeeSculpt
 ./src/App.cpp
-./src/Editor.cpp
 ./src/Icons.cpp
 ./src/main.mm
 ./src/MetalLayerHelper.mm
 ./src/MouseCursors.cpp
-./src/PrimitivesStack.cpp
+./src/editor/Editor.cpp
+./src/editor/PrimitivesStack.cpp
 ./src/renderer/Renderer.cpp
 ./src/renderer/shader_reader.c
 ./src/system/format.c

@@ -1,9 +1,9 @@
-#include "renderer/Renderer.h"
+#include "../renderer/Renderer.h"
+#include "../system/undo.h"
+#include "../system/microui.h"
+#include "../system/format.h"
+#include "../system/palettes.h"
 #include "Editor.h"
-#include "system/undo.h"
-#include "system/microui.h"
-#include "system/format.h"
-#include "system/palettes.h"
 
 
 //----------------------------------------------------------------------------------------------------------------------------

@@ -1,14 +1,14 @@
-#include "renderer/Renderer.h"
-#include "PrimitivesStack.h"
-#include "system/microui.h"
+#include "../renderer/Renderer.h"
+#include "../system/microui.h"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include "MouseCursors.h"
-#include "system/palettes.h"
-#include "system/format.h"
-#include "system/point_in.h"
-#include "system/undo.h"
-#include "system/serializer.h"
+#include "../MouseCursors.h"
+#include "../system/palettes.h"
+#include "../system/format.h"
+#include "../system/point_in.h"
+#include "../system/undo.h"
+#include "../system/serializer.h"
+#include "PrimitivesStack.h"
 
 const float primitive_point_radius = 6.f;
 const vec2 contextual_menu_size = {100.f, 140.f};

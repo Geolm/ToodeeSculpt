@@ -2,9 +2,9 @@
 
 #define CC_USE_ASSERT
 #define CC_NO_SHORT_NAMES
-#include "system/cc.h"
-#include "system/aabb.h"
-#include "shaders/common.h"
+#include "../system/cc.h"
+#include "../system/aabb.h"
+#include "../shaders/common.h"
 
 struct mu_Context;
 class Renderer;
