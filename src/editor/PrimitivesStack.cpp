@@ -4,7 +4,6 @@
 #include <GLFW/glfw3.h>
 #include "../MouseCursors.h"
 #include "../system/palettes.h"
-#include "../system/format.h"
 #include "../system/point_in.h"
 #include "../system/undo.h"
 #include "../system/serializer.h"
