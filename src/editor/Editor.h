@@ -36,12 +36,18 @@ private:
     PrimitivesStack m_PrimitivesStack;
     aabb m_Zone;
     aabb m_ExternalZone;
+    vec2 m_PopupCoord;
+    vec2 m_PopupHalfSize;
     struct undo_context* m_pUndoContext;
 
     MenuBarState m_MenuBarState;
     int m_SnapToGrid;
     int m_ShowGrid;
     float m_GridSubdivision;
+
+    // load/save
     const char* m_pFolderPath;
+    bool m_SaveFailed;
+    bool m_PopupOpen;
 };
 

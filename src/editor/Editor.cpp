@@ -12,6 +12,8 @@ void Editor::Init(aabb zone, const char* folder_path)
 {
     m_ExternalZone = m_Zone = zone;
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));
+    m_PopupHalfSize = (vec2) {250.f, 50.f};
+    m_PopupCoord = vec2_sub(aabb_get_center(&m_Zone), m_PopupHalfSize);
     m_pUndoContext = undo_init(1<<18, 1<<10);
     m_PrimitivesStack.Init(zone, m_pUndoContext);
     m_MenuBarState = MenuBar_None;
@@ -19,21 +21,27 @@ void Editor::Init(aabb zone, const char* folder_path)
     m_ShowGrid = 0;
     m_GridSubdivision = 20.f;
     m_pFolderPath = folder_path;
+    m_SaveFailed = false;
+    m_PopupOpen = false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::OnMouseMove(vec2 pos)
 {
-    m_PrimitivesStack.OnMouseMove(pos);
+    if (!m_PopupOpen)
+    {
+        m_PrimitivesStack.OnMouseMove(pos);
 
-    if (aabb_test_point(&m_ExternalZone, pos))
-        m_MenuBarState = MenuBar_None;
+        if (aabb_test_point(&m_ExternalZone, pos))
+            m_MenuBarState = MenuBar_None;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::OnMouseButton(int button, int action)
 {
-    m_PrimitivesStack.OnMouseButton(button, action);
+    if (!m_PopupOpen)
+        m_PrimitivesStack.OnMouseButton(button, action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -94,13 +102,13 @@ void Editor::MenuBar(struct mu_Context* gui_context)
     {
         mu_layout_row(gui_context, 3, (int[]) {row_size, row_size,  row_size}, 0);
         
-        if (mu_button(gui_context, "File"))
+        if (mu_button(gui_context, "File") && !m_PopupOpen)
             m_MenuBarState = (m_MenuBarState == MenuBar_File) ? MenuBar_None : MenuBar_File;
         
-        if (mu_button(gui_context, "Edit"))
+        if (mu_button(gui_context, "Edit") && !m_PopupOpen)
             m_MenuBarState = (m_MenuBarState == MenuBar_Edit) ? MenuBar_None : MenuBar_Edit;
 
-        if (mu_button(gui_context, "Options"))
+        if (mu_button(gui_context, "Options") && !m_PopupOpen)
             m_MenuBarState = (m_MenuBarState == MenuBar_Options) ? MenuBar_None : MenuBar_Options;
 
         if (m_MenuBarState == MenuBar_File)
@@ -178,8 +186,23 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_end_window(gui_context);
             }
         }
-
         mu_end_window(gui_context);
+    }
+
+    if (m_SaveFailed)
+    {
+        mu_Rect rect = mu_rect(m_PopupCoord.x, m_PopupCoord.y, m_PopupHalfSize.x * 2.f, m_PopupHalfSize.y * 2.f);
+        if (mu_begin_window_ex(gui_context, "save failure", rect, MU_OPT_HOLDFOCUS|MU_OPT_NOCLOSE|MU_OPT_NOINTERACT|MU_OPT_NOSCROLL|MU_OPT_FORCE_SIZE|MU_OPT_ALIGNCENTER))
+        {
+            mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
+            mu_text(gui_context, "the filename might be illegal or you don't have the write access for this folder");
+            if (mu_button(gui_context, "ok"))
+            {
+                m_SaveFailed = false;
+                m_PopupOpen = false;
+            }
+            mu_end_window(gui_context);
+        }
     }
 }
 
@@ -190,7 +213,19 @@ void Editor::Save()
     nfdresult_t result = NFD_SaveDialog( "tds", m_pFolderPath, &save_path );
     if (result == NFD_OKAY)
     {
-        // TODO : save the primitivestack
+        FILE* f = fopen(save_path, "wb");
+        if (f != NULL)
+        {
+
+
+            fclose(f);
+        }
+        else
+        {
+            log_error("cannot open/create file : %s", save_path);
+            m_PopupOpen = true;
+            m_SaveFailed = true;
+        }
         free(save_path);
     }
     else if (result == NFD_CANCEL)
@@ -200,6 +235,8 @@ void Editor::Save()
     else 
     {
         log_error("file dialog error: %s", NFD_GetError());
+        m_PopupOpen = true;
+        m_SaveFailed = true;
     }
 }
 
