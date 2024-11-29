@@ -10,7 +10,6 @@
 #include "../system/serializer.h"
 #include "PrimitivesStack.h"
 
-const float primitive_point_radius = 6.f;
 const vec2 contextual_menu_size = {100.f, 140.f};
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -62,12 +61,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
     }
     else if (GetState() == state::MOVING_PRIMITIVE)
     {
-        primitive *s = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-        vec2 delta = m_MousePosition - m_Reference;
-        vec2* points = s->primitive_desc.points;
-        for(uint32_t i=0; i<PrimitiveNumPoints(s->primitive_type); ++i)
-            points[i] += delta;
-
+        cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->Translate(m_MousePosition - m_Reference);
         m_Reference = m_MousePosition;
     }
 }
@@ -98,19 +92,18 @@ void PrimitivesStack::OnMouseButton(int button, int action)
     {
         if (SelectedPrimitiveValid())
         {
-            primitive *s = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            vec2* points = s->primitive_desc.points;
-            for(uint32_t i=0; i<PrimitiveNumPoints(s->primitive_type); ++i)
+            Primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+            for(uint32_t i=0; i<primitive->GetNumPoints(); ++i)
             {
-                if (point_in_disc(points[i], primitive_point_radius, m_MousePosition))
+                if (point_in_disc(primitive->GetPoints(i), Primitive::point_radius, m_MousePosition))
                 {
-                    m_pGrabbedPoint = &points[i];
+                    m_pGrabbedPoint = &primitive->GetPoints(i);
                     *m_pGrabbedPoint = m_MousePosition;
                     SetState(state::MOVING_POINT);
                 }
             }
 
-            if (GetState() == state::IDLE && MouseCursorInPrimitive(s, false))
+            if (GetState() == state::IDLE && primitive->TestMouseCursor(m_MousePosition, false))
             {
                 m_Reference = m_MousePosition;
                 SetState(state::MOVING_PRIMITIVE);
@@ -122,8 +115,8 @@ void PrimitivesStack::OnMouseButton(int button, int action)
             uint32_t selection = INVALID_INDEX;
             for(uint32_t i=0; i<cc_size(&m_Primitives) && selection == INVALID_INDEX; ++i)
             {
-                primitive *s = cc_get(&m_Primitives, i);
-                if (MouseCursorInPrimitive(s, true))
+                Primitive *p = cc_get(&m_Primitives, i);
+                if (p->TestMouseCursor(m_MousePosition, true))
                     selection = i;
             }
             m_SelectedPrimitiveIndex = selection;
@@ -153,7 +146,7 @@ void PrimitivesStack::OnMouseButton(int button, int action)
         assert(m_CurrentPoint < PRIMITIVE_MAXPOINTS);
         m_PrimitivePoints[m_CurrentPoint++] = m_MousePosition;
 
-        if (m_CurrentPoint == PrimitiveNumPoints(m_PrimitiveType))
+        if (m_CurrentPoint == Primitive::GetNumPoints(m_PrimitiveType))
         {
             if (m_PrimitiveType == command_type::primitive_oriented_box || m_PrimitiveType == command_type::primitive_ellipse)
                 SetState(state::SET_WIDTH);
@@ -176,15 +169,10 @@ void PrimitivesStack::OnMouseButton(int button, int action)
     // primitive creation
     if (GetState() == state::CREATE_PRIMITIVE)
     {
-        primitive new_primitive;
-        new_primitive.primitive_type = m_PrimitiveType;
-        new_primitive.op = op_union;
-        new_primitive.roundness = m_Roundness;
-        new_primitive.color = (primitive_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f};
-        new_primitive.primitive_desc.width = m_Width;
+        Primitive new_primitive(m_PrimitiveType, op_union, (primitive_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f}, m_Roundness, m_Width);
 
-        for(uint32_t i=0; i<PrimitiveNumPoints(m_PrimitiveType); ++i)
-            new_primitive.primitive_desc.points[i] = m_PrimitivePoints[i];
+        for(uint32_t i=0; i<Primitive::GetNumPoints(m_PrimitiveType); ++i)
+            new_primitive.SetPoints(i, m_PrimitivePoints[i]);
 
         cc_push(&m_Primitives, new_primitive);
 
@@ -201,18 +189,13 @@ void PrimitivesStack::Draw(Renderer& renderer)
     // drawing *the* primitives
     renderer.BeginCombination(m_SmoothBlend);
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
-    {
-        primitive *s = cc_get(&m_Primitives, i);
-        draw_color color;
-        color.from_float(s->color.red, s->color.green, s->color.blue, m_AlphaValue);
-        DrawPrimitive(renderer, s, s->roundness, color, s->op);
-    }
+        cc_get(&m_Primitives, i)->Draw(renderer, m_AlphaValue);
     renderer.EndCombination();
 
     if (GetState() == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawCircleFilled(m_PrimitivePoints[i], primitive_point_radius, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(m_PrimitivePoints[i], Primitive::point_radius, draw_color(na16_red, 128));
 
         // preview primitive
         if (m_PrimitiveType == command_type::primitive_triangle_filled) 
@@ -227,11 +210,11 @@ void PrimitivesStack::Draw(Renderer& renderer)
         {
             renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
         }
-        renderer.DrawCircleFilled(m_MousePosition, primitive_point_radius, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_MousePosition, Primitive::point_radius, draw_color(na16_red, 128));
     }
     else if (GetState() == state::SET_WIDTH)
     {
-        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, draw_color(na16_red, 128));
 
         if (m_PrimitiveType == command_type::primitive_oriented_box)
             renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, draw_color(na16_light_blue, 128));
@@ -240,7 +223,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
-        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, draw_color(na16_red, 128));
 
         // preview primitive
         switch(m_PrimitiveType)
@@ -264,22 +247,22 @@ void PrimitivesStack::Draw(Renderer& renderer)
         MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
         {
-            primitive *s = cc_get(&m_Primitives, i);
-            if (MouseCursorInPrimitive(s, true))
+            Primitive *primitive = cc_get(&m_Primitives, i);
+            if (primitive->TestMouseCursor(m_MousePosition, true))
             {
-                DrawPrimitiveGizmo(renderer, s);
+                primitive->DrawGizmo(renderer);
                 if (i == m_SelectedPrimitiveIndex)
                     MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
         if (SelectedPrimitiveValid())
-            DrawPrimitiveGizmo(renderer, cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer);
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
-            DrawPrimitiveGizmo(renderer, cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer);
     }
 }
 
@@ -300,53 +283,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         }
 
         if (SelectedPrimitiveValid() && mu_header_ex(gui_context, "selected primitive", MU_OPT_EXPANDED))
-        {
-            primitive *s = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-
-            mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
-            mu_label(gui_context,"type");
-            switch(s->primitive_type)
-            {
-            case command_type::primitive_circle_filled : 
-                {
-                    mu_text(gui_context, "disc");
-                    mu_label(gui_context, "radius");
-                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 1000.f, 1.f, "%3.0f", 0);
-                    break;
-                }
-            case command_type::primitive_ellipse :
-                {
-                    mu_text(gui_context, "ellipse");
-                    mu_label(gui_context, "width");
-                    res |= mu_slider_ex(gui_context, &s->primitive_desc.width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
-                    break;
-                }
-            case command_type::primitive_triangle_filled : 
-                {
-                    mu_text(gui_context, "triangle");
-                    mu_label(gui_context, "roundness");
-                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
-                    break;
-                }
-            case command_type::primitive_oriented_box : 
-                {
-                    mu_text(gui_context, "box");
-                    mu_label(gui_context, "width");
-                    res |= mu_slider_ex(gui_context, &s->primitive_desc.width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
-                    mu_label(gui_context, "roundness");
-                    res |= mu_slider_ex(gui_context, &s->roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
-                    break;
-                }
-
-            default : break;
-            }
-
-            _Static_assert(sizeof(s->op) == sizeof(int));
-            mu_label(gui_context, "operation");
-            const char* op_names[op_last] = {"add", "blend", "sub", "overlap"};
-            res |= mu_combo_box(gui_context, &m_SDFOperationComboBox, (int*)&s->op, op_last, op_names);
-            res |= mu_rgb_color(gui_context, &s->color.red, &s->color.green, &s->color.blue);
-        }
+            res |= cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->PropertyGrid(gui_context);
 
         mu_end_window(gui_context);
 
@@ -410,7 +347,7 @@ void PrimitivesStack::UndoSnapshot()
     serializer_write_uint32_t(&serializer, m_SelectedPrimitiveIndex);
     serializer_write_size_t(&serializer, cc_size(&m_Primitives));
     if (array_size != 0)
-        serializer_write_blob(&serializer, cc_get(&m_Primitives, 0), cc_size(&m_Primitives) * sizeof(primitive));
+        serializer_write_blob(&serializer, cc_get(&m_Primitives, 0), cc_size(&m_Primitives) * sizeof(Primitive));
     undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
 
     if (serializer_get_status(&serializer) == serializer_write_error)
@@ -441,7 +378,7 @@ void PrimitivesStack::Undo()
             size_t array_size = serializer_read_size_t(&serializer);
             cc_resize(&m_Primitives, array_size);
             if (array_size != 0)
-                serializer_read_blob(&serializer, cc_get(&m_Primitives, 0), array_size * sizeof(primitive));
+                serializer_read_blob(&serializer, cc_get(&m_Primitives, 0), array_size * sizeof(Primitive));
 
             if (serializer_get_status(&serializer) == serializer_read_error)
                 log_fatal("corrupt undo buffer");
@@ -494,84 +431,6 @@ void PrimitivesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Default();
 
     m_CurrentState = new_state;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-bool PrimitivesStack::MouseCursorInPrimitive(const primitive* s, bool test_vertices)
-{
-    const vec2* points = s->primitive_desc.points;
-    bool result = false;
-
-    switch(s->primitive_type)
-    {
-    case command_type::primitive_triangle_filled: 
-        {
-            result = point_in_triangle(points[0], points[1], points[2], m_MousePosition);
-            break;
-        }
-    case command_type::primitive_circle_filled:
-        {
-            result = point_in_disc(points[0], s->roundness, m_MousePosition);
-            break;
-        }
-    case command_type::primitive_ellipse:
-        {
-            result = point_in_ellipse(points[0], points[1], s->primitive_desc.width, m_MousePosition);
-            break;
-        }
-    case command_type::primitive_oriented_box:
-        {
-            result = point_in_oriented_box(points[0], points[1], s->primitive_desc.width, m_MousePosition);
-            break;
-        }
-
-    default: 
-        return false;
-    }
-
-    if (test_vertices)
-    {
-        for(uint32_t i=0; i<PrimitiveNumPoints(s->primitive_type); ++i)
-            result |= point_in_disc(points[i], primitive_point_radius, m_MousePosition);
-    }
-
-    return result;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::DrawPrimitiveGizmo(Renderer& renderer, const primitive* s)
-{
-    DrawPrimitive(renderer, s, 0.f, draw_color(na16_orange, 128), op_add);
-
-    for(uint32_t i=0; i<PrimitiveNumPoints(s->primitive_type); ++i)
-        renderer.DrawCircleFilled(s->primitive_desc.points[i], primitive_point_radius, draw_color(na16_black, 128));
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::DrawPrimitive(Renderer& renderer, const primitive* s, float roundness, draw_color color, sdf_operator op)
-{
-    const vec2* points = s->primitive_desc.points;
-    switch(s->primitive_type)
-    {
-    case command_type::primitive_triangle_filled: 
-        renderer.DrawTriangleFilled(points[0], points[1], points[2], roundness, color, op);
-        break;
-
-    case command_type::primitive_circle_filled:
-        renderer.DrawCircleFilled(points[0], s->roundness, color, op);
-        break;
-
-    case command_type::primitive_ellipse:
-        renderer.DrawEllipse(points[0], points[1], s->primitive_desc.width, color, op);
-        break;
-
-    case command_type::primitive_oriented_box:
-        renderer.DrawOrientedBox(points[0], points[1], s->primitive_desc.width, roundness, color, op);
-        break;
-
-    default: 
-        break;
-    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

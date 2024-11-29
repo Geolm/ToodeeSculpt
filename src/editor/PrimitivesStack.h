@@ -5,9 +5,12 @@
 #include "../system/cc.h"
 #include "../system/aabb.h"
 #include "../shaders/common.h"
+#include "Primitive.h"
 
 struct mu_Context;
 class Renderer;
+
+enum {PRIMITIVES_STACK_RESERVATION = 100};
 
 //----------------------------------------------------------------------------------------------------------------------------
 class PrimitivesStack
@@ -26,31 +29,7 @@ public:
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
 
 private:
-    //----------------------------------------------------------------------------------------------------------------------------
-    // internal structures
-    enum {PRIMITIVE_MAXPOINTS = 3};
-    enum {PRIMITIVES_STACK_RESERVATION = 100};
-
-    struct primitive_data
-    {
-        vec2 points[PRIMITIVE_MAXPOINTS];
-        float width;
-    };
-
-    struct primitive_color
-    {
-        float red, green, blue;
-    };
-
-    struct primitive
-    {
-        primitive_data primitive_desc;
-        command_type primitive_type;
-        float roundness;
-        sdf_operator op;
-        primitive_color color;
-    };
-
+    
     enum state
     {
         IDLE,
@@ -67,16 +46,13 @@ private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
-    bool MouseCursorInPrimitive(const primitive* s, bool test_vertices);
-    void DrawPrimitiveGizmo(Renderer& renderer, const primitive* s);
-    void DrawPrimitive(Renderer& renderer, const primitive* s, float roundness, draw_color color, sdf_operator op);
     void UndoSnapshot();
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
-    inline uint32_t PrimitiveNumPoints(command_type primitive);
+    
 
 private:
     // serialized data 
-    cc_vec(primitive) m_Primitives;
+    cc_vec(Primitive) m_Primitives;
     float m_SmoothBlend;
     float m_AlphaValue;
 
@@ -102,19 +78,3 @@ private:
     float m_GridSubdivision;
 };
 
-//----------------------------------------------------------------------------------------------------------------------------
-inline uint32_t PrimitivesStack::PrimitiveNumPoints(command_type primitive)
-{
-    switch(primitive)
-    {
-    case primitive_ellipse:
-    case primitive_oriented_box: return 2;
-    case primitive_arc:
-    case primitive_arc_filled:
-    case primitive_circle:
-    case primitive_circle_filled: return 1;
-    case primitive_triangle:
-    case primitive_triangle_filled: return 3;
-    default: return 0;
-    }
-}
