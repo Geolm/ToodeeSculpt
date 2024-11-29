@@ -113,7 +113,7 @@ static inline vec2 aabb_bilinear(const aabb* box, vec2 uv)
 }
 
 //-----------------------------------------------------------------------------
-static vec2 aabb_get_center(const aabb* box)
+static inline vec2 aabb_get_center(const aabb* box)
 {
     return vec2_scale(vec2_add(box->min, box->max), .5f);
 }
