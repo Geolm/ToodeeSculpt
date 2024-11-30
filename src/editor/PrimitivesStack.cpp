@@ -275,6 +275,7 @@ void PrimitivesStack::DuplicateSelected()
         Primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         cc_push(&m_Primitives, new_primitive);
         m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
+        log_info("primitive duplicated");
     }
 }
 
@@ -410,7 +411,7 @@ void PrimitivesStack::Undo()
             serializer_init(&serializer, pBuffer, max_size);
             Deserialize(&serializer);
             if (serializer_get_status(&serializer) == serializer_read_error)
-                log_fatal("corrupt undo buffer");
+                log_fatal("corrupted undo buffer");
         }
     }
 }
@@ -433,6 +434,7 @@ void PrimitivesStack::Paste()
         vec2 center = m_CopiedPrimitive.ComputerCenter();
         m_CopiedPrimitive.Translate(m_MousePosition - center);
         cc_push(&m_Primitives, m_CopiedPrimitive);
+        m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
         UndoSnapshot();
         log_info("primitive pasted");
     }
@@ -445,6 +447,7 @@ void PrimitivesStack::DeleteSelected()
     {
         cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
         m_SelectedPrimitiveIndex = INVALID_INDEX;
+        log_info("primitive deleted");
         UndoSnapshot();
     }
 }
