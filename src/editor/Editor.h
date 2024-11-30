@@ -6,6 +6,8 @@ class Renderer;
 struct mu_Context;
 struct undo_context;
 
+#define POPUP_STRING_LENGTH (2048)
+
 class Editor
 {
 public:
@@ -17,6 +19,9 @@ public:
     void UserInterface(struct mu_Context* gui_context);
     void Terminate();
 
+    void Popup(const char* title, const char* message);
+
+    void Load();
     void Save();
     void Undo();
     void Delete();
@@ -47,10 +52,14 @@ private:
 
     // load/save
     const char* m_pFolderPath;
-    bool m_SaveFailed;
-    bool m_PopupOpen;
     static constexpr const uint32_t TDS_FOURCC = 0x32534446;    // 2SDF
     static constexpr const uint16_t TDS_MAJOR = 0;
     static constexpr const uint16_t TDS_MINOR = 1;
+    static constexpr const long TDS_FILE_MAXSIZE = (1<<16);
+
+    // popup
+    bool m_PopupOpen;
+    char m_PopupTitle[POPUP_STRING_LENGTH];
+    char m_PopupMessage[POPUP_STRING_LENGTH];
 };
 

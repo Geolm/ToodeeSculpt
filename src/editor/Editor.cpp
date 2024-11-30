@@ -21,7 +21,6 @@ void Editor::Init(aabb zone, const char* folder_path)
     m_ShowGrid = 0;
     m_GridSubdivision = 20.f;
     m_pFolderPath = folder_path;
-    m_SaveFailed = false;
     m_PopupOpen = false;
 }
 
@@ -123,6 +122,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button(gui_context, "Load"))
                 {
+                    Load();
                     m_MenuBarState = MenuBar_None;
                 }
                 if (mu_button(gui_context, "Save"))
@@ -189,21 +189,28 @@ void Editor::MenuBar(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
-    if (m_SaveFailed)
+    if (m_PopupOpen)
     {
         mu_Rect rect = mu_rect(m_PopupCoord.x, m_PopupCoord.y, m_PopupHalfSize.x * 2.f, m_PopupHalfSize.y * 2.f);
-        if (mu_begin_window_ex(gui_context, "save failure", rect, MU_OPT_HOLDFOCUS|MU_OPT_NOCLOSE|MU_OPT_NOINTERACT|MU_OPT_NOSCROLL|MU_OPT_FORCE_SIZE|MU_OPT_ALIGNCENTER))
+        if (mu_begin_window_ex(gui_context, m_PopupTitle, rect, MU_OPT_HOLDFOCUS|MU_OPT_NOCLOSE|MU_OPT_NOINTERACT|MU_OPT_NOSCROLL|MU_OPT_FORCE_SIZE|MU_OPT_ALIGNCENTER))
         {
             mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
-            mu_text(gui_context, "the filename might be illegal or you don't have the write access for this folder");
+            mu_text(gui_context, m_PopupMessage);
             if (mu_button(gui_context, "ok"))
-            {
-                m_SaveFailed = false;
                 m_PopupOpen = false;
-            }
+
             mu_end_window(gui_context);
         }
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::Popup(const char* title, const char* message)
+{
+    strncpy(m_PopupTitle, title, POPUP_STRING_LENGTH);
+    strncpy(m_PopupMessage, message, POPUP_STRING_LENGTH);
+    log_error("%s : %s", title, message);
+    m_PopupOpen = true;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -233,26 +240,71 @@ void Editor::Save()
                 fclose(f);
             }
             else
-            {
-                log_error("cannot open/create file : %s", save_path);
-                m_PopupOpen = true;
-                m_SaveFailed = true;
-            }
+                Popup("save failure", "the filename might be illegal or you don't have the write access for this folder");
         }
         else
-        {
-            log_error("cannot save shape");
-        }
+            log_error("buffer too small, cannot save shape");
 
         free(buffer);
         free(save_path);
     }
     else if (result == NFD_ERROR)
+        Popup("save failure", NFD_GetError());
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::Load()
+{
+    nfdchar_t *load_path = NULL;
+    nfdresult_t result = NFD_OpenDialog( "tds", NULL, &load_path);
+
+    if (result == NFD_OKAY)
     {
-        log_error("file dialog error: %s", NFD_GetError());
-        m_PopupOpen = true;
-        m_SaveFailed = true;
+        FILE* f = fopen(load_path, "rb");
+        if (f != NULL)
+        {
+            fseek(f, 0L, SEEK_END);
+            size_t file_length = ftell(f);
+            fseek(f, 0L, SEEK_SET);
+
+            // don't read too big file, probably not a TDS file
+            if (file_length<TDS_FILE_MAXSIZE)
+            {
+                void* buffer = malloc(file_length);
+                fread(buffer, file_length, 1, f);
+
+                serializer_context serializer;
+                serializer_init(&serializer, buffer, file_length);
+
+                if (serializer_read_uint32_t(&serializer) == TDS_FOURCC)
+                {
+                    // check only the major for compatibility
+                    if (serializer_read_uint16_t(&serializer) == TDS_MAJOR)
+                    {
+                        // discard minor version
+                        serializer_read_uint16_t(&serializer);
+                        m_PrimitivesStack.Deserialize(&serializer);
+
+                        if (serializer_get_status(&serializer) != serializer_no_error)
+                            Popup("load failure", "unable to load primitives");
+                    }
+                    else
+                        Popup("load failure", "file too old and not compatible");
+                }
+                else
+                    Popup("load failure", "not a ToodeeSculpt file");
+
+                free(buffer);
+            }
+            else
+                Popup("load failure", "the file is too big to be loaded");
+
+            fclose(f);
+        }
+        free(load_path);
     }
+    else if (result == NFD_ERROR)
+        Popup("load failure", NFD_GetError());
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
