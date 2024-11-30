@@ -738,6 +738,10 @@ int mu_button_ex(mu_Context *ctx, const char *label, int icon, int opt) {
                    : mu_get_id(ctx, &icon, sizeof(icon));
   mu_Rect r = mu_layout_next(ctx);
   mu_update_control(ctx, id, r, opt);
+
+  if (ctx->hover == id)
+    res |= MU_RES_HOVER;
+
   /* handle click */
   if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id) {
     res |= MU_RES_SUBMIT;

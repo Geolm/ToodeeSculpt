@@ -303,25 +303,25 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
             mu_layout_row(gui_context, 1, (int[]) { 90}, 0);
-            if (mu_button_ex(gui_context, "disc", 0, 0))
+            if (mu_button_ex(gui_context, "disc", 0, 0)&MU_RES_SUBMIT)
             {
                 m_PrimitiveType = command_type::primitive_circle_filled;
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "ellipse", 0, 0))
+            if (mu_button_ex(gui_context, "ellipse", 0, 0)&MU_RES_SUBMIT)
             {
                 m_PrimitiveType = command_type::primitive_ellipse;
                 SetState(state::ADDING_POINTS);
             }
             
-            if (mu_button_ex(gui_context, "box", 0, 0))
+            if (mu_button_ex(gui_context, "box", 0, 0)&MU_RES_SUBMIT)
             {
                 m_PrimitiveType = command_type::primitive_oriented_box;
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "triangle", 0, 0))
+            if (mu_button_ex(gui_context, "triangle", 0, 0)&MU_RES_SUBMIT)
             {
                 m_PrimitiveType = command_type::primitive_triangle_filled;
                 SetState(state::ADDING_POINTS);

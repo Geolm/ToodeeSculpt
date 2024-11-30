@@ -72,7 +72,8 @@ enum {
 enum {
   MU_RES_ACTIVE       = (1 << 0),
   MU_RES_SUBMIT       = (1 << 1),
-  MU_RES_CHANGE       = (1 << 2)
+  MU_RES_CHANGE       = (1 << 2),
+  MU_RES_HOVER        = (1 << 3)
 };
 
 enum {
