@@ -27,6 +27,8 @@ public:
     size_t GetSerializedDataLength();
     void Serialize(serializer_context* context);
     void Deserialize(serializer_context* context);
+    void CopySelected();
+    void Paste();
     void DeleteSelected();
     void Terminate();
 
@@ -81,5 +83,6 @@ private:
     vec2* m_pGrabbedPoint;
     bool m_SnapToGrid;
     float m_GridSubdivision;
+    Primitive m_CopiedPrimitive;
 };
 

@@ -24,6 +24,7 @@ struct primitive_color
 class Primitive
 {
 public:
+    Primitive() {SetInvalid();}
     Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float width);
     
     void DrawGizmo(Renderer& renderer);
@@ -33,13 +34,17 @@ public:
     void Translate(vec2 translation);
     int PropertyGrid(struct mu_Context* gui_context);
 
+    void SetInvalid() {m_Type = combination_begin;}
+    bool IsValid() {return m_Type != combination_begin;}
     vec2& GetPoints(uint32_t index) {assert(index < GetNumPoints()); return m_Desc.points[index];}
+    const vec2& GetPoints(uint32_t index) const {assert(index < GetNumPoints()); return m_Desc.points[index];}
     void SetPoints(uint32_t index, vec2 point) {assert(index < GetNumPoints()); m_Desc.points[index] = point;}
     inline command_type GetType() const {return m_Type;}
     static inline uint32_t GetNumPoints(command_type type);
     uint32_t GetNumPoints() const {return GetNumPoints(m_Type);}
     void SetWidth(float width) {m_Desc.width = width;}
     void SetRoundness(float roundness) {m_Roundness = roundness;}
+    vec2 ComputerCenter() const;
 
 public:
     static constexpr const float point_radius {6.f};

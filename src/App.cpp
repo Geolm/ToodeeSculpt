@@ -263,6 +263,12 @@ void App::OnKeyEvent(int key, int scancode, int action, int mods)
     
     if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
         m_pEditor->Delete();
+
+    if (key == GLFW_KEY_C && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        m_pEditor->Copy();
+
+    if (key == GLFW_KEY_V && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        m_pEditor->Paste();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

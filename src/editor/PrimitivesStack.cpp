@@ -27,6 +27,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_pGrabbedPoint = nullptr;
     m_SnapToGrid = false;
     m_GridSubdivision = 20.f;
+    m_CopiedPrimitive.SetInvalid();
 
     UndoSnapshot();
 }
@@ -177,10 +178,8 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
             new_primitive.SetPoints(i, m_PrimitivePoints[i]);
 
         cc_push(&m_Primitives, new_primitive);
-
         SetState(state::IDLE);
         m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
-
         UndoSnapshot();
     }
 }
@@ -413,6 +412,29 @@ void PrimitivesStack::Undo()
             if (serializer_get_status(&serializer) == serializer_read_error)
                 log_fatal("corrupt undo buffer");
         }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::CopySelected()
+{
+    if (SelectedPrimitiveValid())
+    {
+        m_CopiedPrimitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+        log_info("primitive copied");
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::Paste()
+{
+    if (m_CopiedPrimitive.IsValid())
+    {
+        vec2 center = m_CopiedPrimitive.ComputerCenter();
+        m_CopiedPrimitive.Translate(m_MousePosition - center);
+        cc_push(&m_Primitives, m_CopiedPrimitive);
+        UndoSnapshot();
+        log_info("primitive pasted");
     }
 }
 

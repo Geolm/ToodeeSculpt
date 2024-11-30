@@ -21,6 +21,8 @@ public:
 
     void Popup(const char* title, const char* message);
 
+    void Copy();
+    void Paste();
     void Load();
     void Save();
     void Undo();

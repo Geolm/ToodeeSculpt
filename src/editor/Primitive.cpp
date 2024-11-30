@@ -157,3 +157,14 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
 
     return res;
 }
+
+//----------------------------------------------------------------------------------------------------------------------------
+vec2 Primitive::ComputerCenter() const
+{
+    vec2 center = {.x = 0.f, .y = 0.f};
+    for(uint32_t i=0; i<GetNumPoints(); ++i)
+        center += GetPoints(i);
+
+    return vec2_scale(center, 1.f / float(GetNumPoints()));
+}
+
