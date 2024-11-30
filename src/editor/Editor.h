@@ -13,7 +13,7 @@ class Editor
 public:
     void Init(aabb zone, const char* folder_path);
     void OnMouseMove(vec2 pos);
-    void OnMouseButton(int button, int action);
+    void OnMouseButton(int button, int action, int mods);
     void Draw(Renderer& renderer);
     void DebugInterface(struct mu_Context* gui_context);
     void UserInterface(struct mu_Context* gui_context);

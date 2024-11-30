@@ -65,7 +65,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::OnMouseButton(int button, int action)
+void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 {
     bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS);
     // contextual menu
@@ -103,6 +103,10 @@ void PrimitivesStack::OnMouseButton(int button, int action)
 
             if (GetState() == state::IDLE && primitive->TestMouseCursor(m_MousePosition, false))
             {
+                // copy a primitive
+                if (mods&GLFW_MOD_SUPER)
+                    DuplicateSelected();
+                
                 m_Reference = m_MousePosition;
                 SetState(state::MOVING_PRIMITIVE);
             }
@@ -261,6 +265,18 @@ void PrimitivesStack::Draw(Renderer& renderer)
     {
         if (SelectedPrimitiveValid())
             cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::DuplicateSelected()
+{
+    if (SelectedPrimitiveValid())
+    {
+        Primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+        cc_push(&m_Primitives, new_primitive);
+        m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
+        UndoSnapshot();
     }
 }
 

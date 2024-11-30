@@ -19,7 +19,7 @@ class PrimitivesStack
 public:
     void Init(aabb zone, struct undo_context* undo);
     void OnMouseMove(vec2 pos);
-    void OnMouseButton(int button, int action);
+    void OnMouseButton(int button, int action, int mods);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
     void UndoSnapshot();
@@ -50,6 +50,7 @@ private:
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
+    void DuplicateSelected();
     enum state GetState() const {return m_CurrentState;}
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
     

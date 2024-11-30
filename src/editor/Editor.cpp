@@ -37,10 +37,10 @@ void Editor::OnMouseMove(vec2 pos)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::OnMouseButton(int button, int action)
+void Editor::OnMouseButton(int button, int action, int mods)
 {
     if (!m_PopupOpen)
-        m_PrimitivesStack.OnMouseButton(button, action);
+        m_PrimitivesStack.OnMouseButton(button, action, mods);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
