@@ -21,7 +21,6 @@ public:
 private:
     void InitGui();
     void RetrieveFolderPath();
-    void LogUserInterface();
     void DrawGui();
 
 private:

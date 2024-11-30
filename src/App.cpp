@@ -78,13 +78,6 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
         mu_input_scroll(user_ptr->m_pGuiContext, (int)xoffset, (int)yoffset);
     });
 
-    log_add_callback([] (log_Event *ev)
-    {
-        App* user_ptr = (App*) ev->udata;
-
-        snprintf(user_ptr->m_pLogBuffer, user_ptr->m_LogSize, ev->fmt, ev->ap);
-    }, this, 0);
-
     MouseCursors::CreateInstance();
     MouseCursors::GetInstance().Init(window);
 
@@ -105,7 +98,7 @@ void App::RetrieveFolderPath()
     size_t path_length = wai_getExecutablePath(NULL, 0, NULL);
     m_pFolderPath = (char*)malloc(path_length + 1);
     int dirname_length;
-    wai_getExecutablePath(m_pFolderPath, path_length, &dirname_length);
+    wai_getExecutablePath(m_pFolderPath, (int)path_length, &dirname_length);
     m_pFolderPath[dirname_length] = '\0';
     log_info("folder path : %s", m_pFolderPath);
 }
@@ -219,23 +212,11 @@ void App::Update(CA::MetalDrawable* drawable)
         m_pEditor->DebugInterface(m_pGuiContext);
         mu_end_window(m_pGuiContext);
     }
-    LogUserInterface();
-
 
     mu_end(m_pGuiContext);
     DrawGui();
     m_Renderer.EndFrame();
     m_Renderer.Flush(drawable);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void App::LogUserInterface()
-{
-    if (mu_begin_window_ex(m_pGuiContext, "Log", mu_rect(1680, 700, 300, 300), 0))
-    {
-        mu_text(m_pGuiContext, m_pLogBuffer);
-        mu_end_window(m_pGuiContext);
-    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
