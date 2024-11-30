@@ -162,7 +162,6 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 {
                     m_MenuBarState = MenuBar_None;
                 }
-                
                 mu_end_window(gui_context);
             }
         }
@@ -287,6 +286,8 @@ void Editor::Load()
 
                         if (serializer_get_status(&serializer) != serializer_no_error)
                             Popup("load failure", "unable to load primitives");
+                        else
+                            m_PrimitivesStack.UndoSnapshot();
                     }
                     else
                         Popup("load failure", "file too old and not compatible");
