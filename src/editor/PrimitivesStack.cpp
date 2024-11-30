@@ -276,7 +276,6 @@ void PrimitivesStack::DuplicateSelected()
         Primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         cc_push(&m_Primitives, new_primitive);
         m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
-        UndoSnapshot();
     }
 }
 
