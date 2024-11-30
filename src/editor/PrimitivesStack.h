@@ -22,6 +22,7 @@ public:
     void OnMouseButton(int button, int action);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
+    void UndoSnapshot();
     void Undo();
     size_t GetSerializedDataLength();
     void Serialize(serializer_context* context);
@@ -50,7 +51,6 @@ private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
-    void UndoSnapshot();
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
     
 
