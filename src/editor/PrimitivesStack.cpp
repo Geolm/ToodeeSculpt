@@ -115,7 +115,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
             }
         }
 
-        if (aabb_test_point(&m_EditionZone, m_MousePosition) && m_pGrabbedPoint == nullptr)
+        if (GetState() == state::IDLE && aabb_test_point(&m_EditionZone, m_MousePosition) && m_pGrabbedPoint == nullptr)
         {
             uint32_t selection = INVALID_INDEX;
             for(uint32_t i=0; i<cc_size(&m_Primitives) && selection == INVALID_INDEX; ++i)
