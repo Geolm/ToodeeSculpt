@@ -12,6 +12,7 @@ class Editor
 {
 public:
     void Init(aabb zone, const char* folder_path);
+    void OnKeyEvent(int key, int scancode, int action, int mods);
     void OnMouseMove(vec2 pos);
     void OnMouseButton(int button, int action, int mods);
     void Draw(Renderer& renderer);

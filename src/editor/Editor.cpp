@@ -4,8 +4,11 @@
 #include "../system/format.h"
 #include "../system/palettes.h"
 #include "../system/nfd.h"
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 #include "Editor.h"
 
+#define UNUSED_VARIABLE(a) (void)(a)
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Init(aabb zone, const char* folder_path)
@@ -22,6 +25,23 @@ void Editor::Init(aabb zone, const char* folder_path)
     m_GridSubdivision = 20.f;
     m_pFolderPath = folder_path;
     m_PopupOpen = false;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::OnKeyEvent(int key, int scancode, int action, int mods)
+{
+    UNUSED_VARIABLE(scancode);
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        Undo();
+    
+    if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        Delete();
+
+    if (key == GLFW_KEY_C && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        Copy();
+
+    if (key == GLFW_KEY_V && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        Paste();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
