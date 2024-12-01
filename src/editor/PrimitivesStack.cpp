@@ -298,7 +298,6 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
     if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 500, 400, 400), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
     {
         int res = 0;
-
         if (mu_header_ex(gui_context, "global control", MU_OPT_EXPANDED))
         {
             mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
@@ -316,7 +315,6 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         // if something has changed, handle undo
         if (res & MU_RES_SUBMIT)
             UndoSnapshot();
-
     }
     ContextualMenu(gui_context);
 }
@@ -330,7 +328,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             (int)m_ContextualMenuPosition.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y), 
             MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
-            mu_layout_row(gui_context, 1, (int[]) { 90}, 0);
+            mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0)&MU_RES_SUBMIT)
             {
                 m_PrimitiveType = command_type::primitive_circle_filled;
@@ -409,9 +407,8 @@ void PrimitivesStack::Undo()
 {
     // cancel primitive creation
     if (GetState() == state::ADDING_POINTS || GetState() == state::SET_ROUNDNESS)
-    {
         SetState(state::IDLE);
-    }
+    
     // if idle, call undo manager
     else if (GetState() == state::IDLE || GetState() == state::PRIMITIVE_SELECTED)
     {
