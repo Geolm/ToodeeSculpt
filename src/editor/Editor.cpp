@@ -42,6 +42,12 @@ void Editor::OnKeyEvent(int key, int scancode, int action, int mods)
 
     if (key == GLFW_KEY_V && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
         Paste();
+
+    if (key == GLFW_KEY_G && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        m_ShowGrid = !m_ShowGrid;
+
+    if (key == GLFW_KEY_D && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
+        m_PrimitivesStack.DumpStack();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -50,7 +56,6 @@ void Editor::OnMouseMove(vec2 pos)
     if (!m_PopupOpen)
     {
         m_PrimitivesStack.OnMouseMove(pos);
-
         if (aabb_test_point(&m_ExternalZone, pos))
             m_MenuBarState = MenuBar_None;
     }
@@ -74,7 +79,7 @@ void Editor::Draw(Renderer& renderer)
         vec2 step = vec2_scale(m_Zone.max - m_Zone.min, 1.f / m_GridSubdivision);
         
         for(float x = m_Zone.min.x; x<m_Zone.max.x; x += step.x)
-            renderer.DrawBox(x, m_Zone.min.y, x+1, m_Zone.max.y, draw_color(na16_light_grey, 64));
+            renderer.DrawBox(x, m_Zone.min.y, x+1, m_Zone.max.y, draw_color(na16_light_grey, 128));
         
         for(float y = m_Zone.min.y; y<m_Zone.max.y; y += step.y)
             renderer.DrawBox(m_Zone.min.x, y, m_Zone.max.x, y+1, draw_color(na16_light_grey, 128));

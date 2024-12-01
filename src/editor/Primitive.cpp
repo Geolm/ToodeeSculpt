@@ -168,3 +168,19 @@ vec2 Primitive::ComputerCenter() const
     return vec2_scale(center, 1.f / float(GetNumPoints()));
 }
 
+//----------------------------------------------------------------------------------------------------------------------------
+void Primitive::DumpInfo() const
+{
+    switch(m_Type)
+    {
+    case command_type::primitive_circle_filled : log_info("disc");break;
+    case command_type::primitive_ellipse : log_info("ellipse");break;
+    case command_type::primitive_triangle_filled : log_info("triangle"); break;
+    case command_type::primitive_oriented_box : log_info("box"); break;
+    default: log_info("unknown"); break;
+    }
+    const char* op_names[op_last] = {"add", "blend", "sub", "overlap"};
+    log_info("operation : %s", op_names[m_Operator]);
+}
+
+

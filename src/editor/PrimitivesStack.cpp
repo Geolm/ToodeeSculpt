@@ -489,6 +489,19 @@ void PrimitivesStack::SetState(enum state new_state)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::DumpStack() const
+{
+    log_info("dumping primitives stack");
+
+    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    {
+        Primitive* primitive = cc_get(&m_Primitives, i);
+        log_info("primitive %d", i);
+        primitive->DumpInfo();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Terminate()
 {
     cc_cleanup(&m_Primitives);

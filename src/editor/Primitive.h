@@ -45,6 +45,7 @@ public:
     void SetWidth(float width) {m_Desc.width = width;}
     void SetRoundness(float roundness) {m_Roundness = roundness;}
     vec2 ComputerCenter() const;
+    void DumpInfo() const;
 
 public:
     static constexpr const float point_radius {6.f};

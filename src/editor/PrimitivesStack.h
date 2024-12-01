@@ -32,6 +32,8 @@ public:
     void DeleteSelected();
     void Terminate();
 
+    void DumpStack() const;
+    void DuplicateSelected();
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
 
@@ -52,7 +54,6 @@ private:
 private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
-    void DuplicateSelected();
     enum state GetState() const {return m_CurrentState;}
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
     
