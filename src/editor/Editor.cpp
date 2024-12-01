@@ -25,6 +25,7 @@ void Editor::Init(aabb zone, const char* folder_path)
     m_GridSubdivision = 20.f;
     m_pFolderPath = folder_path;
     m_PopupOpen = false;
+    m_ShowDebug = false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -211,6 +212,10 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_rect(row_size * 2 + 10, text_height + padding, 250.f, text_height * 4 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
+
+                if (mu_checkbox(gui_context, "Show debug", &m_ShowDebug))
+                    m_PrimitivesStack.SetDebugInfo((bool)m_ShowDebug);
+
                 if (mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid))
                     m_PrimitivesStack.SetSnapToGrid((bool)m_SnapToGrid);
 

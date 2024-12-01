@@ -6,6 +6,7 @@
 #include "../system/palettes.h"
 #include "../system/point_in.h"
 #include "../system/undo.h"
+#include "../system/format.h"
 #include "PrimitivesStack.h"
 
 const vec2 contextual_menu_size = {100.f, 140.f};
@@ -22,12 +23,13 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_SDFOperationComboBox = 0;
     m_SmoothBlend = 1.f;
     m_AlphaValue = 1.f;
-    m_SelectedPrimitiveIndex = INVALID_INDEX;
+    SetSelectedPrimitive(INVALID_INDEX);
     m_pUndoContext = undo;
     m_pGrabbedPoint = nullptr;
     m_SnapToGrid = false;
     m_GridSubdivision = 20.f;
     m_CopiedPrimitive.SetInvalid();
+    m_DebugInfo = false;
 
     UndoSnapshot();
 }
@@ -83,7 +85,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         {
             m_NewPrimitiveContextualMenuOpen = !m_NewPrimitiveContextualMenuOpen;
             m_ContextualMenuPosition = m_MousePosition;
-            m_SelectedPrimitiveIndex = INVALID_INDEX;
+            SetSelectedPrimitive(INVALID_INDEX);
         }
     }
     // selecting primitive
@@ -122,7 +124,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
                 if (p->TestMouseCursor(m_MousePosition, true))
                     selection = i;
             }
-            m_SelectedPrimitiveIndex = selection;
+            SetSelectedPrimitive(selection);
         }
     }
     // moving point
@@ -179,7 +181,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 
         cc_push(&m_Primitives, new_primitive);
         SetState(state::IDLE);
-        m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
+        SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         UndoSnapshot();
     }
 }
@@ -190,7 +192,12 @@ void PrimitivesStack::Draw(Renderer& renderer)
     // drawing *the* primitives
     renderer.BeginCombination(m_SmoothBlend);
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
-        cc_get(&m_Primitives, i)->Draw(renderer, m_AlphaValue);
+    {
+        Primitive *primitive = cc_get(&m_Primitives, i);
+        primitive->Draw(renderer, m_AlphaValue);
+        if (m_DebugInfo)
+            renderer.DrawText(primitive->ComputerCenter(), format("%d", i), draw_color(na16_black));
+    }
     renderer.EndCombination();
 
     if (GetState() == state::ADDING_POINTS)
@@ -263,7 +270,13 @@ void PrimitivesStack::Draw(Renderer& renderer)
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
-            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer);
+        {
+            Primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+            primitive->DrawGizmo(renderer);
+
+            if (m_DebugInfo)
+                renderer.DrawText(primitive->ComputerCenter(), format("%d", m_SelectedPrimitiveIndex), draw_color(na16_black));
+        }
     }
 }
 
@@ -274,7 +287,7 @@ void PrimitivesStack::DuplicateSelected()
     {
         Primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         cc_push(&m_Primitives, new_primitive);
-        m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
+        SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         log_info("primitive duplicated");
     }
 }
@@ -434,7 +447,7 @@ void PrimitivesStack::Paste()
         vec2 center = m_CopiedPrimitive.ComputerCenter();
         m_CopiedPrimitive.Translate(m_MousePosition - center);
         cc_push(&m_Primitives, m_CopiedPrimitive);
-        m_SelectedPrimitiveIndex = uint32_t(cc_size(&m_Primitives))-1;
+        SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         UndoSnapshot();
         log_info("primitive pasted");
     }
@@ -446,7 +459,7 @@ void PrimitivesStack::DeleteSelected()
     if (GetState() == state::IDLE && SelectedPrimitiveValid())
     {
         cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
-        m_SelectedPrimitiveIndex = INVALID_INDEX;
+        SetSelectedPrimitive(INVALID_INDEX);
         log_info("primitive deleted");
         UndoSnapshot();
     }

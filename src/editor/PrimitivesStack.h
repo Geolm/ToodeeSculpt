@@ -36,6 +36,7 @@ public:
     void DuplicateSelected();
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
+    void SetDebugInfo(bool flag) {m_DebugInfo = flag;}
 
 private:
     
@@ -56,7 +57,7 @@ private:
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
-    
+    inline void SetSelectedPrimitive(uint32_t index);
 
 private:
     // serialized data 
@@ -70,6 +71,7 @@ private:
     bool m_NewPrimitiveContextualMenuOpen;
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
+    bool m_DebugInfo;
 
     // primitive creation
     state m_CurrentState;
@@ -86,4 +88,12 @@ private:
     float m_GridSubdivision;
     Primitive m_CopiedPrimitive;
 };
+
+//----------------------------------------------------------------------------------------------------------------------------
+inline void PrimitivesStack::SetSelectedPrimitive(uint32_t index)
+{
+    m_SelectedPrimitiveIndex = index;
+    if (m_DebugInfo)
+        log_info("selected primitive : %d", m_SelectedPrimitiveIndex);
+}
 

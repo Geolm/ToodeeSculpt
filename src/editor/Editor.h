@@ -48,10 +48,12 @@ private:
     vec2 m_PopupHalfSize;
     struct undo_context* m_pUndoContext;
 
+    // menubar
     MenuBarState m_MenuBarState;
     int m_SnapToGrid;
     int m_ShowGrid;
     float m_GridSubdivision;
+    int m_ShowDebug;
 
     // load/save
     const char* m_pFolderPath;

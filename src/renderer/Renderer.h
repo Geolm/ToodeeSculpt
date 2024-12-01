@@ -40,6 +40,7 @@ public:
     void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
     void DrawChar(float x, float y, char c, draw_color color);
     void DrawText(float x, float y, const char* text, draw_color color);
+    inline void DrawText(vec2 coord, const char* text, draw_color color) {DrawText(coord.x, coord.y, text, color);}
     void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
     void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op = op_union);
 
