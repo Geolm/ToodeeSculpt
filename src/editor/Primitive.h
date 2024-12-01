@@ -32,6 +32,8 @@ public:
     void Draw(Renderer& renderer, float roundness, draw_color color, sdf_operator op);
     bool TestMouseCursor(vec2 mouse_position, bool test_vertices);
     void Translate(vec2 translation);
+    void Normalize(const aabb* box);
+    void Expand(const aabb* box);
     int PropertyGrid(struct mu_Context* gui_context);
 
     void SetInvalid() {m_Type = combination_begin;}

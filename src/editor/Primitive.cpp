@@ -107,6 +107,20 @@ void Primitive::Translate(vec2 translation)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void Primitive::Normalize(const aabb* box)
+{
+    for(uint32_t i=0; i<GetNumPoints(); ++i)
+        m_Desc.points[i] = aabb_get_uv(box, m_Desc.points[i]);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Primitive::Expand(const aabb* box)
+{
+    for(uint32_t i=0; i<GetNumPoints(); ++i)
+        m_Desc.points[i] = aabb_bilinear(box, m_Desc.points[i]);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 int Primitive::PropertyGrid(struct mu_Context* gui_context)
 {
     int res = 0;
