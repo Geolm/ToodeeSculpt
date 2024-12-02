@@ -7,6 +7,7 @@
 #include "../system/point_in.h"
 #include "../system/undo.h"
 #include "../system/format.h"
+#include "../system/hash.h"
 #include "PrimitivesStack.h"
 
 const vec2 contextual_menu_size = {100.f, 140.f};
@@ -30,6 +31,10 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_GridSubdivision = 20.f;
     m_CopiedPrimitive.SetInvalid();
     m_DebugInfo = false;
+    cc_init(&m_MultipleSelection);
+    cc_reserve(&m_MultipleSelection, PRIMITIVES_STACK_RESERVATION);
+    m_MultipleSelectionHash = 0;
+    m_MultipleSelectionIndex = 0;
 
     UndoSnapshot();
 }
@@ -65,6 +70,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
         cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->Translate(m_MousePosition - m_Reference);
         m_Reference = m_MousePosition;
     }
+    else if (GetState() == state::IDLE && glfwGetMouseButton())
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -115,17 +121,8 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
             }
         }
 
-        if (GetState() == state::IDLE && aabb_test_point(&m_EditionZone, m_MousePosition) && m_pGrabbedPoint == nullptr)
-        {
-            uint32_t selection = INVALID_INDEX;
-            for(uint32_t i=0; i<cc_size(&m_Primitives) && selection == INVALID_INDEX; ++i)
-            {
-                Primitive *p = cc_get(&m_Primitives, i);
-                if (p->TestMouseCursor(m_MousePosition, true))
-                    selection = i;
-            }
-            SetSelectedPrimitive(selection);
-        }
+        if (GetState() == state::IDLE && aabb_test_point(&m_EditionZone, m_MousePosition))
+            SelectPrimitive();
     }
     // moving point
     else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
@@ -184,6 +181,39 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         UndoSnapshot();
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::SelectPrimitive()
+{
+    cc_clear(&m_MultipleSelection);
+    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    {
+        Primitive *p = cc_get(&m_Primitives, i);
+        if (p->TestMouseCursor(m_MousePosition, true))
+            cc_push(&m_MultipleSelection, i);
+    }
+
+    if (cc_size(&m_MultipleSelection)>0)
+    {
+        uint32_t new_hash;
+        hash_fnv_1a(cc_get(&m_MultipleSelection, 0), sizeof(uint32_t) * cc_size(&m_MultipleSelection), &new_hash);
+
+        log_info("clicking on %d primitives, hash : 0x%X", cc_size(&m_MultipleSelection), new_hash);
+
+        // same selection candidate, rotate
+        if (new_hash == m_MultipleSelectionHash)
+        {
+            if (++m_MultipleSelectionIndex > cc_size(&m_MultipleSelection))
+                m_MultipleSelectionIndex = 0;
+        }
+        else m_MultipleSelectionIndex = 0;
+
+        m_MultipleSelectionHash = new_hash;
+        SetSelectedPrimitive(*cc_get(&m_MultipleSelection, m_MultipleSelectionIndex));
+    }
+    else
+        SetSelectedPrimitive(INVALID_INDEX);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -288,34 +318,35 @@ void PrimitivesStack::DuplicateSelected()
         Primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         cc_push(&m_Primitives, new_primitive);
         SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
-        log_info("primitive duplicated");
+        log_debug("primitive duplicated");
     }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
 {
+    int res = 0;
+    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 100, 400, 200), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+    {
+        mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
+        mu_label(gui_context,"smoothness");
+        res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
+        mu_label(gui_context, "alpha");
+        res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
+        mu_end_window(gui_context);
+    }
     if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 500, 400, 400), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
     {
-        int res = 0;
-        if (mu_header_ex(gui_context, "global control", MU_OPT_EXPANDED))
-        {
-            mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-            mu_label(gui_context,"smoothness");
-            res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
-            mu_label(gui_context, "alpha");
-            res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
-        }
-
         if (SelectedPrimitiveValid() && mu_header_ex(gui_context, "selected primitive", MU_OPT_EXPANDED))
             res |= cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->PropertyGrid(gui_context);
 
         mu_end_window(gui_context);
-
-        // if something has changed, handle undo
-        if (res & MU_RES_SUBMIT)
-            UndoSnapshot();
     }
+
+    // if something has changed, handle undo
+    if (res & MU_RES_SUBMIT)
+        UndoSnapshot();
+
     ContextualMenu(gui_context);
 }
 
@@ -432,7 +463,7 @@ void PrimitivesStack::CopySelected()
     if (SelectedPrimitiveValid())
     {
         m_CopiedPrimitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-        log_info("primitive copied");
+        log_debug("primitive copied");
     }
 }
 
@@ -446,7 +477,7 @@ void PrimitivesStack::Paste()
         cc_push(&m_Primitives, m_CopiedPrimitive);
         SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         UndoSnapshot();
-        log_info("primitive pasted");
+        log_debug("primitive pasted");
     }
 }
 
@@ -457,7 +488,7 @@ void PrimitivesStack::DeleteSelected()
     {
         cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
         SetSelectedPrimitive(INVALID_INDEX);
-        log_info("primitive deleted");
+        log_debug("primitive deleted");
         UndoSnapshot();
     }
 }
@@ -496,19 +527,6 @@ void PrimitivesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Default();
 
     m_CurrentState = new_state;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::DumpStack() const
-{
-    log_info("dumping primitives stack");
-
-    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
-    {
-        Primitive* primitive = cc_get(&m_Primitives, i);
-        log_info("primitive %d", i);
-        primitive->DumpInfo();
-    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

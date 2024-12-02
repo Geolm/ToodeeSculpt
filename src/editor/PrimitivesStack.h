@@ -32,7 +32,6 @@ public:
     void DeleteSelected();
     void Terminate();
 
-    void DumpStack() const;
     void DuplicateSelected();
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
@@ -56,6 +55,7 @@ private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
+    void SelectPrimitive();
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
     inline void SetSelectedPrimitive(uint32_t index);
 
@@ -72,6 +72,8 @@ private:
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
     bool m_DebugInfo;
+    bool m_SnapToGrid;
+    float m_GridSubdivision;
 
     // primitive creation
     state m_CurrentState;
@@ -81,19 +83,23 @@ private:
     float m_Width;
     float m_Roundness;
     command_type m_PrimitiveType;
+
+    // primitive selection
     uint32_t m_SelectedPrimitiveIndex;
+    uint32_t m_MultipleSelectionHash;
+    uint32_t m_MultipleSelectionIndex;
+    cc_vec(uint32_t) m_MultipleSelection;
+
     struct undo_context* m_pUndoContext;
     vec2* m_pGrabbedPoint;
-    bool m_SnapToGrid;
-    float m_GridSubdivision;
     Primitive m_CopiedPrimitive;
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
 inline void PrimitivesStack::SetSelectedPrimitive(uint32_t index)
 {
+    assert(index == INVALID_INDEX || index < cc_size(&m_Primitives));
     m_SelectedPrimitiveIndex = index;
-    if (m_DebugInfo)
-        log_info("selected primitive : %d", m_SelectedPrimitiveIndex);
+    log_debug("selected primitive : %d", m_SelectedPrimitiveIndex);
 }
 

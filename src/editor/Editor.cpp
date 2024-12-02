@@ -46,9 +46,6 @@ void Editor::OnKeyEvent(int key, int scancode, int action, int mods)
 
     if (key == GLFW_KEY_G && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
         m_ShowGrid = !m_ShowGrid;
-
-    if (key == GLFW_KEY_D && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
-        m_PrimitivesStack.DumpStack();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -252,7 +249,7 @@ void Editor::Popup(const char* title, const char* message)
 {
     strncpy(m_PopupTitle, title, POPUP_STRING_LENGTH);
     strncpy(m_PopupMessage, message, POPUP_STRING_LENGTH);
-    log_error("%s : %s", title, message);
+    log_debug("%s : %s", title, message);
     m_PopupOpen = true;
 }
 
