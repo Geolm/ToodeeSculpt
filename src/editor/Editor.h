@@ -54,6 +54,8 @@ private:
     int m_ShowGrid;
     float m_GridSubdivision;
     int m_ShowDebug;
+    int m_LogLevel;
+    int m_LogLevelCombo;
 
     // load/save
     const char* m_pFolderPath;

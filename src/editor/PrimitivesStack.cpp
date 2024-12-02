@@ -337,7 +337,7 @@ void PrimitivesStack::DuplicateSelected()
 void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
 {
     int res = 0;
-    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 100, 400, 200), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 300, 400, 100), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_label(gui_context,"smoothness");
@@ -346,6 +346,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
         mu_end_window(gui_context);
     }
+
     if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 500, 400, 400), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
     {
         if (SelectedPrimitiveValid() && mu_header_ex(gui_context, "selected primitive", MU_OPT_EXPANDED))
