@@ -10,7 +10,6 @@
 
 struct mu_Context;
 class Renderer;
-struct GLFWwindow;
 
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
@@ -19,7 +18,7 @@ class PrimitivesStack
 {
 public:
     void Init(aabb zone, struct undo_context* undo);
-    void OnMouseMove(GLFWwindow* window, vec2 pos);
+    void OnMouseMove(vec2 pos);
     void OnMouseButton(int button, int action, int mods);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);

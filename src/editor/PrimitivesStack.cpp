@@ -40,7 +40,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::OnMouseMove(GLFWwindow* window, vec2 pos) 
+void PrimitivesStack::OnMouseMove(vec2 pos) 
 {
     if ((GetState() == state::ADDING_POINTS || GetState() == state::MOVING_POINT) && m_SnapToGrid)
     {
