@@ -116,7 +116,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
             bool new_selection = SelectPrimitive(mods&GLFW_MOD_SHIFT);
 
             // clicking on already selected primitive to move/duplicate
-            if (!new_selection && GetState() == state::IDLE && cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->TestMouseCursor(m_MousePosition, false))
+            if (!new_selection && GetState() == state::IDLE && SelectedPrimitiveValid() && cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->TestMouseCursor(m_MousePosition, false))
             {
                 // copy a primitive
                 if (mods&GLFW_MOD_SUPER)
