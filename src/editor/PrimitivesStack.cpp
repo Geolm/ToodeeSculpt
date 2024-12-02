@@ -40,7 +40,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::OnMouseMove(vec2 pos) 
+void PrimitivesStack::OnMouseMove(GLFWwindow* window, vec2 pos) 
 {
     if ((GetState() == state::ADDING_POINTS || GetState() == state::MOVING_POINT) && m_SnapToGrid)
     {
@@ -50,6 +50,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
         pos += m_EditionZone.min;
     }
 
+    m_MouseLastPosition = m_MousePosition;
     m_MousePosition = pos;
 
     if (GetState() == state::SET_ROUNDNESS)
@@ -70,7 +71,6 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
         cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->Translate(m_MousePosition - m_Reference);
         m_Reference = m_MousePosition;
     }
-    else if (GetState() == state::IDLE && glfwGetMouseButton())
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -109,8 +109,14 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
                     SetState(state::MOVING_POINT);
                 }
             }
+        }
+        
+        if (GetState() == state::IDLE && aabb_test_point(&m_EditionZone, m_MousePosition))
+        {
+            bool new_selection = SelectPrimitive(mods&GLFW_MOD_SHIFT);
 
-            if (GetState() == state::IDLE && primitive->TestMouseCursor(m_MousePosition, false))
+            // clicking on already selected primitive to move/duplicate
+            if (!new_selection && GetState() == state::IDLE && cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->TestMouseCursor(m_MousePosition, false))
             {
                 // copy a primitive
                 if (mods&GLFW_MOD_SUPER)
@@ -120,9 +126,6 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
                 SetState(state::MOVING_PRIMITIVE);
             }
         }
-
-        if (GetState() == state::IDLE && aabb_test_point(&m_EditionZone, m_MousePosition))
-            SelectPrimitive();
     }
     // moving point
     else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
@@ -184,7 +187,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::SelectPrimitive()
+bool PrimitivesStack::SelectPrimitive(bool cycle_through)
 {
     cc_clear(&m_MultipleSelection);
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
@@ -196,24 +199,30 @@ void PrimitivesStack::SelectPrimitive()
 
     if (cc_size(&m_MultipleSelection)>0)
     {
-        uint32_t new_hash;
-        hash_fnv_1a(cc_get(&m_MultipleSelection, 0), sizeof(uint32_t) * cc_size(&m_MultipleSelection), &new_hash);
+        uint32_t new_hash = hash_fnv_1a(cc_get(&m_MultipleSelection, 0), sizeof(uint32_t) * cc_size(&m_MultipleSelection));
 
-        log_info("clicking on %d primitives, hash : 0x%X", cc_size(&m_MultipleSelection), new_hash);
+        log_debug("clicking on %d primitives, hash : 0x%X", cc_size(&m_MultipleSelection), new_hash);
 
-        // same selection candidate, rotate
+        // same selection candidate
         if (new_hash == m_MultipleSelectionHash)
         {
-            if (++m_MultipleSelectionIndex > cc_size(&m_MultipleSelection))
-                m_MultipleSelectionIndex = 0;
+            // cycle through selected primitive or keep the same if shift not pressed
+            if (cycle_through)
+            {
+                if (++m_MultipleSelectionIndex >= cc_size(&m_MultipleSelection))
+                    m_MultipleSelectionIndex = 0;
+            }
         }
         else m_MultipleSelectionIndex = 0;
 
         m_MultipleSelectionHash = new_hash;
-        SetSelectedPrimitive(*cc_get(&m_MultipleSelection, m_MultipleSelectionIndex));
+        return SetSelectedPrimitive(*cc_get(&m_MultipleSelection, m_MultipleSelectionIndex));
     }
     else
+    {
         SetSelectedPrimitive(INVALID_INDEX);
+        return false;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

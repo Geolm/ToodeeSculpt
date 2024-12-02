@@ -10,6 +10,7 @@
 
 struct mu_Context;
 class Renderer;
+struct GLFWwindow;
 
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
@@ -18,7 +19,7 @@ class PrimitivesStack
 {
 public:
     void Init(aabb zone, struct undo_context* undo);
-    void OnMouseMove(vec2 pos);
+    void OnMouseMove(GLFWwindow* window, vec2 pos);
     void OnMouseButton(int button, int action, int mods);
     void Draw(Renderer& renderer);
     void UserInterface(struct mu_Context* gui_context);
@@ -55,9 +56,9 @@ private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
-    void SelectPrimitive();
+    bool SelectPrimitive(bool cycle_through);
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
-    inline void SetSelectedPrimitive(uint32_t index);
+    inline bool SetSelectedPrimitive(uint32_t index);
 
 private:
     // serialized data 
@@ -71,6 +72,7 @@ private:
     bool m_NewPrimitiveContextualMenuOpen;
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
+    vec2 m_MouseLastPosition;
     bool m_DebugInfo;
     bool m_SnapToGrid;
     float m_GridSubdivision;
@@ -96,10 +98,12 @@ private:
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void PrimitivesStack::SetSelectedPrimitive(uint32_t index)
+inline bool PrimitivesStack::SetSelectedPrimitive(uint32_t index)
 {
     assert(index == INVALID_INDEX || index < cc_size(&m_Primitives));
+    bool different = (m_SelectedPrimitiveIndex != index);
     m_SelectedPrimitiveIndex = index;
     log_debug("selected primitive : %d", m_SelectedPrimitiveIndex);
+    return different;
 }
 
