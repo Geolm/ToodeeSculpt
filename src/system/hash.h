@@ -9,7 +9,10 @@ extern "C" {
 #endif
 
 // 32bit fnv-1a hash
-void hash_fnv_1a(const void *data, size_t size, uint32_t* hash);
+uint32_t hash_fnv_1a(const void *data, size_t length);
+
+// Jenkins's one_at_a_time hash 
+uint32_t hash_jenkins(const void* data, size_t length);
 
 #ifdef __cplusplus
 }
