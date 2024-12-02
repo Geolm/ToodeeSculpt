@@ -95,7 +95,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         }
     }
     // selecting primitive
-    else if (GetState() == state::IDLE && left_button_pressed)
+    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition))
     {
         if (SelectedPrimitiveValid())
         {
@@ -111,7 +111,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
             }
         }
         
-        if (GetState() == state::IDLE && aabb_test_point(&m_EditionZone, m_MousePosition))
+        if (GetState() == state::IDLE)
         {
             bool new_selection = SelectPrimitive(mods&GLFW_MOD_SHIFT);
 
@@ -123,6 +123,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
                     DuplicateSelected();
                 
                 m_Reference = m_MousePosition;
+                m_StartingPoint = m_MousePosition;
                 SetState(state::MOVING_PRIMITIVE);
             }
         }
@@ -140,7 +141,8 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     else if (GetState() == state::MOVING_PRIMITIVE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {
         SetState(state::IDLE);
-        UndoSnapshot();
+        if (m_StartingPoint != m_MousePosition)
+            UndoSnapshot();
     }
     // adding points
     else if (GetState() == state::ADDING_POINTS && left_button_pressed)

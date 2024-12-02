@@ -81,6 +81,7 @@ private:
     uint32_t m_CurrentPoint;
     vec2 m_PrimitivePoints[PRIMITIVE_MAXPOINTS];
     vec2 m_Reference;
+    vec2 m_StartingPoint;
     float m_Width;
     float m_Roundness;
     command_type m_PrimitiveType;
