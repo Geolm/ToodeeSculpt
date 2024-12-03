@@ -8,9 +8,8 @@ int Primitive::m_SDFOperationComboBox = 0;
 
 //----------------------------------------------------------------------------------------------------------------------------
 Primitive::Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float width)
-    : m_Type(type), m_Roundness(roundness), m_Operator(op), m_Color(color)
+    : m_Width(width), m_Roundness(roundness), m_Thickness(0.f), m_Type(type), m_Operator(op), m_Color(color)
 {
-    m_Desc.width = width;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -19,7 +18,7 @@ void Primitive::DrawGizmo(Renderer& renderer)
     Draw(renderer, 0.f, draw_color(na16_orange, 128), op_add);
 
     for(uint32_t i=0; i<GetNumPoints(); ++i)
-        renderer.DrawCircleFilled(m_Desc.points[i], point_radius, draw_color(na16_black, 128));
+        renderer.DrawCircleFilled(m_Points[i], point_radius, draw_color(na16_black, 128));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -33,23 +32,22 @@ void Primitive::Draw(Renderer& renderer, float alpha)
 //----------------------------------------------------------------------------------------------------------------------------
 void Primitive::Draw(Renderer& renderer, float roundness, draw_color color, sdf_operator op)
 {
-    const vec2* points = m_Desc.points;
     switch(m_Type)
     {
     case command_type::primitive_triangle_filled: 
-        renderer.DrawTriangleFilled(points[0], points[1], points[2], roundness, color, op);
+        renderer.DrawTriangleFilled(m_Points[0], m_Points[1], m_Points[2], roundness, color, op);
         break;
 
     case command_type::primitive_circle_filled:
-        renderer.DrawCircleFilled(points[0], m_Roundness, color, op);
+        renderer.DrawCircleFilled(m_Points[0], m_Roundness, color, op);
         break;
 
     case command_type::primitive_ellipse:
-        renderer.DrawEllipse(points[0], points[1], m_Desc.width, color, op);
+        renderer.DrawEllipse(m_Points[0], m_Points[1], m_Width, color, op);
         break;
 
     case command_type::primitive_oriented_box:
-        renderer.DrawOrientedBox(points[0], points[1], m_Desc.width, roundness, color, op);
+        renderer.DrawOrientedBox(m_Points[0], m_Points[1], m_Width, roundness, color, op);
         break;
 
     default: 
@@ -60,29 +58,28 @@ void Primitive::Draw(Renderer& renderer, float roundness, draw_color color, sdf_
 //----------------------------------------------------------------------------------------------------------------------------
 bool Primitive::TestMouseCursor(vec2 mouse_position, bool test_vertices)
 {
-    const vec2* points = m_Desc.points;
     bool result = false;
 
     switch(m_Type)
     {
     case command_type::primitive_triangle_filled: 
         {
-            result = point_in_triangle(points[0], points[1], points[2], mouse_position);
+            result = point_in_triangle(m_Points[0], m_Points[1], m_Points[2], mouse_position);
             break;
         }
     case command_type::primitive_circle_filled:
         {
-            result = point_in_disc(points[0], m_Roundness, mouse_position);
+            result = point_in_disc(m_Points[0], m_Roundness, mouse_position);
             break;
         }
     case command_type::primitive_ellipse:
         {
-            result = point_in_ellipse(points[0], points[1], m_Desc.width, mouse_position);
+            result = point_in_ellipse(m_Points[0], m_Points[1], m_Width, mouse_position);
             break;
         }
     case command_type::primitive_oriented_box:
         {
-            result = point_in_oriented_box(points[0], points[1], m_Desc.width, mouse_position);
+            result = point_in_oriented_box(m_Points[0], m_Points[1], m_Width, mouse_position);
             break;
         }
 
@@ -93,7 +90,7 @@ bool Primitive::TestMouseCursor(vec2 mouse_position, bool test_vertices)
     if (test_vertices)
     {
         for(uint32_t i=0; i<GetNumPoints(); ++i)
-            result |= point_in_disc(points[i], point_radius, mouse_position);
+            result |= point_in_disc(m_Points[i], point_radius, mouse_position);
     }
 
     return result;
@@ -103,21 +100,21 @@ bool Primitive::TestMouseCursor(vec2 mouse_position, bool test_vertices)
 void Primitive::Translate(vec2 translation)
 {
     for(uint32_t i=0; i<GetNumPoints(); ++i)
-        m_Desc.points[i] += translation;
+        m_Points[i] += translation;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Primitive::Normalize(const aabb* box)
 {
     for(uint32_t i=0; i<GetNumPoints(); ++i)
-        m_Desc.points[i] = aabb_get_uv(box, m_Desc.points[i]);
+        m_Points[i] = aabb_get_uv(box, m_Points[i]);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Primitive::Expand(const aabb* box)
 {
     for(uint32_t i=0; i<GetNumPoints(); ++i)
-        m_Desc.points[i] = aabb_bilinear(box, m_Desc.points[i]);
+        m_Points[i] = aabb_bilinear(box, m_Points[i]);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -140,7 +137,7 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
         {
             mu_text(gui_context, "ellipse");
             mu_label(gui_context, "width");
-            res |= mu_slider_ex(gui_context, &m_Desc.width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
+            res |= mu_slider_ex(gui_context, &m_Width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
             break;
         }
     case command_type::primitive_triangle_filled : 
@@ -154,7 +151,7 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
         {
             mu_text(gui_context, "box");
             mu_label(gui_context, "width");
-            res |= mu_slider_ex(gui_context, &m_Desc.width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
+            res |= mu_slider_ex(gui_context, &m_Width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
             mu_label(gui_context, "roundness");
             res |= mu_slider_ex(gui_context, &m_Roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
             break;
