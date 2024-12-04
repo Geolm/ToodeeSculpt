@@ -75,7 +75,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
             float distance = 10.f;
             constant float* data = &input.draw_data[data_index];
 
-            if (cmd.type == combination_begin)
+            if (primitive_get_type(cmd.type) == combination_begin)
             {
                 previous_color = 0.h;
                 previous_distance = LARGE_DISTANCE;
@@ -84,21 +84,22 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
             }
             else
             {
-                switch(cmd.type)
+                const bool filled = primitive_is_filled(cmd.type);
+                switch(primitive_get_type(cmd.type))
                 {
-                case primitive_circle :
-                {
-                    float2 center = float2(data[0], data[1]);
-                    float radius = data[2];
-                    float half_width = data[3];
-                    distance = abs(sd_disc(in.pos.xy, center, radius)) - half_width;
-                    break;
-                }
-                case primitive_circle_filled :
+                case primitive_disc :
                 {
                     float2 center = float2(data[0], data[1]);
                     float radius = data[2];
-                    distance = sd_disc(in.pos.xy, center, radius);
+                    if (filled)
+                    {
+                        distance = sd_disc(in.pos.xy, center, radius);
+                    }
+                    else
+                    {
+                        float half_width = data[3];
+                        distance = abs(sd_disc(in.pos.xy, center, radius)) - half_width;
+                    }
                     break;
                 }
                 case primitive_oriented_box :
@@ -137,23 +138,23 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     break;
                 }
                 case primitive_triangle:
-                case primitive_triangle_filled:
                 {
                     float2 p0 = float2(data[0], data[1]);
                     float2 p1 = float2(data[2], data[3]);
                     float2 p2 = float2(data[4], data[5]);
                     distance = sd_triangle(in.pos.xy, p0, p1, p2);
                     
-                    if (cmd.type == primitive_triangle)
+                    if (!filled)
                         distance = abs(distance);
                         
                     distance -= data[6];
                     break;
                 }
+                default: break;
                 }
 
                 half4 color;
-                if (cmd.type == combination_end)
+                if (primitive_get_type(cmd.type) == combination_end)
                 {
                     combining = false;
                     color = previous_color;

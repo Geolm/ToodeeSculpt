@@ -37,9 +37,10 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         if (any(tile_pos>ushort2(clip.max_x, clip.max_y)) || any((tile_pos + TILE_SIZE)<ushort2(clip.min_x, clip.min_y)))
             continue;
 
+        const bool filled = primitive_is_filled(input.commands[i].type);
         bool to_be_added = false;
         constant float* data = &input.draw_data[data_index];
-        switch(input.commands[i].type)
+        switch(primitive_get_type(input.commands[i].type))
         {
             case primitive_oriented_box :
             {
@@ -59,23 +60,24 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }
-            case primitive_circle :
+            case primitive_disc :
             {
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];
-                float half_width = data[3] + input.aa_width + smooth_border;
-                to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
+
+                if (filled)
+                {
+                    radius += input.aa_width + smooth_border;
+                    float sq_radius = radius * radius;
+                    to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
+                }
+                else
+                {
+                    float half_width = data[3] + input.aa_width + smooth_border;
+                    to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
+                }
                 break;
             }
-            case primitive_circle_filled :
-            {
-                float2 center = float2(data[0], data[1]);
-                float radius = data[2] + input.aa_width + smooth_border;
-                float sq_radius = radius * radius;
-                to_be_added = intersection_aabb_disc(tile_aabb, center, sq_radius);
-                break;
-            }
-            case primitive_triangle_filled :
             case primitive_triangle :
             {
                 float2 p0 = float2(data[0], data[1]);
@@ -84,7 +86,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6] + smooth_border);
                 to_be_added = intersection_aabb_triangle(tile_rounded, p0, p1, p2);
 
-                if (input.commands[i].type == primitive_triangle)
+                if (!filled)
                 {
                     bool corners_inside = test_point_triangle(p0, p1, p2, tile_rounded.min);
                     corners_inside &= test_point_triangle(p0, p1, p2, tile_rounded.max);
