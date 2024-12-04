@@ -91,15 +91,9 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 {
                     float2 center = float2(data[0], data[1]);
                     float radius = data[2];
-                    if (filled)
-                    {
-                        distance = sd_disc(in.pos.xy, center, radius);
-                    }
-                    else
-                    {
-                        float half_width = data[3];
-                        distance = abs(sd_disc(in.pos.xy, center, radius)) - half_width;
-                    }
+                    distance = sd_disc(in.pos.xy, center, radius);
+                    if (!filled)
+                        distance = abs(distance) - data[3];
                     break;
                 }
                 case primitive_oriented_box :
@@ -114,6 +108,8 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 p0 = float2(data[0], data[1]);
                     float2 p1 = float2(data[2], data[3]);
                     distance = sd_oriented_ellipse(in.pos.xy, p0, p1, data[4]);
+                    if (!filled)
+                        distance = abs(distance) - data[5];
                     break;
                 }
                 case primitive_aabox:

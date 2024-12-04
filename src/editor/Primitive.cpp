@@ -8,7 +8,7 @@ int Primitive::m_SDFOperationComboBox = 0;
 
 //----------------------------------------------------------------------------------------------------------------------------
 Primitive::Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float width)
-    : m_Width(width), m_Roundness(roundness), m_Thickness(0.f), m_Type(type), m_Filled(true), m_Operator(op), m_Color(color)
+    : m_Width(width), m_Roundness(roundness), m_Thickness(0.f), m_Type(type), m_Filled(1), m_Operator(op), m_Color(color)
 {
 }
 
@@ -167,6 +167,12 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
 
     default : break;
     }
+
+    mu_label(gui_context, "filled");
+    res |= mu_checkbox(gui_context, "filled", &m_Filled);
+
+    mu_label(gui_context, "thickness");
+    res |= mu_slider_ex(gui_context, &m_Thickness, 0.f, 100.f, 0.1f, "%3.2f", 0);
 
     _Static_assert(sizeof(m_Operator) == sizeof(int));
     mu_label(gui_context, "operation");

@@ -49,7 +49,7 @@ private:
     float m_Roundness;
     float m_Thickness;
     command_type m_Type;
-    bool m_Filled;
+    int m_Filled;
     sdf_operator m_Operator;
     primitive_color m_Color;
 
