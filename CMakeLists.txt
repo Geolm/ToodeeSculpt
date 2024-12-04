@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.25)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_DEBUG_FLAGS "-g -O0")
+set(CMAKE_RELEASE_FLAGS "-O3 -DNDEBUG -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno-missing-braces")
 
 project(ToodeeSculpt)
 
@@ -53,5 +55,3 @@ target_link_libraries(ToodeeSculpt
         "-framework QuartzCore"
         ${CMAKE_SOURCE_DIR}/lib/libnfd.a
         )
-
-target_compile_options(ToodeeSculpt PRIVATE -O3 -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno-missing-braces)
