@@ -55,3 +55,8 @@ target_link_libraries(ToodeeSculpt
         "-framework QuartzCore"
         ${CMAKE_SOURCE_DIR}/lib/libnfd.a
         )
+
+target_compile_options(ToodeeSculpt PRIVATE
+        $<$<CONFIG:Debug>:-g -O0>
+        $<$<CONFIG:Release>:-O3 -DNDEBUG -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno-missing-braces>
+)

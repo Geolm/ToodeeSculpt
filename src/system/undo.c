@@ -20,6 +20,8 @@ struct undo_context
     uint32_t max_states;
 };
 
+#define UNUSED_VARIABLE(a) (void)(a)
+
 //-----------------------------------------------------------------------------------------------------------------------------
 struct undo_context* undo_init(size_t buffer_size, uint32_t max_states)
 {
@@ -44,6 +46,7 @@ void* undo_begin_snapshot(struct undo_context* context, size_t* max_size)
 //-----------------------------------------------------------------------------------------------------------------------------
 void undo_end_snapshot(struct undo_context* context, void* data, size_t size)
 {
+    UNUSED_VARIABLE(data);
     assert(data >= (void*)&context->buffer[context->current_position]);
     assert(data < (void*)&context->buffer[context->buffer_size]);
     assert(context->num_states < context->max_states);
