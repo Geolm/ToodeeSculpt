@@ -20,21 +20,23 @@ typedef struct alignas(8) {float x, y;} float2;
 using namespace metal;
 #endif
 
+// packed on 6 bits
 enum command_type
 {
     primitive_aabox = 0,
     primitive_oriented_box = 1,
-    primitive_circle = 2,
-    primitive_circle_filled = 3,
-    primitive_arc = 4,
-    primitive_arc_filled = 5,
-    primitive_triangle = 6,
-    primitive_triangle_filled = 7,
-    primitive_char = 8,
-    primitive_ellipse = 9,
-    combination_begin = 16,
-    combination_end = 17
+    primitive_disc = 2,
+    primitive_triangle = 3,
+    primitive_ellipse = 4,
+    primitive_pie = 5,
+    primitive_char = 6,
+    combination_begin = 32,
+    combination_end = 33
 };
+
+#define COMMAND_TYPE_MASK   (0x3f)
+#define PRIMITIVE_FILLED    (0x80)
+
 
 enum sdf_operator
 {
@@ -80,6 +82,23 @@ struct draw_command
     draw_color color;
     uint32_t data_index;
 };
+
+static inline uint8_t pack_type(enum command_type type,  bool filled)
+{
+    uint8_t result = filled ? PRIMITIVE_FILLED : 0;
+    result |= (uint8_t)(type&COMMAND_TYPE_MASK); 
+    return result;
+}
+
+static inline bool primitive_is_filled(uint8_t type)
+{
+    return (type&PRIMITIVE_FILLED);
+}
+
+static inline enum command_type primitive_get_type(uint8_t type)
+{
+    return (enum command_type)(type&COMMAND_TYPE_MASK);
+}
 
 struct tile_node
 {

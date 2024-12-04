@@ -247,7 +247,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
             renderer.DrawCircleFilled(m_PrimitivePoints[i], Primitive::point_radius, draw_color(na16_red, 128));
 
         // preview primitive
-        if (m_PrimitiveType == command_type::primitive_triangle_filled) 
+        if (m_PrimitiveType == command_type::primitive_triangle) 
         {
             if (m_CurrentPoint == 1)
                 renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
@@ -266,9 +266,9 @@ void PrimitivesStack::Draw(Renderer& renderer)
         renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, draw_color(na16_red, 128));
 
         if (m_PrimitiveType == command_type::primitive_oriented_box)
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, draw_color(na16_light_blue, 128));
+            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, draw_color(na16_light_blue, 128));
         else if (m_PrimitiveType == command_type::primitive_ellipse)
-            renderer.DrawEllipse(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, draw_color(na16_light_blue, 128));
+            renderer.DrawEllipseFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, draw_color(na16_light_blue, 128));
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
@@ -277,15 +277,15 @@ void PrimitivesStack::Draw(Renderer& renderer)
         // preview primitive
         switch(m_PrimitiveType)
         {
-        case command_type::primitive_triangle_filled:
+        case command_type::primitive_triangle:
             renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 
                                         m_Roundness, draw_color(na16_light_blue, 128));break;
 
-        case command_type::primitive_circle_filled:
+        case command_type::primitive_disc:
             renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, draw_color(na16_light_blue, 128));break;
 
         case command_type::primitive_oriented_box:
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, draw_color(na16_light_blue, 128));
+            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, draw_color(na16_light_blue, 128));
             break;
 
         default:break;
@@ -374,7 +374,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0)&MU_RES_SUBMIT)
             {
-                m_PrimitiveType = command_type::primitive_circle_filled;
+                m_PrimitiveType = command_type::primitive_disc;
                 SetState(state::ADDING_POINTS);
             }
 
@@ -392,7 +392,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 
             if (mu_button_ex(gui_context, "triangle", 0, 0)&MU_RES_SUBMIT)
             {
-                m_PrimitiveType = command_type::primitive_triangle_filled;
+                m_PrimitiveType = command_type::primitive_triangle;
                 SetState(state::ADDING_POINTS);
             }
             mu_end_window(gui_context);

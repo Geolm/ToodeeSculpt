@@ -29,22 +29,27 @@ public:
 
     void BeginCombination(float smooth_value);
     void EndCombination();
-    void DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op = op_union);
-    void DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op = op_union);
+
+    inline void DrawCircle(vec2 center, float radius, float width, draw_color color, sdf_operator op = op_union);
     inline void DrawCircleFilled(vec2 center, float radius, draw_color color, sdf_operator op = op_union);
-    void DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op = op_union);
-    inline void DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, draw_color color, sdf_operator op = op_union);
-    void DrawEllipse(float x0, float y0, float x1, float y1, float width, draw_color color, sdf_operator op = op_union);
-    inline void DrawEllipse(vec2 p0, vec2 p1, float width, draw_color color, sdf_operator op = op_union);
+    inline void DrawOrientedBox(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op = op_union);
+    inline void DrawOrientedBoxFilled(vec2 p0, vec2 p1, float width, float roundness, draw_color color, sdf_operator op = op_union);
+    inline void DrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op = op_union);
+    inline void DrawEllipseFilled(vec2 p0, vec2 p1, float width, draw_color color, sdf_operator op = op_union);
+    inline void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
+    inline void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
+    
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
     void DrawChar(float x, float y, char c, draw_color color);
     void DrawText(float x, float y, const char* text, draw_color color);
     inline void DrawText(vec2 coord, const char* text, draw_color color) {DrawText(coord.x, coord.y, text, color);}
-    void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
-    void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op = op_union);
 
 private:
+    void PrivateDrawDisc(vec2 center, float radius, float thickness, draw_color color, sdf_operator op);
+    void PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, draw_color color, sdf_operator op);
+    void PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op);
+    void PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op);
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
@@ -121,20 +126,43 @@ inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, draw_color color, sdf_operator op)
+inline void Renderer::DrawOrientedBox(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op)
 {
-    DrawOrientedBox(p0.x, p0.y, p1.x, p1.y, width, roundness, color, op);
+    PrivateDrawOrientedBox(p0, p1, width, 0.f, thickness, color, op);
 }
 
-//----------------------------------------------------------------------------------------------------------------------------
-inline void Renderer::DrawEllipse(vec2 p0, vec2 p1, float width, draw_color color, sdf_operator op)
+inline void Renderer::DrawOrientedBoxFilled(vec2 p0, vec2 p1, float width, float roundness, draw_color color, sdf_operator op)
 {
-    DrawEllipse(p0.x, p0.y, p1.x, p1.y, width, color, op);
+    PrivateDrawOrientedBox(p0, p1, width, roundness, -1.f, color, op);
 }
 
-//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::DrawCircle(vec2 center, float radius, float thickness, draw_color color, sdf_operator op)
+{
+    PrivateDrawDisc(center, radius, thickness, color, op);
+}
+
 inline void Renderer::DrawCircleFilled(vec2 center, float radius, draw_color color, sdf_operator op)
 {
-    DrawCircleFilled(center.x, center.y, radius, color, op);
+    PrivateDrawDisc(center, radius, -1.f, color, op);
+}
+
+inline void Renderer::DrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op)
+{
+    PrivateDrawEllipse(p0, p1, width, thickness, color, op);
+}
+
+inline void Renderer::DrawEllipseFilled(vec2 p0, vec2 p1, float width, draw_color color, sdf_operator op)
+{
+    PrivateDrawEllipse(p0, p1, width, -1.f, color, op);
+}
+
+inline void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op)
+{
+    PrivateDrawTriangle(p0, p1, p2, 0.f, thickness, color, op);
+}
+
+inline void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op)
+{
+    PrivateDrawTriangle(p0, p1, p2, roundness, -1.f, color, op);
 }
 

@@ -8,6 +8,7 @@
 #include "../system/microui.h"
 #include "../system/aabb.h"
 #include "../system/format.h"
+#include <float.h>
 
 #ifdef SHADERS_IN_EXECUTABLE
 #include "../shaders/binning.h"
@@ -540,8 +541,10 @@ void Renderer::EndCombination()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawCircle(float x, float y, float radius, float width, draw_color color, sdf_operator op)
+void Renderer::PrivateDrawDisc(vec2 center, float radius, float thickness, draw_color color, sdf_operator op)
 {
+    thickness *= .5f;
+    bool filled = thickness < 0.f;
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -549,44 +552,23 @@ void Renderer::DrawCircle(float x, float y, float radius, float width, draw_colo
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = primitive_circle;
+        cmd->type = pack_type(primitive_disc, filled);
 
-        float* data = m_DrawData.NewMultiple(4);
+        float* data = m_DrawData.NewMultiple(filled ? 3 : 4);
         quantized_aabb* aabb = m_CommandsAABB.NewElement();
         if (data != nullptr && aabb != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, x, y, radius, width);
-            float max_radius = radius + width * .5f + m_AAWidth + m_SmoothValue;
-            write_float(data,  x, y, radius, width * .5f);
-            write_aabb(aabb, x - max_radius, y - max_radius, x + max_radius, y + max_radius);
-            merge_aabb(m_CombinationAABB, aabb);
-            return;
-        }
-        m_Commands.RemoveLast();
-    }
-    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color, sdf_operator op)
-{
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op;
-        cmd->type = primitive_circle_filled;
-
-        float* data = m_DrawData.NewMultiple(3);
-        quantized_aabb* aabb = m_CommandsAABB.NewElement();
-        if (data != nullptr && aabb != nullptr)
-        {
-            canvas_to_screen(m_CanvasScale, x, y, radius);
+            canvas_to_screen(m_CanvasScale, center.x, center.y, radius, thickness);
             float max_radius = radius + m_AAWidth + m_SmoothValue;
-            write_float(data,  x, y, radius);
-            write_aabb(aabb, x - max_radius, y - max_radius, x + max_radius, y + max_radius);
+            if (filled)
+                write_float(data, center.x, center.y, radius);
+            else
+            {
+                max_radius += thickness;
+                write_float(data, center.x, center.y, radius, thickness);
+            }
+            
+            write_aabb(aabb, center.x - max_radius, center.y - max_radius, center.x + max_radius, center.y + max_radius);
             merge_aabb(m_CombinationAABB, aabb);
             return;
         }
@@ -596,11 +578,14 @@ void Renderer::DrawCircleFilled(float x, float y, float radius, draw_color color
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float width, float roundness, draw_color color, sdf_operator op)
+void Renderer::PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, draw_color color, sdf_operator op)
 {
-    if (x0 == x1 && y1 == y0)
+    if (vec2_similar(p0, p1, FLT_EPSILON))
         return;
 
+    thickness *= .5f;
+    bool filled = thickness < 0.f;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -608,15 +593,16 @@ void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float wid
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = primitive_oriented_box;
+        cmd->type = pack_type(primitive_oriented_box, filled);
 
         float* data = m_DrawData.NewMultiple(6);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width, roundness);
-            aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, roundness + m_AAWidth + m_SmoothValue);
-            write_float(data,  x0, y0, x1, y1, width, roundness);
+            float roundness_thickness = filled ? roundness : thickness;
+            canvas_to_screen(m_CanvasScale, p0.x, p0.y, p1.x, p1.y, width, roundness_thickness);
+            aabb bb = aabb_from_rounded_obb(p0, p1, width, roundness_thickness + m_AAWidth + m_SmoothValue);
+            write_float(data, p0.x, p0.y, p1.x, p1.y, width, roundness_thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);
             return;
@@ -627,15 +613,17 @@ void Renderer::DrawOrientedBox(float x0, float y0, float x1, float y1, float wid
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawEllipse(float x0, float y0, float x1, float y1, float width, draw_color color, sdf_operator op)
+void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op)
 {
-    if (x0 == x1 && y1 == y0)
+    if (vec2_similar(p0, p1, FLT_EPSILON))
         return;
 
     if (width <= 0.f)
-        DrawOrientedBox(x0, y0, x1, y1, 0.f, 0.f, color, op);
+        PrivateDrawOrientedBox(p0, p1, 0.f, 0.f, -1.f, color, op);
     else
     {
+        bool filled = thickness < 0.f;
+        thickness = float_max(thickness * .5f, 0.f);
         draw_command* cmd = m_Commands.NewElement();
         if (cmd != nullptr)
         {
@@ -643,15 +631,20 @@ void Renderer::DrawEllipse(float x0, float y0, float x1, float y1, float width, 
             cmd->color = color;
             cmd->data_index = m_DrawData.GetNumElements();
             cmd->op = op;
-            cmd->type = primitive_ellipse;
+            cmd->type = pack_type(primitive_ellipse, filled);
 
-            float* data = m_DrawData.NewMultiple(5);
+            float* data = m_DrawData.NewMultiple(filled ? 5 : 6);
             quantized_aabb* aabox = m_CommandsAABB.NewElement();
             if (data != nullptr && aabox != nullptr)
             {
-                canvas_to_screen(m_CanvasScale, x0, y0, x1, y1, width);
-                aabb bb = aabb_from_rounded_obb((vec2){x0, y0}, (vec2){x1, y1}, width, m_AAWidth + m_SmoothValue);
-                write_float(data,  x0, y0, x1, y1, width);
+                canvas_to_screen(m_CanvasScale, p0.x, p0.y, p1.x, p1.y, width, thickness);
+                aabb bb = aabb_from_rounded_obb(p0, p1, width, m_AAWidth + m_SmoothValue + thickness);
+
+                if (filled)
+                    write_float(data, p0.x, p0.y, p1.x, p1.y, width);
+                else
+                    write_float(data, p0.x, p0.y, p1.x, p1.y, width, thickness);
+
                 write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
                 merge_aabb(m_CombinationAABB, aabox);
                 return;
@@ -660,6 +653,46 @@ void Renderer::DrawEllipse(float x0, float y0, float x1, float y1, float width, 
         }
         log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op)
+{
+    // exclude invalid triangle
+    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
+        return;
+
+    thickness *= .5f;
+    bool filled = thickness < 0.f;
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = pack_type(primitive_triangle, filled);
+
+        float* data = m_DrawData.NewMultiple(7);
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            canvas_to_screen(m_CanvasScale, p0, p1, p2);
+            
+            float roundness_thickness = filled ? roundness : thickness;
+            roundness_thickness *= m_CanvasScale;
+
+            aabb bb = aabb_from_triangle(p0, p1, p2);
+            aabb_grow(&bb, vec2_splat(roundness_thickness + m_AAWidth + m_SmoothValue));
+            write_float(data,  p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, roundness_thickness);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
+            return;
+        }
+        m_Commands.RemoveLast();
+    }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -732,74 +765,5 @@ void Renderer::DrawText(float x, float y, const char* text, draw_color color)
         DrawChar(x, y, *c, color);
         x += font_spacing;
     }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op)
-{
-    // exclude invalid triangle
-    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
-        return;
-
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op;
-        cmd->type = primitive_triangle_filled;
-
-        float* data = m_DrawData.NewMultiple(7);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
-        if (data != nullptr && aabox != nullptr)
-        {
-            canvas_to_screen(m_CanvasScale, p0, p1, p2);
-            roundness *= m_CanvasScale;
-
-            aabb bb = aabb_from_triangle(p0, p1, p2);
-            aabb_grow(&bb, vec2_splat(roundness + m_AAWidth + m_SmoothValue));
-            write_float(data,  p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, roundness);
-            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
-            return;
-        }
-        m_Commands.RemoveLast();
-    }
-    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float width, draw_color color, sdf_operator op)
-{
-    // exclude invalid triangle
-    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
-        return;
-
-    draw_command* cmd = m_Commands.NewElement();
-    if (cmd != nullptr)
-    {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
-        cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op;
-        cmd->type = primitive_triangle;
-
-        float* data = m_DrawData.NewMultiple(7);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
-        if (data != nullptr && aabox != nullptr)
-        {
-            canvas_to_screen(m_CanvasScale, p0, p1, p2);
-            float half_width = width * m_CanvasScale * .5f;
-            aabb bb = aabb_from_triangle(p0, p1, p2);
-            aabb_grow(&bb, vec2_splat(half_width + m_AAWidth + m_SmoothValue));
-            write_float(data,  p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, half_width);
-            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
-            return;
-        }
-        m_Commands.RemoveLast();
-    }
-    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 

@@ -8,7 +8,7 @@ int Primitive::m_SDFOperationComboBox = 0;
 
 //----------------------------------------------------------------------------------------------------------------------------
 Primitive::Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float width)
-    : m_Width(width), m_Roundness(roundness), m_Thickness(0.f), m_Type(type), m_Operator(op), m_Color(color)
+    : m_Width(width), m_Roundness(roundness), m_Thickness(0.f), m_Type(type), m_Filled(true), m_Operator(op), m_Color(color)
 {
 }
 
@@ -34,20 +34,28 @@ void Primitive::Draw(Renderer& renderer, float roundness, draw_color color, sdf_
 {
     switch(m_Type)
     {
-    case command_type::primitive_triangle_filled: 
-        renderer.DrawTriangleFilled(m_Points[0], m_Points[1], m_Points[2], roundness, color, op);
+    case command_type::primitive_triangle:
+        if (m_Filled) 
+            renderer.DrawTriangleFilled(m_Points[0], m_Points[1], m_Points[2], roundness, color, op);
+        else
+            renderer.DrawTriangle(m_Points[0], m_Points[1], m_Points[2], m_Thickness, color, op);
         break;
 
-    case command_type::primitive_circle_filled:
-        renderer.DrawCircleFilled(m_Points[0], m_Roundness, color, op);
+    case command_type::primitive_disc:
+        if (m_Filled)
+            renderer.DrawCircleFilled(m_Points[0], m_Roundness, color, op);
+        else
+            renderer.DrawCircle(m_Points[0], m_Roundness, m_Thickness, color, op);
         break;
 
     case command_type::primitive_ellipse:
-        renderer.DrawEllipse(m_Points[0], m_Points[1], m_Width, color, op);
+        if (m_Filled)
+            renderer.DrawEllipseFilled(m_Points[0], m_Points[1], m_Width, color, op);
         break;
 
     case command_type::primitive_oriented_box:
-        renderer.DrawOrientedBox(m_Points[0], m_Points[1], m_Width, roundness, color, op);
+        if (m_Filled)
+            renderer.DrawOrientedBoxFilled(m_Points[0], m_Points[1], m_Width, roundness, color, op);
         break;
 
     default: 
@@ -62,12 +70,12 @@ bool Primitive::TestMouseCursor(vec2 mouse_position, bool test_vertices)
 
     switch(m_Type)
     {
-    case command_type::primitive_triangle_filled: 
+    case command_type::primitive_triangle: 
         {
             result = point_in_triangle(m_Points[0], m_Points[1], m_Points[2], mouse_position);
             break;
         }
-    case command_type::primitive_circle_filled:
+    case command_type::primitive_disc:
         {
             result = point_in_disc(m_Points[0], m_Roundness, mouse_position);
             break;
@@ -126,7 +134,7 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
     mu_label(gui_context,"type");
     switch(m_Type)
     {
-    case command_type::primitive_circle_filled : 
+    case command_type::primitive_disc : 
         {
             mu_text(gui_context, "disc");
             mu_label(gui_context, "radius");
@@ -140,7 +148,7 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
             res |= mu_slider_ex(gui_context, &m_Width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
             break;
         }
-    case command_type::primitive_triangle_filled : 
+    case command_type::primitive_triangle : 
         {
             mu_text(gui_context, "triangle");
             mu_label(gui_context, "roundness");
@@ -178,20 +186,3 @@ vec2 Primitive::ComputerCenter() const
 
     return vec2_scale(center, 1.f / float(GetNumPoints()));
 }
-
-//----------------------------------------------------------------------------------------------------------------------------
-void Primitive::DumpInfo() const
-{
-    switch(m_Type)
-    {
-    case command_type::primitive_circle_filled : log_info("disc");break;
-    case command_type::primitive_ellipse : log_info("ellipse");break;
-    case command_type::primitive_triangle_filled : log_info("triangle"); break;
-    case command_type::primitive_oriented_box : log_info("box"); break;
-    default: log_info("unknown"); break;
-    }
-    const char* op_names[op_last] = {"add", "blend", "sub", "overlap"};
-    log_info("operation : %s", op_names[m_Operator]);
-}
-
-
