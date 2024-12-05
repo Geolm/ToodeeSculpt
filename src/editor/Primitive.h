@@ -21,7 +21,7 @@ public:
     Primitive() {SetInvalid();}
     Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float radius);
     
-    void DrawGizmo(Renderer& renderer);
+    void DrawGizmo(Renderer& renderer, draw_color color);
     void Draw(Renderer& renderer, float alpha);
     void Draw(Renderer& renderer, float roundness, draw_color color, sdf_operator op);
     bool TestMouseCursor(vec2 mouse_position, bool test_vertices);

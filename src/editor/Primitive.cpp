@@ -13,9 +13,9 @@ Primitive::Primitive(command_type type, sdf_operator op, primitive_color color, 
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Primitive::DrawGizmo(Renderer& renderer)
+void Primitive::DrawGizmo(Renderer& renderer, draw_color color)
 {
-    Draw(renderer, 0.f, draw_color(na16_orange, 128), op_add);
+    Draw(renderer, 0.f, color, op_add);
 
     for(uint32_t i=0; i<GetNumPoints(); ++i)
         renderer.DrawCircleFilled(m_Points[i], point_radius, draw_color(na16_black, 128));

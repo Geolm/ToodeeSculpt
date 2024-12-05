@@ -113,7 +113,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         
         if (GetState() == state::IDLE)
         {
-            bool new_selection = SelectPrimitive(mods&GLFW_MOD_SHIFT);
+            bool new_selection = SelectPrimitive(mods&GLFW_MOD_CONTROL);
 
             // clicking on already selected primitive to move/duplicate
             if (!new_selection && GetState() == state::IDLE && SelectedPrimitiveValid() && cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->TestMouseCursor(m_MousePosition, false))
@@ -299,21 +299,21 @@ void PrimitivesStack::Draw(Renderer& renderer)
             Primitive *primitive = cc_get(&m_Primitives, i);
             if (primitive->TestMouseCursor(m_MousePosition, true))
             {
-                primitive->DrawGizmo(renderer);
+                primitive->DrawGizmo(renderer, draw_color(na16_orange, 128));
                 if (i == m_SelectedPrimitiveIndex)
                     MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
         if (SelectedPrimitiveValid())
-            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer);
+            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer, draw_color(na16_blue, 128));
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
         {
             Primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            primitive->DrawGizmo(renderer);
+            primitive->DrawGizmo(renderer, draw_color(na16_orange, 128));
 
             if (m_DebugInfo)
                 renderer.DrawText(primitive->ComputerCenter(), format("%d", m_SelectedPrimitiveIndex), draw_color(na16_black));
