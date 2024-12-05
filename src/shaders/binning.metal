@@ -58,6 +58,15 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float width = data[4];
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[5]));
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
+
+                if (!filled)
+                {
+                    bool corners_inside = point_in_ellipse(p0, p1, width, tile_rounded.min);
+                    corners_inside &= point_in_ellipse(p0, p1, width, tile_rounded.max);
+                    corners_inside &= point_in_ellipse(p0, p1, width, float2(tile_rounded.max.x, tile_rounded.min.y));
+                    corners_inside &= point_in_ellipse(p0, p1, width, float2(tile_rounded.min.x, tile_rounded.max.y));
+                    to_be_added &= !corners_inside;
+                }
                 break;
             }
             case primitive_disc :
@@ -88,10 +97,10 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
 
                 if (!filled)
                 {
-                    bool corners_inside = test_point_triangle(p0, p1, p2, tile_rounded.min);
-                    corners_inside &= test_point_triangle(p0, p1, p2, tile_rounded.max);
-                    corners_inside &= test_point_triangle(p0, p1, p2, float2(tile_rounded.max.x, tile_rounded.min.y));
-                    corners_inside &= test_point_triangle(p0, p1, p2, float2(tile_rounded.min.x, tile_rounded.max.y));
+                    bool corners_inside = point_in_triangle(p0, p1, p2, tile_rounded.min);
+                    corners_inside &= point_in_triangle(p0, p1, p2, tile_rounded.max);
+                    corners_inside &= point_in_triangle(p0, p1, p2, float2(tile_rounded.max.x, tile_rounded.min.y));
+                    corners_inside &= point_in_triangle(p0, p1, p2, float2(tile_rounded.min.x, tile_rounded.max.y));
                     to_be_added &= !corners_inside;
                 }
                 break;

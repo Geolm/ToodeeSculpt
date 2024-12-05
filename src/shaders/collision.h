@@ -158,7 +158,7 @@ static inline float edge_sign(float2 p, float2 e0, float2 e1)
 }
 
 //-----------------------------------------------------------------------------
-bool test_point_triangle(float2 p0, float2 p1, float2 p2, float2 point)
+bool point_in_triangle(float2 p0, float2 p1, float2 p2, float2 point)
 {
     float d1, d2, d3;
     bool has_neg, has_pos;
@@ -171,4 +171,24 @@ bool test_point_triangle(float2 p0, float2 p1, float2 p2, float2 point)
     has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
     return !(has_neg && has_pos);
+}
+
+//-----------------------------------------------------------------------------
+bool point_in_ellipse(float2 p0, float2 p1, float width, float2 point)
+{
+    float2 center = (p0 + p1) * .5f;
+    float2 axis_j = (p1 - center);
+    float half_height = length(axis_j);
+    axis_j = normalize(axis_j);
+    float2 axis_i = skew(axis_j);
+    float half_width = width * .5f;
+
+    // transform point in ellipse space
+    point = point - center;
+    float2 point_ellipse_space = float2(abs(dot(axis_i, point)), abs(dot(axis_j, point)));
+
+    float distance =  (point_ellipse_space.x * point_ellipse_space.x) / (half_width * half_width) +
+                      (point_ellipse_space.y * point_ellipse_space.y) / (half_height * half_height);
+
+    return (distance <= 1.f);
 }
