@@ -17,12 +17,12 @@ bool bin2h(const char* filename, const char* variable, const void* buffer, size_
 
     while (index<length-1)
     {
-        fprintf(f, "0x%x, ", input[index++]);
+        fprintf(f, "0x%02X, ", input[index++]);
         if (index%32 == 0)
             fprintf(f, "\n    ");
     }
 
-    fprintf(f, "0x%x\n};\n#endif\n", input[index]);
+    fprintf(f, "0x%02X\n};\n#endif\n", input[index]);
     fclose(f);
     return true;
 }
@@ -42,12 +42,12 @@ bool uint2h(const char* filename, const char* variable, const uint32_t* buffer, 
     
     while (index<length-1)
     {
-        fprintf(f, "0x%x, ", buffer[index++]);
+        fprintf(f, "0x%08X, ", buffer[index++]);
         if (index%8 == 0)
             fprintf(f, "\n    ");
     }
 
-    fprintf(f, "0x%x\n};\n#endif\n", buffer[index]);
+    fprintf(f, "0x%08X\n};\n#endif\n", buffer[index]);
     fclose(f);
     return true;
 }
