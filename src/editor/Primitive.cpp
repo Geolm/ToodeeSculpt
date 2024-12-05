@@ -51,11 +51,15 @@ void Primitive::Draw(Renderer& renderer, float roundness, draw_color color, sdf_
     case command_type::primitive_ellipse:
         if (m_Filled)
             renderer.DrawEllipseFilled(m_Points[0], m_Points[1], m_Width, color, op);
+        else
+            renderer.DrawEllipse(m_Points[0], m_Points[1], m_Width, m_Thickness, color, op);
         break;
 
     case command_type::primitive_oriented_box:
         if (m_Filled)
             renderer.DrawOrientedBoxFilled(m_Points[0], m_Points[1], m_Width, roundness, color, op);
+        else
+            renderer.DrawOrientedBox(m_Points[0], m_Points[1], m_Width, m_Thickness, color, op);
         break;
 
     default: 

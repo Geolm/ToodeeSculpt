@@ -56,7 +56,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
-                aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border);
+                aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[5]));
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
                 break;
             }

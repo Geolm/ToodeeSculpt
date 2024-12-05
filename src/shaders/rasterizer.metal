@@ -100,7 +100,10 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 {
                     float2 p0 = float2(data[0], data[1]);
                     float2 p1 = float2(data[2], data[3]);
-                    distance = sd_oriented_box(in.pos.xy, p0, p1, data[4]) - data[5];
+                    distance = sd_oriented_box(in.pos.xy, p0, p1, data[4]);
+                    if (!filled)
+                        distance = abs(distance);
+                    distance -= data[5];
                     break;
                 }
                 case primitive_ellipse :
