@@ -244,7 +244,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
         {
             mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
             mu_text(gui_context, m_PopupMessage);
-            if (mu_button(gui_context, "ok"))
+            if (mu_button(gui_context, "ok")&MU_RES_SUBMIT)
                 m_PopupOpen = false;
 
             mu_end_window(gui_context);

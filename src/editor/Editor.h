@@ -60,8 +60,8 @@ private:
     // load/save
     const char* m_pFolderPath;
     static constexpr const uint32_t TDS_FOURCC = 0x32534446;    // 2SDF
-    static constexpr const uint16_t TDS_MAJOR = 0;
-    static constexpr const uint16_t TDS_MINOR = 1;
+    static constexpr const uint16_t TDS_MAJOR = 1;
+    static constexpr const uint16_t TDS_MINOR = 0;
     static constexpr const long TDS_FILE_MAXSIZE = (1<<16);
 
     // popup
