@@ -187,8 +187,63 @@ bool point_in_ellipse(float2 p0, float2 p1, float width, float2 point)
     point = point - center;
     float2 point_ellipse_space = float2(abs(dot(axis_i, point)), abs(dot(axis_j, point)));
 
-    float distance =  (point_ellipse_space.x * point_ellipse_space.x) / (half_width * half_width) +
-                      (point_ellipse_space.y * point_ellipse_space.y) / (half_height * half_height);
+    float distance =  square(point_ellipse_space.x) / square(half_width) + square(point_ellipse_space.y) / square(half_height);
 
     return (distance <= 1.f);
+}
+
+//-----------------------------------------------------------------------------
+bool aabb_in_ellipse(float2 p0, float2 p1, float width, aabb box)
+{
+    float2 aabb_vertices[4]; 
+    aabb_vertices[0] = box.min;
+    aabb_vertices[1] = box.max;
+    aabb_vertices[2] = float2(box.min.x, box.max.y);
+    aabb_vertices[3] = float2(box.max.x, box.min.y);
+
+    float2 center = (p0 + p1) * .5f;
+    float2 axis_j = (p1 - center);
+    float half_height = length(axis_j);
+    axis_j = normalize(axis_j);
+    float2 axis_i = skew(axis_j);
+    float half_width = width * .5f;
+
+    // transform each vertex in ellipse space and test all are in the ellipse
+    for(uint32_t i=0; i<4; ++i)
+    {
+        float2 box_vertex = aabb_vertices[i] - center;
+        float2 vertex_ellipse_space = float2(abs(dot(axis_i, box_vertex)), abs(dot(axis_j, box_vertex)));
+        float distance =  square(vertex_ellipse_space.x) / square(half_width) + square(vertex_ellipse_space.y) / square(half_height);
+        if (distance>1.f)
+            return false;
+    }
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+bool aabb_in_triangle(float2 p0, float2 p1, float2 p2, aabb box)
+{
+    float2 aabb_vertices[4]; 
+    aabb_vertices[0] = box.min;
+    aabb_vertices[1] = box.max;
+    aabb_vertices[2] = float2(box.min.x, box.max.y);
+    aabb_vertices[3] = float2(box.max.x, box.min.y);
+
+    float3 edge0 = edge_init(p0, p1);
+    float3 edge1 = edge_init(p1, p2);
+    float3 edge2 = edge_init(p2, p0);
+
+    for(uint32_t i=0; i<4; ++i)
+    {
+        float d0 = edge_distance(edge0, aabb_vertices[i]);
+        float d1 = edge_distance(edge1, aabb_vertices[i]);
+        float d2 = edge_distance(edge2, aabb_vertices[i]);
+
+        bool has_neg = (d1 < 0) || (d2 < 0) || (d0 < 0);
+        bool has_pos = (d1 > 0) || (d2 > 0) || (d0 > 0);
+
+        if (has_neg&&has_pos)
+            return false;
+    }
+    return true;
 }

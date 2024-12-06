@@ -71,8 +71,14 @@ void Editor::OnMouseButton(int button, int action, int mods)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Draw(Renderer& renderer)
 {
-    renderer.DrawBox(m_ExternalZone, draw_color(0, 0, 0, 0xff));
-    renderer.DrawBox(m_Zone, draw_color(0xffffffff));
+    if (!m_ShowDebug)
+    {
+        renderer.DrawBox(m_ExternalZone, draw_color(0, 0, 0, 0xff));
+        renderer.DrawBox(m_Zone, draw_color(0xffffffff));
+        renderer.SetDebugOutput(false);
+    }
+    else
+        renderer.SetDebugOutput(true);
 
     if (m_ShowGrid)
     {

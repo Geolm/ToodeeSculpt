@@ -59,14 +59,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[5]));
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
 
-                if (!filled)
-                {
-                    bool corners_inside = point_in_ellipse(p0, p1, width, tile_rounded.min);
-                    corners_inside &= point_in_ellipse(p0, p1, width, tile_rounded.max);
-                    corners_inside &= point_in_ellipse(p0, p1, width, float2(tile_rounded.max.x, tile_rounded.min.y));
-                    corners_inside &= point_in_ellipse(p0, p1, width, float2(tile_rounded.min.x, tile_rounded.max.y));
-                    to_be_added &= !corners_inside;
-                }
+                if (to_be_added && !filled && aabb_in_ellipse(p0, p1, width, tile_rounded))
+                    to_be_added = false;
                 break;
             }
             case primitive_disc :
@@ -95,14 +89,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6] + smooth_border);
                 to_be_added = intersection_aabb_triangle(tile_rounded, p0, p1, p2);
 
-                if (!filled)
-                {
-                    bool corners_inside = point_in_triangle(p0, p1, p2, tile_rounded.min);
-                    corners_inside &= point_in_triangle(p0, p1, p2, tile_rounded.max);
-                    corners_inside &= point_in_triangle(p0, p1, p2, float2(tile_rounded.max.x, tile_rounded.min.y));
-                    corners_inside &= point_in_triangle(p0, p1, p2, float2(tile_rounded.min.x, tile_rounded.max.y));
-                    to_be_added &= !corners_inside;
-                }
+                if (to_be_added && !filled && aabb_in_triangle(p0, p1, p2, tile_rounded))
+                    to_be_added = false;
+
                 break;
             }
             case combination_begin:
@@ -119,6 +108,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
             }
             case primitive_aabox :
             case primitive_char : to_be_added = true; break;
+            default : to_be_added = false; break;
         }
 
         if (to_be_added)

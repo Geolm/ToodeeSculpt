@@ -25,6 +25,7 @@ public:
 
     inline void SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
     inline void ResetCanvas() {m_CanvasScale = 1.f;}
+    inline void SetDebugOutput(bool b) {m_DebugOutput = b;}
     void SetCanvas(float width, float height);
 
     void BeginCombination(float smooth_value);
@@ -101,6 +102,7 @@ private:
     float m_FontScale {1.f};
     float m_CanvasScale {1.f};
     float m_SmoothValue {0.f};
+    bool m_DebugOutput {false};
     quantized_aabb* m_CombinationAABB {nullptr};
 
     // stats

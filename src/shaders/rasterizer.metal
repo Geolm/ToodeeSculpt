@@ -203,7 +203,12 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
     }
 
     if (all(output == BLACK_COLOR))
-        discard_fragment();
+    {
+        if (input.debug_output)
+            return half4(0.f, 0.f, 1.0f, 1.0f);
+        else
+            discard_fragment();
+    }
 
     return output;
 }
