@@ -39,6 +39,7 @@ public:
     inline void DrawEllipseFilled(vec2 p0, vec2 p1, float width, draw_color color, sdf_operator op = op_union);
     inline void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
     inline void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
+    inline void DrawPieFilled(vec2 center, vec2 point, float aperture, draw_color color, sdf_operator op = op_union);
     
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
@@ -51,6 +52,7 @@ private:
     void PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op);
+    void PrivateDrawPie(vec2 center, vec2 point, float aperture, float thickness, draw_color color, sdf_operator op);
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
@@ -168,3 +170,7 @@ inline void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundn
     PrivateDrawTriangle(p0, p1, p2, roundness, -1.f, color, op);
 }
 
+inline void Renderer::DrawPieFilled(vec2 center, vec2 point, float aperture, draw_color color, sdf_operator op)
+{
+    PrivateDrawPie(center, point, aperture, -1.f, color, op);
+}

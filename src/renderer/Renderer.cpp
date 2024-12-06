@@ -20,6 +20,8 @@
 #define SHADER_PATH "/Users/geolm/Code/Geolm/ToodeeSculpt/src/shaders/"
 #define UNUSED_VARIABLE(a) (void)(a)
 
+const float small_float = 0.001f;
+
 template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 template<class T> T min(T a, T b) {return (a<b) ? a : b;}
 template<class T> T max(T a, T b) {return (a>b) ? a : b;}
@@ -581,7 +583,7 @@ void Renderer::PrivateDrawDisc(vec2 center, float radius, float thickness, draw_
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, draw_color color, sdf_operator op)
 {
-    if (vec2_similar(p0, p1, FLT_EPSILON))
+    if (vec2_similar(p0, p1, small_float))
         return;
 
     thickness *= .5f;
@@ -616,7 +618,7 @@ void Renderer::PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float round
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op)
 {
-    if (vec2_similar(p0, p1, FLT_EPSILON))
+    if (vec2_similar(p0, p1, small_float))
         return;
 
     if (width <= 0.f)
@@ -660,7 +662,7 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
 void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op)
 {
     // exclude invalid triangle
-    if (vec2_similar(p0, p1, 0.001f) || vec2_similar(p2, p1, 0.001f) || vec2_similar(p0, p2, 0.001f))
+    if (vec2_similar(p0, p1, small_float) || vec2_similar(p2, p1, small_float) || vec2_similar(p0, p2, small_float))
         return;
 
     thickness *= .5f;
@@ -686,7 +688,53 @@ void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, f
 
             aabb bb = aabb_from_triangle(p0, p1, p2);
             aabb_grow(&bb, vec2_splat(roundness_thickness + m_AAWidth + m_SmoothValue));
-            write_float(data,  p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, roundness_thickness);
+            write_float(data, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, roundness_thickness);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
+            return;
+        }
+        m_Commands.RemoveLast();
+    }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thickness, draw_color color, sdf_operator op)
+{
+    if (vec2_similar(center, point, small_float))
+        return;
+    
+    bool filled = thickness < 0.f;
+    aperture = float_clamp(aperture, 0.f, VEC2_PI);
+    thickness = float_max(thickness * .5f, 0.f);
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = pack_type(primitive_pie, filled);
+
+        float* data = m_DrawData.NewMultiple(filled ? 7 : 8);
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            canvas_to_screen(m_CanvasScale, center, point);
+            canvas_to_screen(m_CanvasScale, thickness);
+
+            vec2 direction = point - center;
+            float radius = vec2_normalize(&direction);
+            
+            aabb bb = aabb_from_circle(center, radius);
+            aabb_grow(&bb, vec2_splat(thickness + m_AAWidth + m_SmoothValue));
+
+            if (filled)
+                write_float(data, center.x, center.y, direction.x, direction.y, radius, sinf(aperture), cosf(aperture));
+            else
+                write_float(data, center.x, center.y, direction.x, direction.y, radius, sinf(aperture), cosf(aperture), thickness);
+                
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);
             return;

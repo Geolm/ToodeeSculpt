@@ -82,3 +82,14 @@ float sd_oriented_ellipse(float2 position, float2 a, float2 b, float width)
     float2 position_boxspace = float2x2(axis.x,-axis.y, axis.y, axis.x)*position_translated;
     return sd_ellipse(position_boxspace, float2(height * .5f, width * .5f));
 }
+
+//-----------------------------------------------------------------------------
+float sd_oriented_pie(float2 position, float2 center, float2 direction, float2 aperture, float radius)
+{
+    position -= center;
+    position = float2x2(direction.x,-direction.y, direction.y, direction.x) * position;
+    position.x = abs(position.x);
+    float l = length(position) - radius;
+	float m = length(position - aperture*clamp(dot(position,aperture),0.f,radius));
+    return max(l,m*sign(aperture.y*position.x - aperture.x*position.y));
+}
