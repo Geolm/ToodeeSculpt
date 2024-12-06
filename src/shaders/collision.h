@@ -1,3 +1,7 @@
+// ---------------------------------------------------------------------------------------------------------------------------
+// Struct & Helpers 
+// ---------------------------------------------------------------------------------------------------------------------------
+
 struct aabb
 {
     float2 min;
@@ -12,6 +16,59 @@ aabb aabb_grow(aabb box, float2 amount)
 float2 skew(float2 v) {return float2(-v.y, v.x);}
 
 template <class T> T square(T value) {return value*value;}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+float3 edge_init(float2 a, float2 b)
+{
+    float3 edge;
+    edge.x = a.y - b.y;
+    edge.y = b.x - a.x;
+    edge.z = a.x * b.y - a.y * b.x;
+    return edge;
+}
+
+float edge_distance(float3 e, float2 p)
+{
+    return e.x * p.x + e.y * p.y + e.z;
+}
+
+//-----------------------------------------------------------------------------
+float edge_sign(float2 p, float2 e0, float2 e1)
+{
+    return (p.x - e1.x) * (e0.y - e1.y) - (e0.x - e1.x) * (p.y - e1.y);
+}
+
+struct obb
+{
+    float2 axis_i;
+    float2 axis_j;
+    float2 center;
+    float2 extents;
+};
+
+//-----------------------------------------------------------------------------
+obb compute_obb(float2 p0, float2 p1, float width)
+{
+    obb result;
+    result.center = (p0 + p1) * .5f;
+    result.axis_j = (p1 - result.center);
+    result.extents.y = length(result.axis_j);
+    result.axis_j /= result.extents.y;
+    result.axis_i = skew(result.axis_j);
+    result.extents.x = width * .5f;
+    return result;
+}
+
+//-----------------------------------------------------------------------------
+float2 obb_transform(obb obox, float2 point)
+{
+    point = point - obox.center;
+    return float2(abs(dot(obox.axis_i, point)), abs(dot(obox.axis_j, point)));
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// Intersections functions
+// ---------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_aabb_disc(aabb box, float2 center, float sq_radius)
@@ -95,21 +152,6 @@ bool intersection_aabb_obb(aabb box, float2 p0, float2 p1, float width)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-float3 edge_init(float2 a, float2 b)
-{
-    float3 edge;
-    edge.x = a.y - b.y;
-    edge.y = b.x - a.x;
-    edge.z = a.x * b.y - a.y * b.x;
-    return edge;
-}
-
-float edge_distance(float3 e, float2 p)
-{
-    return e.x * p.x + e.y * p.y + e.z;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_aabb_triangle(aabb box, float2 p0, float2 p1, float2 p2)
 {
     // first axis : aabb's axis
@@ -152,12 +194,6 @@ bool intersection_aabb_triangle(aabb box, float2 p0, float2 p1, float2 p2)
 }
 
 //-----------------------------------------------------------------------------
-static inline float edge_sign(float2 p, float2 e0, float2 e1)
-{
-    return (p.x - e1.x) * (e0.y - e1.y) - (e0.x - e1.x) * (p.y - e1.y);
-}
-
-//-----------------------------------------------------------------------------
 bool point_in_triangle(float2 p0, float2 p1, float2 p2, float2 point)
 {
     float d1, d2, d3;
@@ -176,20 +212,17 @@ bool point_in_triangle(float2 p0, float2 p1, float2 p2, float2 point)
 //-----------------------------------------------------------------------------
 bool point_in_ellipse(float2 p0, float2 p1, float width, float2 point)
 {
-    float2 center = (p0 + p1) * .5f;
-    float2 axis_j = (p1 - center);
-    float half_height = length(axis_j);
-    axis_j = normalize(axis_j);
-    float2 axis_i = skew(axis_j);
-    float half_width = width * .5f;
-
-    // transform point in ellipse space
-    point = point - center;
-    float2 point_ellipse_space = float2(abs(dot(axis_i, point)), abs(dot(axis_j, point)));
-
-    float distance =  square(point_ellipse_space.x) / square(half_width) + square(point_ellipse_space.y) / square(half_height);
+    obb obox = compute_obb(p0, p1, width);
+    point = obb_transform(obox, point);
+    float distance =  square(point.x) / square(obox.extents.x) + square(point.y) / square(obox.extents.y);
 
     return (distance <= 1.f);
+}
+
+//-----------------------------------------------------------------------------
+bool intersection_ellipse_circle(float2 p0, float2 p1, float width, aabb box)
+{
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -201,19 +234,13 @@ bool aabb_in_ellipse(float2 p0, float2 p1, float width, aabb box)
     aabb_vertices[2] = float2(box.min.x, box.max.y);
     aabb_vertices[3] = float2(box.max.x, box.min.y);
 
-    float2 center = (p0 + p1) * .5f;
-    float2 axis_j = (p1 - center);
-    float half_height = length(axis_j);
-    axis_j = normalize(axis_j);
-    float2 axis_i = skew(axis_j);
-    float half_width = width * .5f;
+    obb obox = compute_obb(p0, p1, width);
 
     // transform each vertex in ellipse space and test all are in the ellipse
     for(uint32_t i=0; i<4; ++i)
     {
-        float2 box_vertex = aabb_vertices[i] - center;
-        float2 vertex_ellipse_space = float2(abs(dot(axis_i, box_vertex)), abs(dot(axis_j, box_vertex)));
-        float distance =  square(vertex_ellipse_space.x) / square(half_width) + square(vertex_ellipse_space.y) / square(half_height);
+        float2 vertex_ellipse_space = obb_transform(obox, aabb_vertices[i]);
+        float distance =  square(vertex_ellipse_space.x) / square(obox.extents.x) + square(vertex_ellipse_space.y) / square(obox.extents.y);
         if (distance>1.f)
             return false;
     }
