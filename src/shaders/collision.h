@@ -236,7 +236,7 @@ bool intersection_ellipse_circle(float2 p0, float2 p1, float width, float2 cente
 }
 
 //-----------------------------------------------------------------------------
-bool aabb_in_ellipse(float2 p0, float2 p1, float width, aabb box)
+bool is_aabb_inside_ellipse(float2 p0, float2 p1, float width, aabb box)
 {
     float2 aabb_vertices[4]; 
     aabb_vertices[0] = box.min;
@@ -247,7 +247,7 @@ bool aabb_in_ellipse(float2 p0, float2 p1, float width, aabb box)
     obb obox = compute_obb(p0, p1, width);
 
     // transform each vertex in ellipse space and test all are in the ellipse
-    for(uint32_t i=0; i<4; ++i)
+    for(int i=0; i<4; ++i)
     {
         float2 vertex_ellipse_space = obb_transform(obox, aabb_vertices[i]);
         float distance =  square(vertex_ellipse_space.x) / square(obox.extents.x) + square(vertex_ellipse_space.y) / square(obox.extents.y);
@@ -258,7 +258,7 @@ bool aabb_in_ellipse(float2 p0, float2 p1, float width, aabb box)
 }
 
 //-----------------------------------------------------------------------------
-bool aabb_in_triangle(float2 p0, float2 p1, float2 p2, aabb box)
+bool is_aabb_inside_triangle(float2 p0, float2 p1, float2 p2, aabb box)
 {
     float2 aabb_vertices[4]; 
     aabb_vertices[0] = box.min;
@@ -270,7 +270,7 @@ bool aabb_in_triangle(float2 p0, float2 p1, float2 p2, aabb box)
     float3 edge1 = edge_init(p1, p2);
     float3 edge2 = edge_init(p2, p0);
 
-    for(uint32_t i=0; i<4; ++i)
+    for(int i=0; i<4; ++i)
     {
         float d0 = edge_distance(edge0, aabb_vertices[i]);
         float d1 = edge_distance(edge1, aabb_vertices[i]);
@@ -280,6 +280,26 @@ bool aabb_in_triangle(float2 p0, float2 p1, float2 p2, aabb box)
         bool has_pos = (d1 > 0) || (d2 > 0) || (d0 > 0);
 
         if (has_neg&&has_pos)
+            return false;
+    }
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+bool is_aabb_inside_obb(float2 p0, float2 p1, float width, aabb box)
+{
+    float2 aabb_vertices[4]; 
+    aabb_vertices[0] = box.min;
+    aabb_vertices[1] = box.max;
+    aabb_vertices[2] = float2(box.min.x, box.max.y);
+    aabb_vertices[3] = float2(box.max.x, box.min.y);
+
+    obb obox = compute_obb(p0, p1, width);
+
+    for(int i=0; i<4; ++i)
+    {
+        float2 point = obb_transform(obox, aabb_vertices[i]);
+        if (any(abs(point) > obox.extents))
             return false;
     }
     return true;

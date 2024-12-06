@@ -50,6 +50,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float width = data[4];
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[5] + smooth_border);
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
+
+                if (to_be_added && !filled && is_aabb_inside_obb(p0, p1, width, tile_rounded))
+                    to_be_added = false;
                 break;
             }
             case primitive_ellipse :
@@ -60,7 +63,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[5]));
                 to_be_added = intersection_ellipse_circle(p0, p1, width, tile_center, length(aabb_get_extents(tile_rounded)));
 
-                if (to_be_added && !filled && aabb_in_ellipse(p0, p1, width, tile_rounded))
+                if (to_be_added && !filled && is_aabb_inside_ellipse(p0, p1, width, tile_rounded))
                     to_be_added = false;
                 break;
             }
@@ -90,7 +93,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6] + smooth_border);
                 to_be_added = intersection_aabb_triangle(tile_rounded, p0, p1, p2);
 
-                if (to_be_added && !filled && aabb_in_triangle(p0, p1, p2, tile_rounded))
+                if (to_be_added && !filled && is_aabb_inside_triangle(p0, p1, p2, tile_rounded))
                     to_be_added = false;
 
                 break;
