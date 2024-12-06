@@ -13,6 +13,11 @@ aabb aabb_grow(aabb box, float2 amount)
     return (aabb) {.min = box.min - amount, .max = box.max + amount};
 }
 
+float2 aabb_get_extents(aabb box)
+{
+    return box.max - box.min;
+}
+
 float2 skew(float2 v) {return float2(-v.y, v.x);}
 
 template <class T> T square(T value) {return value*value;}
@@ -220,9 +225,14 @@ bool point_in_ellipse(float2 p0, float2 p1, float width, float2 point)
 }
 
 //-----------------------------------------------------------------------------
-bool intersection_ellipse_circle(float2 p0, float2 p1, float width, aabb box)
+bool intersection_ellipse_circle(float2 p0, float2 p1, float width, float2 center, float radius)
 {
-    return false;
+    obb obox = compute_obb(p0, p1, width);
+    center = obb_transform(obox, center);
+    float distance =  square(center.x) / square(obox.extents.x) + square(center.y) / square(obox.extents.y);
+    radius /= min(obox.extents.x, obox.extents.y);
+
+    return (distance <= 1.f + radius);
 }
 
 //-----------------------------------------------------------------------------
