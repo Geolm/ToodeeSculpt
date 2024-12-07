@@ -68,6 +68,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 break;
             }
             case primitive_disc :
+            case primitive_pie :
             {
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];

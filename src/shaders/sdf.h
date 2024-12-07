@@ -86,6 +86,7 @@ float sd_oriented_ellipse(float2 position, float2 a, float2 b, float width)
 //-----------------------------------------------------------------------------
 float sd_oriented_pie(float2 position, float2 center, float2 direction, float2 aperture, float radius)
 {
+    direction = -skew(direction);
     position -= center;
     position = float2x2(direction.x,-direction.y, direction.y, direction.x) * position;
     position.x = abs(position.x);

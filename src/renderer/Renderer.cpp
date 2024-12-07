@@ -731,9 +731,9 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
             aabb_grow(&bb, vec2_splat(thickness + m_AAWidth + m_SmoothValue));
 
             if (filled)
-                write_float(data, center.x, center.y, direction.x, direction.y, radius, sinf(aperture), cosf(aperture));
+                write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture));
             else
-                write_float(data, center.x, center.y, direction.x, direction.y, radius, sinf(aperture), cosf(aperture), thickness);
+                write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture), thickness);
                 
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);
