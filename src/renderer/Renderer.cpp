@@ -703,6 +703,9 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
 {
     if (vec2_similar(center, point, small_float))
         return;
+
+    if (aperture <= small_float)
+        return;
     
     bool filled = thickness < 0.f;
     aperture = float_clamp(aperture, 0.f, VEC2_PI);

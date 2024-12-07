@@ -67,8 +67,27 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                     to_be_added = false;
                 break;
             }
-            case primitive_disc :
             case primitive_pie :
+            {
+                float2 center = float2(data[0], data[1]);
+                float radius = data[2];
+                float2 direction = float2(data[3], data[4]);
+                float2 aperture = float2(data[5], data[6]);
+
+                if (filled)
+                {
+                    radius += input.aa_width + smooth_border;
+                    to_be_added = intersection_aabb_pie(tile_aabb, center, direction, aperture, radius);
+                }
+                else
+                {
+                    float half_width = data[3] + input.aa_width + smooth_border;
+                    to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
+                }
+                break;
+            }
+
+            case primitive_disc :
             {
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];

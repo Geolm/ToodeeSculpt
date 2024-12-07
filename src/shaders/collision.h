@@ -198,6 +198,30 @@ bool intersection_aabb_triangle(aabb box, float2 p0, float2 p1, float2 p2)
     return true;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------------
+bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 aperture, float radius)
+{
+    if (!intersection_aabb_disc(box, center, square(radius)))
+        return false;
+
+    if (all(center>=box.min) && all(center<=box.max))
+        return true;
+
+    float2 aabb_vertices[4]; 
+    aabb_vertices[0] = box.min;
+    aabb_vertices[1] = box.max;
+    aabb_vertices[2] = float2(box.min.x, box.max.y);
+    aabb_vertices[3] = float2(box.max.x, box.min.y);
+
+    for(int i=0; i<4; ++i)
+    {
+        float2 center_vertex = normalize(aabb_vertices[i] - center);
+        if (dot(center_vertex, direction) > aperture.y)
+            return true;
+    }
+    return false;
+}
+
 //-----------------------------------------------------------------------------
 bool point_in_triangle(float2 p0, float2 p1, float2 p2, float2 point)
 {
