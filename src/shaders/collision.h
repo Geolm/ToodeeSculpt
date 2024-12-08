@@ -75,6 +75,34 @@ float2 obb_transform(obb obox, float2 point)
 // Intersections functions
 // ---------------------------------------------------------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// slab test
+bool intersection_aabb_ray(aabb box, float2 origin, float2 direction)
+{
+    float tmin = 0.f;
+    float tmax = 1e10f;
+    for (int i = 0; i < 2; i++)
+    {
+        float inv_dir = 1.f / direction[i];
+        float t1 = (box.min[i] - origin[i]) * inv_dir;
+        float t2 = (box.max[i] - origin[i]) * inv_dir;
+
+        if (t1 > t2)
+        {
+            float temp = t1;
+            t1 = t2;
+            t2 = temp;
+        }
+
+        tmin = max(tmin, t1);
+        tmax = min(tmax, t2);
+
+        if (tmin > tmax)
+            return false;
+    }
+    return true;
+}
+
 // ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_aabb_disc(aabb box, float2 center, float sq_radius)
 {
@@ -204,9 +232,6 @@ bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 ape
     if (!intersection_aabb_disc(box, center, square(radius)))
         return false;
 
-    if (all(center>=box.min) && all(center<=box.max))
-        return true;
-
     float2 aabb_vertices[4]; 
     aabb_vertices[0] = box.min;
     aabb_vertices[1] = box.max;
@@ -219,7 +244,8 @@ bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 ape
         if (dot(center_vertex, direction) > aperture.y)
             return true;
     }
-    return false;
+
+    return intersection_aabb_ray(box, center, direction);
 }
 
 //-----------------------------------------------------------------------------
