@@ -2,12 +2,13 @@
 #include "../system/palettes.h"
 #include "../system/point_in.h"
 #include "../system/microui.h"
+#include "color_box.h"
 #include "Primitive.h"
 
 int Primitive::m_SDFOperationComboBox = 0;
 
 //----------------------------------------------------------------------------------------------------------------------------
-Primitive::Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float width)
+Primitive::Primitive(command_type type, sdf_operator op, color4f color, float roundness, float width)
     : m_Width(width), m_Roundness(roundness), m_Thickness(0.f), m_Type(type), m_Filled(1), m_Operator(op), m_Color(color)
 {
 }
@@ -210,6 +211,16 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
     mu_label(gui_context, "operation");
     const char* op_names[op_last] = {"add", "blend", "sub", "overlap"};
     res |= mu_combo_box(gui_context, &m_SDFOperationComboBox, (int*)&m_Operator, op_last, op_names);
+
+    struct color_box color = 
+    {
+        .rgba_output = &m_Color,
+        .num_palette_entries = 0,
+        .palette_entries = NULL
+    };
+
+
+
     res |= mu_rgb_color(gui_context, &m_Color.red, &m_Color.green, &m_Color.blue);
 
     return res;

@@ -28,6 +28,7 @@ add_executable(ToodeeSculpt
 ./src/main.mm
 ./src/MetalLayerHelper.mm
 ./src/MouseCursors.cpp
+./src/editor/color_box.c
 ./src/editor/Editor.cpp
 ./src/editor/Primitive.cpp
 ./src/editor/PrimitivesStack.cpp

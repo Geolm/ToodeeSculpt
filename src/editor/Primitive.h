@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../system/vec2.h"
+#include "../system/color.h"
 #include "../shaders/common.h"
 #include <assert.h>
 
@@ -9,17 +10,12 @@ enum {PRIMITIVE_MAXPOINTS = 3};
 class Renderer;
 struct mu_Context;
 
-struct primitive_color
-{
-    float red, green, blue;
-};
-
 //----------------------------------------------------------------------------------------------------------------------------
 class Primitive
 {
 public:
     Primitive() {SetInvalid();}
-    Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float width);
+    Primitive(command_type type, sdf_operator op, color4f color, float roundness, float width);
     
     void DrawGizmo(Renderer& renderer, draw_color color);
     void Draw(Renderer& renderer, float alpha);
@@ -53,7 +49,7 @@ private:
     command_type m_Type;
     int m_Filled;
     sdf_operator m_Operator;
-    primitive_color m_Color;
+    color4f m_Color;
 
     static int m_SDFOperationComboBox;
 };

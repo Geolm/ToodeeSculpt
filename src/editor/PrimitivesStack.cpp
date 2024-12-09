@@ -191,7 +191,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     // primitive creation
     if (GetState() == state::CREATE_PRIMITIVE)
     {
-        Primitive new_primitive(m_PrimitiveType, op_union, (primitive_color) {.red = 0.8f, .green = 0.2f, .blue = 0.4f}, m_Roundness, m_Width);
+        Primitive new_primitive(m_PrimitiveType, op_union, (color4f) {.red = 0.8f, .green = 0.2f, .blue = 0.4f}, m_Roundness, m_Width);
 
         for(uint32_t i=0; i<Primitive::GetNumPoints(m_PrimitiveType); ++i)
             new_primitive.SetPoints(i, m_PrimitivePoints[i]);
@@ -355,7 +355,8 @@ void PrimitivesStack::DuplicateSelected()
 void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
 {
     int res = 0;
-    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 300, 400, 100), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+    int window_options = MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE;
+    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 300, 400, 100), window_options))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_label(gui_context,"smoothness");
@@ -365,9 +366,9 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
-    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 500, 400, 400), MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 400), window_options))
     {
-        if (SelectedPrimitiveValid() && mu_header_ex(gui_context, "selected primitive", MU_OPT_EXPANDED))
+        if (SelectedPrimitiveValid())
             res |= cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->PropertyGrid(gui_context);
 
         mu_end_window(gui_context);
