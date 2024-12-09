@@ -46,6 +46,7 @@ private:
         ADDING_POINTS,
         SET_WIDTH,
         SET_ROUNDNESS,
+        SET_ANGLE,
         CREATE_PRIMITIVE,
         MOVING_POINT,
         MOVING_PRIMITIVE
@@ -82,8 +83,10 @@ private:
     vec2 m_PrimitivePoints[PRIMITIVE_MAXPOINTS];
     vec2 m_Reference;
     vec2 m_StartingPoint;
+    vec2 m_Direction;
     float m_Width;
     float m_Roundness;
+    float m_Aperture;
     command_type m_PrimitiveType;
 
     // primitive selection

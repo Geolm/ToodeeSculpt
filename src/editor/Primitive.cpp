@@ -35,32 +35,46 @@ void Primitive::Draw(Renderer& renderer, float roundness, draw_color color, sdf_
     switch(m_Type)
     {
     case command_type::primitive_triangle:
+    {
         if (m_Filled) 
             renderer.DrawTriangleFilled(m_Points[0], m_Points[1], m_Points[2], roundness, color, op);
         else
             renderer.DrawTriangle(m_Points[0], m_Points[1], m_Points[2], m_Thickness, color, op);
         break;
+    }
 
     case command_type::primitive_disc:
+    {
         if (m_Filled)
             renderer.DrawCircleFilled(m_Points[0], m_Roundness, color, op);
         else
             renderer.DrawCircle(m_Points[0], m_Roundness, m_Thickness, color, op);
         break;
+    }
 
     case command_type::primitive_ellipse:
+    {
         if (m_Filled)
             renderer.DrawEllipseFilled(m_Points[0], m_Points[1], m_Width, color, op);
         else
             renderer.DrawEllipse(m_Points[0], m_Points[1], m_Width, m_Thickness, color, op);
         break;
+    }
 
     case command_type::primitive_oriented_box:
+    {
         if (m_Filled)
             renderer.DrawOrientedBoxFilled(m_Points[0], m_Points[1], m_Width, roundness, color, op);
         else
             renderer.DrawOrientedBox(m_Points[0], m_Points[1], m_Width, m_Thickness, color, op);
         break;
+    }
+
+    case command_type::primitive_pie:
+    {
+        if (m_Filled)
+            renderer.DrawPieFilled(m_Points[0], m_Points[1], m_Aperture, color, op);
+    }
 
     default: 
         break;
@@ -92,6 +106,11 @@ bool Primitive::TestMouseCursor(vec2 mouse_position, bool test_vertices)
     case command_type::primitive_oriented_box:
         {
             result = point_in_oriented_box(m_Points[0], m_Points[1], m_Width, mouse_position);
+            break;
+        }
+    case command_type::primitive_pie:
+        {
+            result = point_in_pie(m_Points[0], m_Points[1], m_Aperture, mouse_position);
             break;
         }
 
@@ -166,6 +185,13 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
             res |= mu_slider_ex(gui_context, &m_Width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
             mu_label(gui_context, "roundness");
             res |= mu_slider_ex(gui_context, &m_Roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
+            break;
+        }
+    case command_type::primitive_pie :
+        {
+            mu_text(gui_context, "pie");
+            mu_label(gui_context, "aperture");
+            res |= mu_slider_ex(gui_context, &m_Aperture, 0.f, VEC2_PI, 0.01f, "%3.2f", 0);
             break;
         }
 

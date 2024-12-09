@@ -19,7 +19,7 @@ class Primitive
 {
 public:
     Primitive() {SetInvalid();}
-    Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float radius);
+    Primitive(command_type type, sdf_operator op, primitive_color color, float roundness, float width);
     
     void DrawGizmo(Renderer& renderer, draw_color color);
     void Draw(Renderer& renderer, float alpha);
@@ -39,13 +39,15 @@ public:
     static inline uint32_t GetNumPoints(command_type type);
     uint32_t GetNumPoints() const {return GetNumPoints(m_Type);}
     vec2 ComputerCenter() const;
+    void SetAperture(float value) {m_Aperture = value;}
 
 public:
     static constexpr const float point_radius {6.f};
 
 private:
     vec2 m_Points[PRIMITIVE_MAXPOINTS];
-    float m_Width;
+    float m_Width; 
+    float m_Aperture;
     float m_Roundness;
     float m_Thickness;
     command_type m_Type;
@@ -63,8 +65,8 @@ inline uint32_t Primitive::GetNumPoints(command_type type)
     {
     case primitive_disc: return 1;
     case primitive_ellipse:
-    case primitive_oriented_box: return 2;
     case primitive_pie:
+    case primitive_oriented_box: return 2;
     case primitive_triangle: return 3;
     default: return 0;
     }

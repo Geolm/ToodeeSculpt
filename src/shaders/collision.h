@@ -244,7 +244,6 @@ bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 ape
         if (dot(center_vertex, direction) > aperture.y)
             return true;
     }
-
     return intersection_aabb_ray(box, center, direction);
 }
 

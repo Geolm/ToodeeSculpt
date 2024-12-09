@@ -10,7 +10,7 @@
 #include "../system/hash.h"
 #include "PrimitivesStack.h"
 
-const vec2 contextual_menu_size = {100.f, 140.f};
+const vec2 contextual_menu_size = {100.f, 180.f};
 
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
@@ -61,7 +61,12 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
     {
         m_Width = vec2_distance(pos, m_Reference) * 2.f;
     }
-    // moving point
+    else if (GetState() == state::SET_ANGLE)
+    {
+        vec2 to_mouse = m_MousePosition - m_PrimitivePoints[0];
+        vec2_normalize(&to_mouse);
+        m_Aperture = acosf(vec2_dot(m_Direction, to_mouse));
+    }
     else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
     {
         *m_pGrabbedPoint = m_MousePosition;
@@ -157,6 +162,12 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         {
             if (m_PrimitiveType == command_type::primitive_oriented_box || m_PrimitiveType == command_type::primitive_ellipse)
                 SetState(state::SET_WIDTH);
+            else if (m_PrimitiveType == command_type::primitive_pie)
+            {
+                m_Direction = m_PrimitivePoints[1] - m_PrimitivePoints[0];
+                vec2_normalize(&m_Direction);
+                SetState(state::SET_ANGLE);
+            }
             else
                 SetState(state::SET_ROUNDNESS);
         }
@@ -172,6 +183,10 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         SetState(state::CREATE_PRIMITIVE);
     }
+    else if (GetState() == state::SET_ANGLE && left_button_pressed)
+    {
+        SetState(state::CREATE_PRIMITIVE);
+    }
 
     // primitive creation
     if (GetState() == state::CREATE_PRIMITIVE)
@@ -180,6 +195,9 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 
         for(uint32_t i=0; i<Primitive::GetNumPoints(m_PrimitiveType); ++i)
             new_primitive.SetPoints(i, m_PrimitivePoints[i]);
+
+        if (m_PrimitiveType == command_type::primitive_pie)
+            new_primitive.SetAperture(m_Aperture);
 
         cc_push(&m_Primitives, new_primitive);
         SetState(state::IDLE);
@@ -247,17 +265,13 @@ void PrimitivesStack::Draw(Renderer& renderer)
             renderer.DrawCircleFilled(m_PrimitivePoints[i], Primitive::point_radius, draw_color(na16_red, 128));
 
         // preview primitive
+        if (m_CurrentPoint == 1)
+            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
+
         if (m_PrimitiveType == command_type::primitive_triangle) 
         {
-            if (m_CurrentPoint == 1)
-                renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
-            else if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
+            if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
                 renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
-        }
-        else if ((m_PrimitiveType == command_type::primitive_oriented_box || m_PrimitiveType == command_type::primitive_ellipse)
-                  && m_CurrentPoint == 1)
-        {
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
         }
         renderer.DrawCircleFilled(m_MousePosition, Primitive::point_radius, draw_color(na16_red, 128));
     }
@@ -290,6 +304,10 @@ void PrimitivesStack::Draw(Renderer& renderer)
 
         default:break;
         }
+    }
+    else if (GetState() == state::SET_ANGLE)
+    {
+        renderer.DrawPieFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, draw_color(na16_light_blue, 128));
     }
     else if (GetState() == state::IDLE)
     {
@@ -395,6 +413,13 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_PrimitiveType = command_type::primitive_triangle;
                 SetState(state::ADDING_POINTS);
             }
+
+            if (mu_button_ex(gui_context, "pie", 0, 0)&MU_RES_SUBMIT)
+            {
+                m_PrimitiveType = command_type::primitive_pie;
+                SetState(state::ADDING_POINTS);
+            }
+
             mu_end_window(gui_context);
         }
     }
@@ -525,6 +550,13 @@ void PrimitivesStack::SetState(enum state new_state)
     if (new_state == state::SET_WIDTH)
     {
         m_Width = 0.f;
+        m_Reference = m_MousePosition;
+        MouseCursors::GetInstance().Set(MouseCursors::HResize);
+    }
+
+    if (new_state == state::SET_ANGLE)
+    {
+        m_Aperture = 0.f;
         m_Reference = m_MousePosition;
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
