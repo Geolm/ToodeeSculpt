@@ -34,6 +34,7 @@ extern "C" {
 
 packed_color color4f_to_packed_color(color4f color);
 color4f hsv_to_color4f(hsv4f color);
+hsv4f color4f_to_hsv(color4f color);
 packed_color hsv_to_packed_color(hsv4f color);
 packed_color hueshift_ramp(const hueshift_ramp_desc* desc, float t, float alpha);
 packed_color palette_ramp(const packed_color* palette, uint32_t num_palette_entries, float t, uint8_t alpha);

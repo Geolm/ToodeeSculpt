@@ -45,6 +45,42 @@ packed_color hsv_to_packed_color(hsv4f color)
 }
 
 // ----------------------------------------------------------------------------
+hsv4f color4f_to_hsv(color4f color)
+{
+    float max = (color.red > color.green) ? (color.red > color.blue ? color.red : color.blue) : (color.green > color.blue ? color.green : color.blue);
+    float min = (color.red < color.green) ? (color.red < color.blue ? color.red : color.blue) : (color.green < color.blue ? color.green : color.blue);
+    float delta = max - min;
+
+    hsv4f result;
+    result.alpha = color.alpha;
+    result.value = max;
+
+    if (max == 0.f) 
+    {
+        result.saturation = 0.f;
+        result.hue = 0.f;
+    }
+    else
+    {
+        result.saturation = delta / max;
+
+        if (delta == 0.f) 
+            result.hue = 0.f;
+        else if (max == color.red) 
+            result.hue = (color.green - color.blue) / delta;
+        else if (max == color.green) 
+            result.hue = 2.0f + (color.blue - color.red) / delta;
+        else 
+            result.hue = 4.0f + (color.red - color.green) / delta;
+
+        result.hue /= 6.0f;
+        if (result.hue < 0.0f) 
+            result.hue += 1.0f;
+    }
+    return result;
+}
+
+// ----------------------------------------------------------------------------
 packed_color hueshift_ramp(const hueshift_ramp_desc* desc, float t, float alpha)
 {
     assert(desc->hue >= 0.f && desc->hue <= 360.f);
