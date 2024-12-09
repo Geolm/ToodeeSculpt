@@ -70,12 +70,16 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
             case primitive_pie :
             {
                 float2 center = float2(data[0], data[1]);
-                float radius = data[2];
+                float squared_radius = data[2] * data[2];
                 float2 direction = float2(data[3], data[4]);
                 float2 aperture = float2(data[5], data[6]);
 
                 aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[7]));
-                to_be_added = intersection_aabb_pie(tile_smooth, center, direction, aperture, radius);
+                to_be_added = intersection_aabb_pie(tile_smooth, center, direction, aperture, squared_radius);
+
+                if (to_be_added && !filled && is_aabb_inside_pie(center, direction, aperture, squared_radius, tile_smooth))
+                    to_be_added = false;
+
                 break;
             }
 

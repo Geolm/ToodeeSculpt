@@ -227,9 +227,9 @@ bool intersection_aabb_triangle(aabb box, float2 p0, float2 p1, float2 p2)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 aperture, float radius)
+bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 aperture, float squared_radius)
 {
-    if (!intersection_aabb_disc(box, center, square(radius)))
+    if (!intersection_aabb_disc(box, center, squared_radius))
         return false;
 
     float2 aabb_vertices[4]; 
@@ -271,6 +271,16 @@ bool point_in_ellipse(float2 p0, float2 p1, float width, float2 point)
     float distance =  square(point.x) / square(obox.extents.x) + square(point.y) / square(obox.extents.y);
 
     return (distance <= 1.f);
+}
+
+//-----------------------------------------------------------------------------
+bool point_in_pie(float2 center, float2 direction, float squared_radius, float cos_aperture, float2 point)
+{
+    if (distance_squared(center, point) > squared_radius)
+        return false;
+
+    float2 to_point = normalize(point - center);
+    return dot(to_point, direction) > cos_aperture;
 }
 
 //-----------------------------------------------------------------------------
@@ -349,6 +359,23 @@ bool is_aabb_inside_obb(float2 p0, float2 p1, float width, aabb box)
     {
         float2 point = obb_transform(obox, aabb_vertices[i]);
         if (any(abs(point) > obox.extents))
+            return false;
+    }
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+bool is_aabb_inside_pie(float2 center, float2 direction, float2 aperture, float squared_radius, aabb box)
+{
+    float2 aabb_vertices[4]; 
+    aabb_vertices[0] = box.min;
+    aabb_vertices[1] = box.max;
+    aabb_vertices[2] = float2(box.min.x, box.max.y);
+    aabb_vertices[3] = float2(box.max.x, box.min.y);
+
+    for(int i=0; i<4; ++i)
+    {
+        if (!point_in_pie(center, direction, squared_radius, aperture.y, aabb_vertices[i]))
             return false;
     }
     return true;
