@@ -621,7 +621,7 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
     if (vec2_similar(p0, p1, small_float))
         return;
 
-    if (width <= 0.f)
+    if (width <= small_float)
         PrivateDrawOrientedBox(p0, p1, 0.f, 0.f, -1.f, color, op);
     else
     {
