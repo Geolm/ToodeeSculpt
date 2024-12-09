@@ -289,10 +289,12 @@ bool intersection_ellipse_circle(float2 p0, float2 p1, float width, float2 cente
 {
     obb obox = compute_obb(p0, p1, width);
     center = obb_transform(obox, center);
-    float distance =  square(center.x) / square(obox.extents.x) + square(center.y) / square(obox.extents.y);
-    radius /= min(obox.extents.x, obox.extents.y);
+    
+    float2 transformed_center = center / obox.extents;
+    float scaled_radius = radius / min(obox.extents.x, obox.extents.y);
+    float squared_distance = dot(transformed_center, transformed_center);
 
-    return (distance <= 1.f + radius);
+    return (squared_distance <= square(1.f + scaled_radius));
 }
 
 //-----------------------------------------------------------------------------
