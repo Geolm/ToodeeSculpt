@@ -77,6 +77,9 @@ hsv4f color4f_to_hsv(color4f color)
         if (result.hue < 0.0f) 
             result.hue += 1.0f;
     }
+
+    result.hue *= 360.f;
+
     return result;
 }
 

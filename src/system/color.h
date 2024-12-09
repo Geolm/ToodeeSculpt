@@ -39,6 +39,10 @@ packed_color hsv_to_packed_color(hsv4f color);
 packed_color hueshift_ramp(const hueshift_ramp_desc* desc, float t, float alpha);
 packed_color palette_ramp(const packed_color* palette, uint32_t num_palette_entries, float t, uint8_t alpha);
 
+static inline uint8_t packed_color_get_green(packed_color color) {return (uint8_t)((color>>8)&0xff);}
+static inline uint8_t packed_color_get_red(packed_color color) {return (uint8_t)(color&0xff);}
+static inline uint8_t packed_color_get_blue(packed_color color) {return (uint8_t)((color>>16)&0xff);}
+
 #ifdef __cplusplus
 }
 #endif

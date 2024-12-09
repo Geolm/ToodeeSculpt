@@ -9,7 +9,6 @@ struct mu_Context;
 struct color_box
 {
     color4f* rgba_output;
-    color4f rgba;
     hsv4f hsv;
     packed_color* palette_entries;
     uint32_t num_palette_entries;

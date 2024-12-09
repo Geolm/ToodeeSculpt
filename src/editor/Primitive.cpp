@@ -219,9 +219,7 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
         .palette_entries = NULL
     };
 
-
-
-    res |= mu_rgb_color(gui_context, &m_Color.red, &m_Color.green, &m_Color.blue);
+    res |= color_property_grid(gui_context, &color);
 
     return res;
 }
