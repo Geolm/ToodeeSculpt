@@ -33,6 +33,7 @@ add_executable(ToodeeSculpt
 ./src/editor/PrimitivesStack.cpp
 ./src/renderer/Renderer.cpp
 ./src/renderer/shader_reader.c
+./src/system/color.c
 ./src/system/format.c
 ./src/system/hash.c
 ./src/system/log.c

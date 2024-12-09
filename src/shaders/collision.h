@@ -32,6 +32,7 @@ float3 edge_init(float2 a, float2 b)
     return edge;
 }
 
+//-----------------------------------------------------------------------------
 float edge_distance(float3 e, float2 p)
 {
     return e.x * p.x + e.y * p.y + e.z;

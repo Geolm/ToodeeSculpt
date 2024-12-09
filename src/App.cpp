@@ -7,7 +7,7 @@
 
 #include "system/random.h"
 #include "system/microui.h"
-#include "system/color_ramp.h"
+#include "system/color.h"
 #include "system/sokol_time.h"
 #include "system/palettes.h"
 #include "system/format.h"
