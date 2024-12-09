@@ -74,6 +74,8 @@ void Primitive::Draw(Renderer& renderer, float roundness, draw_color color, sdf_
     {
         if (m_Filled)
             renderer.DrawPieFilled(m_Points[0], m_Points[1], m_Aperture, color, op);
+        else
+            renderer.DrawPie(m_Points[0], m_Points[1], m_Aperture, m_Thickness, color, op);
     }
 
     default: 

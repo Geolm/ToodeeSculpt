@@ -39,6 +39,7 @@ public:
     inline void DrawEllipseFilled(vec2 p0, vec2 p1, float width, draw_color color, sdf_operator op = op_union);
     inline void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
     inline void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
+    inline void DrawPie(vec2 center, vec2 point, float aperture, float width, draw_color color, sdf_operator op = op_union);
     inline void DrawPieFilled(vec2 center, vec2 point, float aperture, draw_color color, sdf_operator op = op_union);
     
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
@@ -168,6 +169,11 @@ inline void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float thickness, d
 inline void Renderer::DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op)
 {
     PrivateDrawTriangle(p0, p1, p2, roundness, -1.f, color, op);
+}
+
+inline void Renderer::DrawPie(vec2 center, vec2 point, float aperture, float width, draw_color color, sdf_operator op)
+{
+    PrivateDrawPie(center, point, aperture, width, color, op);
 }
 
 inline void Renderer::DrawPieFilled(vec2 center, vec2 point, float aperture, draw_color color, sdf_operator op)
