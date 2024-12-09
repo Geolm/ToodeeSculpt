@@ -135,38 +135,6 @@ static inline aabb aabb_from_circle(vec2 center, float radius)
 }
 
 //-----------------------------------------------------------------------------
-static inline aabb aabb_from_sector(vec2 center, float radius, float orientation, float aperture)
-{
-    aabb box = {.min = center, .max = center};
-
-    aabb_encompass(&box, center);
-    aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation), radius)));
-
-    if (aperture>VEC2_PI_4)
-    {
-        aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation - VEC2_PI_4), radius)));
-        aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation + VEC2_PI_4), radius)));
-    }
-
-    if (aperture>VEC2_PI_2)
-    {
-        aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation - VEC2_PI_2), radius)));
-        aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation + VEC2_PI_2), radius)));
-    }
-
-    if (aperture>VEC2_PI * .75f)
-    {
-        aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation - VEC2_PI * .75f), radius)));
-        aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation + VEC2_PI * .75f), radius)));
-    }
-
-    aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation - aperture), radius)));
-    aabb_encompass(&box, vec2_add(center, vec2_scale(vec2_angle(orientation + aperture), radius)));
-    
-    return box;
-}
-
-//-----------------------------------------------------------------------------
 static inline aabb aabb_from_triangle(vec2 v0, vec2 v1, vec2 v2)
 {
     return (aabb)
