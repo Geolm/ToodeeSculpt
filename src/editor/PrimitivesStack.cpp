@@ -366,7 +366,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
-    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 400), window_options))
+    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 500), window_options))
     {
         if (SelectedPrimitiveValid())
             res |= cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->PropertyGrid(gui_context);
