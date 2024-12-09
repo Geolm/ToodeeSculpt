@@ -60,10 +60,10 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
-                aabb tile_rounded = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[5]));
-                to_be_added = intersection_ellipse_circle(p0, p1, width, tile_center, length(aabb_get_extents(tile_rounded)));
+                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[5]));
+                to_be_added = intersection_ellipse_circle(p0, p1, width, tile_center, length(aabb_get_extents(tile_smooth)));
 
-                if (to_be_added && !filled && is_aabb_inside_ellipse(p0, p1, width, tile_rounded))
+                if (to_be_added && !filled && is_aabb_inside_ellipse(p0, p1, width, tile_smooth))
                     to_be_added = false;
                 break;
             }
@@ -74,16 +74,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 direction = float2(data[3], data[4]);
                 float2 aperture = float2(data[5], data[6]);
 
-                if (filled)
-                {
-                    radius += input.aa_width + smooth_border;
-                    to_be_added = intersection_aabb_pie(tile_aabb, center, direction, aperture, radius);
-                }
-                else
-                {
-                    float half_width = data[3] + input.aa_width + smooth_border;
-                    to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
-                }
+                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[7]));
+                to_be_added = intersection_aabb_pie(tile_smooth, center, direction, aperture, radius);
                 break;
             }
 
