@@ -42,7 +42,6 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     m_ViewportHeight = (uint32_t) height;
     m_ViewportWidth = (uint32_t) width;
     m_LogSize = 1024;
-    m_pLogBuffer = (char*) malloc(m_LogSize);
 
     m_Renderer.Init(m_Device, m_ViewportWidth, m_ViewportHeight);
     InitGui();
@@ -306,6 +305,5 @@ void App::Terminate()
     delete m_pEditor;
     m_Renderer.Terminate();
     free(m_pGuiContext);
-    free(m_pLogBuffer);
     free(m_pFolderPath);
 }

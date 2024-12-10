@@ -32,7 +32,6 @@ private:
     float m_ScaleX, m_ScaleY;
     mu_Context* m_pGuiContext {nullptr};
     vec2 m_MousePos;
-    char* m_pLogBuffer;
     size_t m_LogSize;
     uint64_t m_StartTime;
     uint64_t m_LastTime;

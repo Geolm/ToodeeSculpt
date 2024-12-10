@@ -12,6 +12,9 @@ int main(int argc, const char * argv[])
 
     MetalLayerHelper helper;
     App app;
+
+    const GLFWvidmode* videomode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    UNUSED_VARIABLE(videomode);
     
     helper.Init("ToodeeSculpt", 1920, 1080);
 
