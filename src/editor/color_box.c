@@ -1,6 +1,11 @@
 #include "../system/microui.h"
 #include "color_box.h"
+#include <assert.h>
 
+#define PALETTE_ENTRIES_PER_ROW (8)
+
+
+//----------------------------------------------------------------------------------------------------------------------------
 int color_property_grid(struct mu_Context* gui_context, struct color_box* context)
 {
     int res = 0;
@@ -52,6 +57,41 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
             *context->rgba_output = hsv_to_color4f(context->hsv);
         
         res |= res_hsv;
+    }
+
+    if (mu_header_ex(gui_context, "palette", MU_OPT_EXPANDED))
+    {
+        assert(context->num_palette_entries < 32);
+        r = mu_layout_next(gui_context);
+
+        int width = r.w / PALETTE_ENTRIES_PER_ROW;
+
+        for(uint32_t i=0; i<context->num_palette_entries; ++i)
+        {
+            uint32_t x = i%PALETTE_ENTRIES_PER_ROW;
+            uint32_t y = i/PALETTE_ENTRIES_PER_ROW;
+
+            if (x==0 && i > 0)
+                r = mu_layout_next(gui_context);
+
+            packed_color entry = context->palette_entries[i];
+            mu_Rect entry_rect = mu_rect(r.x + x*width, r.y, width, r.h);
+
+            mu_draw_rect(gui_context, entry_rect, mu_color(packed_color_get_red(entry), packed_color_get_green(entry), packed_color_get_blue(entry), 255));
+
+            if (mu_mouse_over(gui_context, entry_rect))
+            {
+                if (gui_context->mouse_pressed&MU_MOUSE_LEFT)
+                {
+                    *context->rgba_output = unpacked_color(entry);
+                    res |= MU_RES_SUBMIT;
+                }
+                else if ((gui_context->mouse_pressed&MU_MOUSE_RIGHT))
+                {
+                    context->palette_entries[i] = color4f_to_packed_color(*context->rgba_output);
+                }
+            }
+        }
     }
 
     return res;

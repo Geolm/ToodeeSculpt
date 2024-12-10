@@ -52,6 +52,7 @@ private:
     color4f m_Color;
 
     static int m_SDFOperationComboBox;
+    static packed_color m_Palette[16];
 };
 
 //----------------------------------------------------------------------------------------------------------------------------

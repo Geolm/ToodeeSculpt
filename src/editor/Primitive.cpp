@@ -7,6 +7,14 @@
 
 int Primitive::m_SDFOperationComboBox = 0;
 
+packed_color Primitive::m_Palette[16] = 
+{
+    na16_light_grey, na16_dark_grey, na16_dark_brown, na16_brown,
+    na16_light_brown, na16_light_green, na16_green, na16_dark_green, 
+    na16_orange, na16_red, na16_pink, na16_purple,
+    na16_light_blue, na16_blue, na16_dark_blue, na16_black
+};
+
 //----------------------------------------------------------------------------------------------------------------------------
 Primitive::Primitive(command_type type, sdf_operator op, color4f color, float roundness, float width)
     : m_Width(width), m_Roundness(roundness), m_Thickness(0.f), m_Type(type), m_Filled(1), m_Operator(op), m_Color(color)
@@ -215,8 +223,8 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
     struct color_box color = 
     {
         .rgba_output = &m_Color,
-        .num_palette_entries = 0,
-        .palette_entries = NULL
+        .num_palette_entries = 16,
+        .palette_entries = m_Palette
     };
 
     res |= color_property_grid(gui_context, &color);

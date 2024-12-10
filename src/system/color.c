@@ -13,6 +13,18 @@ packed_color color4f_to_packed_color(color4f color)
 }
 
 // ----------------------------------------------------------------------------
+color4f unpacked_color(packed_color color)
+{
+    return (color4f)
+    {
+        .red = (float)(packed_color_get_red(color)) / 255.f,
+        .green = (float)(packed_color_get_green(color)) / 255.f,
+        .blue = (float)(packed_color_get_blue(color)) / 255.f,
+        .alpha = (float)(packed_color_get_alpha(color)) / 255.f
+    };
+}
+
+// ----------------------------------------------------------------------------
 color4f hsv_to_color4f(hsv4f color)
 {
     assert(color.hue >= 0.f && color.hue <= 360.f);

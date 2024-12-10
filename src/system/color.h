@@ -31,7 +31,7 @@ typedef uint32_t packed_color;
 extern "C" {
 #endif
 
-
+color4f unpacked_color(packed_color color);
 packed_color color4f_to_packed_color(color4f color);
 color4f hsv_to_color4f(hsv4f color);
 hsv4f color4f_to_hsv(color4f color);
@@ -42,6 +42,7 @@ packed_color palette_ramp(const packed_color* palette, uint32_t num_palette_entr
 static inline uint8_t packed_color_get_green(packed_color color) {return (uint8_t)((color>>8)&0xff);}
 static inline uint8_t packed_color_get_red(packed_color color) {return (uint8_t)(color&0xff);}
 static inline uint8_t packed_color_get_blue(packed_color color) {return (uint8_t)((color>>16)&0xff);}
+static inline uint8_t packed_color_get_alpha(packed_color color) {return (uint8_t)((color>>24)&0xff);}
 
 #ifdef __cplusplus
 }
