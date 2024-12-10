@@ -317,24 +317,24 @@ void PrimitivesStack::Draw(Renderer& renderer)
             Primitive *primitive = cc_get(&m_Primitives, i);
             if (primitive->TestMouseCursor(m_MousePosition, true))
             {
-                primitive->DrawGizmo(renderer, draw_color(na16_orange, 128));
+                primitive->DrawGizmo(renderer, draw_color(0x7f7f7f, 128));
                 if (i == m_SelectedPrimitiveIndex)
                     MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
         if (SelectedPrimitiveValid())
-            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer, draw_color(na16_blue, 128));
+            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer, draw_color(0x1010e0, 128));
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
         {
             Primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            primitive->DrawGizmo(renderer, draw_color(na16_orange, 128));
+            primitive->DrawGizmo(renderer, draw_color(0x7f7f7f, 128));
 
             if (m_DebugInfo)
-                renderer.DrawText(primitive->ComputerCenter(), format("%d", m_SelectedPrimitiveIndex), draw_color(na16_black));
+                renderer.DrawText(primitive->ComputerCenter(), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
         }
     }
 }

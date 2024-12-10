@@ -23,13 +23,15 @@ using namespace metal;
 // packed on 6 bits
 enum command_type
 {
-    primitive_aabox = 0,
-    primitive_oriented_box = 1,
-    primitive_disc = 2,
-    primitive_triangle = 3,
-    primitive_ellipse = 4,
-    primitive_pie = 5,
-    primitive_char = 6,
+    primitive_char = 0,
+    primitive_aabox = 1,
+    primitive_oriented_box = 2,
+    primitive_disc = 3,
+    primitive_triangle = 4,
+    primitive_ellipse = 5,
+    primitive_pie = 6,
+    primitive_ring = 7,
+    
     combination_begin = 32,
     combination_end = 33
 };

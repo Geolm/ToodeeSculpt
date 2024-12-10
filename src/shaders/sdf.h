@@ -94,3 +94,14 @@ float sd_oriented_pie(float2 position, float2 center, float2 direction, float2 a
 	float m = length(position - aperture*clamp(dot(position,aperture),0.f,radius));
     return max(l,m*sign(aperture.y*position.x - aperture.x*position.y));
 }
+
+//-----------------------------------------------------------------------------
+float sd_oriented_ring(float2 position, float2 center, float2 direction, float2 aperture, float radius, float width)
+{
+    direction = -skew(direction);
+    position -= center;
+    position = float2x2(direction.x,-direction.y, direction.y, direction.x) * position;
+    position.x = abs(position.x);
+    position = float2x2(aperture.x,aperture.y,-aperture.y,aperture.x)*position;
+    return max(abs(length(position)-radius)-width*0.5,length(float2(position.x,max(0.0,abs(radius-position.y)-width*0.5)))*sign(position.x) );
+}
