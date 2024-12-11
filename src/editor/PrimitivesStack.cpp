@@ -36,6 +36,10 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_MultipleSelectionHash = 0;
     m_MultipleSelectionIndex = 0;
 
+    m_PointColor = draw_color(0x10e010, 128);
+    m_SelectedPrimitiveColor = draw_color(0x101010, 192);
+    m_HoveredPrimitiveColor = draw_color(0x7f7f7f, 128);
+
     UndoSnapshot();
 }
 
@@ -262,44 +266,44 @@ void PrimitivesStack::Draw(Renderer& renderer)
     if (GetState() == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawCircleFilled(m_PrimitivePoints[i], Primitive::point_radius, draw_color(na16_red, 128));
+            renderer.DrawCircleFilled(m_PrimitivePoints[i], Primitive::point_radius, m_PointColor);
 
         // preview primitive
         if (m_CurrentPoint == 1)
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, draw_color(na16_light_blue, 128));
+            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, m_SelectedPrimitiveColor);
 
         if (m_PrimitiveType == command_type::primitive_triangle) 
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
-                renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, draw_color(na16_light_blue, 128));
+                renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
         }
-        renderer.DrawCircleFilled(m_MousePosition, Primitive::point_radius, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_MousePosition, Primitive::point_radius, m_PointColor);
     }
     else if (GetState() == state::SET_WIDTH)
     {
-        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, m_PointColor);
 
         if (m_PrimitiveType == command_type::primitive_oriented_box)
-            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, draw_color(na16_light_blue, 128));
+            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, m_SelectedPrimitiveColor);
         else if (m_PrimitiveType == command_type::primitive_ellipse)
-            renderer.DrawEllipseFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, draw_color(na16_light_blue, 128));
+            renderer.DrawEllipseFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
-        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, draw_color(na16_red, 128));
+        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, m_PointColor);
 
         // preview primitive
         switch(m_PrimitiveType)
         {
         case command_type::primitive_triangle:
             renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 
-                                        m_Roundness, draw_color(na16_light_blue, 128));break;
+                                        m_Roundness, m_SelectedPrimitiveColor);break;
 
         case command_type::primitive_disc:
-            renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, draw_color(na16_light_blue, 128));break;
+            renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, m_SelectedPrimitiveColor);break;
 
         case command_type::primitive_oriented_box:
-            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, draw_color(na16_light_blue, 128));
+            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, m_SelectedPrimitiveColor);
             break;
 
         default:break;
@@ -307,7 +311,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     }
     else if (GetState() == state::SET_ANGLE)
     {
-        renderer.DrawPieFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, draw_color(na16_light_blue, 128));
+        renderer.DrawPieFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::IDLE)
     {
@@ -317,21 +321,21 @@ void PrimitivesStack::Draw(Renderer& renderer)
             Primitive *primitive = cc_get(&m_Primitives, i);
             if (primitive->TestMouseCursor(m_MousePosition, true))
             {
-                primitive->DrawGizmo(renderer, draw_color(0x7f7f7f, 128));
+                primitive->DrawGizmo(renderer, m_HoveredPrimitiveColor);
                 if (i == m_SelectedPrimitiveIndex)
                     MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
         if (SelectedPrimitiveValid())
-            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer, draw_color(0x1010e0, 128));
+            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
         {
             Primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            primitive->DrawGizmo(renderer, draw_color(0x7f7f7f, 128));
+            primitive->DrawGizmo(renderer, m_SelectedPrimitiveColor);
 
             if (m_DebugInfo)
                 renderer.DrawText(primitive->ComputerCenter(), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));

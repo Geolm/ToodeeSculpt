@@ -77,6 +77,10 @@ private:
     bool m_SnapToGrid;
     float m_GridSubdivision;
 
+    draw_color m_PointColor;
+    draw_color m_SelectedPrimitiveColor;
+    draw_color m_HoveredPrimitiveColor;
+
     // primitive creation
     state m_CurrentState;
     uint32_t m_CurrentPoint;
