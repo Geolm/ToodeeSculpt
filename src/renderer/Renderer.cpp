@@ -286,7 +286,7 @@ void Renderer::BinCommands()
     args->screen_div = (float2) {.x = 1.f / (float)m_ViewportWidth, .y = 1.f / (float) m_ViewportHeight};
     args->font_scale = m_FontScale;
     args->font_size = (float2) {FONT_WIDTH, FONT_HEIGHT};
-    args->debug_output = m_DebugOutput;
+    args->culling_debug = m_CullingDebug;
     m_DrawCommandsArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
 
     tiles_data* output = (tiles_data*) m_BinOutputArg.Map(m_FrameIndex);

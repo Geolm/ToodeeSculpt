@@ -140,7 +140,7 @@ struct draw_cmd_arguments
     float2 screen_div;
     float2 font_size;
     float font_scale;
-    bool debug_output;
+    bool culling_debug;
 };
 
 struct tiles_data

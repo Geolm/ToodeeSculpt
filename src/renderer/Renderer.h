@@ -25,7 +25,7 @@ public:
 
     inline void SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
     inline void ResetCanvas() {m_CanvasScale = 1.f;}
-    inline void SetDebugOutput(bool b) {m_DebugOutput = b;}
+    inline void SetCulllingDebug(bool b) {m_CullingDebug = b;}
     void SetCanvas(float width, float height);
 
     void BeginCombination(float smooth_value);
@@ -54,6 +54,7 @@ private:
     void PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawPie(vec2 center, vec2 point, float aperture, float thickness, draw_color color, sdf_operator op);
+//    void PrivateDraw
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
@@ -105,7 +106,7 @@ private:
     float m_FontScale {1.f};
     float m_CanvasScale {1.f};
     float m_SmoothValue {0.f};
-    bool m_DebugOutput {false};
+    bool m_CullingDebug {false};
     quantized_aabb* m_CombinationAABB {nullptr};
 
     // stats

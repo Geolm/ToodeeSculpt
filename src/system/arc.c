@@ -21,8 +21,8 @@ void circle_from_points(vec2 p0, vec2 p1, vec2 p2, vec2* center, float* radius)
                 + (p1.x * p1.x + p1.y * p1.y) * (p2.x - p0.x) 
                 + (p2.x * p2.x + p2.y * p2.y) * (p0.x - p1.x);
 
-        center->x = -b / (2 * a);
-        center->y = -c / (2 * a);
+        center->x = -b / (2.f * a);
+        center->y = -c / (2.f * a);
         *radius = vec2_distance(*center, p0);
     }
 }
