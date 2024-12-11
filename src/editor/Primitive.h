@@ -39,6 +39,7 @@ public:
 
 public:
     static constexpr const float point_radius {6.f};
+    static packed_color m_Palette[16];
 
 private:
     vec2 m_Points[PRIMITIVE_MAXPOINTS];
@@ -52,7 +53,6 @@ private:
     color4f m_Color;
 
     static int m_SDFOperationComboBox;
-    static packed_color m_Palette[16];
 };
 
 //----------------------------------------------------------------------------------------------------------------------------

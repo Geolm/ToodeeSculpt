@@ -37,8 +37,8 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_MultipleSelectionIndex = 0;
 
     m_PointColor = draw_color(0x10e010, 128);
-    m_SelectedPrimitiveColor = draw_color(0x101010, 192);
-    m_HoveredPrimitiveColor = draw_color(0x7f7f7f, 128);
+    m_SelectedPrimitiveColor = draw_color(0x101020, 128);
+    m_HoveredPrimitiveColor = draw_color(0x101020, 64);
 
     UndoSnapshot();
 }
@@ -195,7 +195,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     // primitive creation
     if (GetState() == state::CREATE_PRIMITIVE)
     {
-        Primitive new_primitive(m_PrimitiveType, op_union, (color4f) {.red = 0.8f, .green = 0.2f, .blue = 0.4f}, m_Roundness, m_Width);
+        Primitive new_primitive(m_PrimitiveType, op_union, unpacked_color(Primitive::m_Palette[0]), m_Roundness, m_Width);
 
         for(uint32_t i=0; i<Primitive::GetNumPoints(m_PrimitiveType); ++i)
             new_primitive.SetPoints(i, m_PrimitivePoints[i]);

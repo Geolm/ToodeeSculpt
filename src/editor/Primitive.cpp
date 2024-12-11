@@ -27,7 +27,7 @@ void Primitive::DrawGizmo(Renderer& renderer, draw_color color)
     Draw(renderer, 0.f, color, op_add);
 
     for(uint32_t i=0; i<GetNumPoints(); ++i)
-        renderer.DrawCircleFilled(m_Points[i], point_radius, draw_color(0x000000, 128));
+        renderer.DrawCircleFilled(m_Points[i], point_radius, draw_color(0x10e010, 128));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
