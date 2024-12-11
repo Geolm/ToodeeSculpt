@@ -113,7 +113,8 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         }
     }
     // selecting primitive
-    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition))
+    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition) && 
+             !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen)
     {
         if (SelectedPrimitiveValid())
         {
@@ -437,7 +438,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             mu_end_window(gui_context);
         }
     }
-    else if (m_SelectedPrimitiveContextualMenuOpen)
+    else if (m_SelectedPrimitiveContextualMenuOpen && SelectedPrimitiveValid())
     {
         if (mu_begin_window_ex(gui_context, "edit", mu_rect((int)m_ContextualMenuPosition.x,
             (int)m_ContextualMenuPosition.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y), 
@@ -463,7 +464,11 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            
+            if (cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->ContextualPropertyGrid(gui_context)&MU_RES_SUBMIT)
+            {
+                m_SelectedPrimitiveContextualMenuOpen = false;
+                UndoSnapshot();
+            }
 
             mu_end_window(gui_context);
         }

@@ -25,6 +25,7 @@ public:
     void Normalize(const aabb* box);
     void Expand(const aabb* box);
     int PropertyGrid(struct mu_Context* gui_context);
+    int ContextualPropertyGrid(struct mu_Context* gui_context);
 
     void SetInvalid() {m_Type = combination_begin;}
     bool IsValid() {return m_Type != combination_begin;}

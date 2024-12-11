@@ -234,6 +234,16 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+int Primitive::ContextualPropertyGrid(struct mu_Context* gui_context)
+{
+    int res = 0;
+
+    res |= mu_checkbox(gui_context, "filled", &m_Filled);
+
+    return res;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 vec2 Primitive::ComputerCenter() const
 {
     vec2 center = {.x = 0.f, .y = 0.f};
