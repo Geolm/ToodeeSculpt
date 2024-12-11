@@ -8,6 +8,7 @@
 #include "../system/microui.h"
 #include "../system/aabb.h"
 #include "../system/format.h"
+#include "../system/arc.h"
 #include <float.h>
 
 #ifdef SHADERS_IN_EXECUTABLE
@@ -740,6 +741,50 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
                 
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);
+            return;
+        }
+        m_Commands.RemoveLast();
+    }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::PrivateDrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op, bool filled)
+{
+    vec2 center, direction;
+    float aperture, radius;
+    arc_from_points(p0, p1, p2, &center, &direction, &aperture, &radius);
+
+    // colinear points
+    if (radius<0.f)
+        return;
+
+    aperture = float_clamp(aperture, 0.f, VEC2_PI);
+    thickness = float_max(thickness * .5f, 0.f);
+
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = pack_type(primitive_ring, filled);
+
+        float* data = m_DrawData.NewMultiple(8);
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            canvas_to_screen(m_CanvasScale, center);
+            canvas_to_screen(m_CanvasScale, radius, thickness);
+
+            aabb bb = aabb_from_circle(center, radius);
+            aabb_grow(&bb, vec2_splat(thickness + m_AAWidth + m_SmoothValue));
+
+            write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture), thickness);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
+
             return;
         }
         m_Commands.RemoveLast();

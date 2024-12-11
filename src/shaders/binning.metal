@@ -67,6 +67,11 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                     to_be_added = false;
                 break;
             }
+            case primitive_ring :
+            {
+                to_be_added = true;
+                break;
+            }
             case primitive_pie :
             {
                 float2 center = float2(data[0], data[1]);

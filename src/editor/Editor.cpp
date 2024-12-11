@@ -80,6 +80,8 @@ void Editor::Draw(Renderer& renderer)
     else
         renderer.SetCulllingDebug(true);
 
+    renderer.DrawRingFilled((vec2) {800, 500}, (vec2) {600, 300}, (vec2) {1200, 400}, 50.f, draw_color(na16_light_grey, 255));
+
     if (m_ShowGrid)
     {
         vec2 step = vec2_scale(m_Zone.max - m_Zone.min, 1.f / m_GridSubdivision);

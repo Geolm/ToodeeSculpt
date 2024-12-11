@@ -161,6 +161,19 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                         distance = abs(distance) - data[7];
                     break;
                 }
+                case primitive_ring:
+                {
+                    float2 center = float2(data[0], data[1]);
+                    float radius = data[2];
+                    float2 direction = float2(data[3], data[4]);
+                    float2 aperture = float2(data[5], data[6]);
+                    float thickness = data[7];
+
+                    distance = sd_oriented_ring(in.pos.xy, center, direction, aperture, radius, thickness);
+                    if (!filled)
+                        distance = abs(distance) - data[7];
+                    break;
+                }
                 default: break;
                 }
 
