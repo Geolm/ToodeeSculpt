@@ -2,9 +2,6 @@
 #include "color_box.h"
 #include <assert.h>
 
-#define PALETTE_ENTRIES_PER_ROW (8)
-
-
 //----------------------------------------------------------------------------------------------------------------------------
 int color_property_grid(struct mu_Context* gui_context, struct color_box* context)
 {
@@ -64,12 +61,12 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
         assert(context->num_palette_entries < 32);
         r = mu_layout_next(gui_context);
 
-        int width = r.w / PALETTE_ENTRIES_PER_ROW;
+        int width = r.w / context->palette_entries_per_row;
 
         for(uint32_t i=0; i<context->num_palette_entries; ++i)
         {
-            uint32_t x = i%PALETTE_ENTRIES_PER_ROW;
-            uint32_t y = i/PALETTE_ENTRIES_PER_ROW;
+            uint32_t x = i%context->palette_entries_per_row;
+            uint32_t y = i/context->palette_entries_per_row;
 
             if (x==0 && i > 0)
                 r = mu_layout_next(gui_context);

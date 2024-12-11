@@ -224,7 +224,8 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
     {
         .rgba_output = &m_Color,
         .num_palette_entries = 16,
-        .palette_entries = m_Palette
+        .palette_entries = m_Palette,
+        .palette_entries_per_row = 8
     };
 
     res |= color_property_grid(gui_context, &color);

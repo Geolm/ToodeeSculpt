@@ -12,6 +12,7 @@ struct color_box
     hsv4f hsv;
     packed_color* palette_entries;
     uint32_t num_palette_entries;
+    uint32_t palette_entries_per_row;
 };
 
 #ifdef __cplusplus
