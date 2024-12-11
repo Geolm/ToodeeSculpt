@@ -93,6 +93,7 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
                 }
                 else
                 {
+                    mu_draw_rect(gui_context, entry_rect, gui_context->style->colors[MU_COLOR_BASE]);
                     entry_rect.w -= 4; entry_rect.h -= 4;
                     entry_rect.x += 2; entry_rect.y += 2;
                 }
