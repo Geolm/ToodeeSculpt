@@ -70,6 +70,7 @@ private:
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_NewPrimitiveContextualMenuOpen;
+    bool m_SelectedPrimitiveContextualMenuOpen;
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
     vec2 m_MouseLastPosition;

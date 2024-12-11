@@ -10,7 +10,7 @@
 #include "../system/hash.h"
 #include "PrimitivesStack.h"
 
-const vec2 contextual_menu_size = {100.f, 180.f};
+const vec2 contextual_menu_size = {100.f, 170.f};
 
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
@@ -18,6 +18,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     cc_init(&m_Primitives);
     cc_reserve(&m_Primitives, PRIMITIVES_STACK_RESERVATION);
     m_NewPrimitiveContextualMenuOpen = false;
+    m_SelectedPrimitiveContextualMenuOpen = false;
     m_EditionZone = zone;
     m_CurrentState = state::IDLE;
     m_CurrentPoint = 0;
@@ -86,21 +87,29 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
 void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 {
     bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS);
-    // contextual menu
-    if (m_NewPrimitiveContextualMenuOpen && left_button_pressed)
-    {
-        aabb contextual_bbox = (aabb) {.min = m_ContextualMenuPosition, .max = m_ContextualMenuPosition + contextual_menu_size};
 
-        if (!aabb_test_point(&contextual_bbox, m_MousePosition))
-            m_NewPrimitiveContextualMenuOpen = false;
+    // close contextual menus if we click 
+    aabb contextual_bbox = (aabb) {.min = m_ContextualMenuPosition, .max = m_ContextualMenuPosition + contextual_menu_size};
+    if (!aabb_test_point(&contextual_bbox, m_MousePosition) && left_button_pressed)
+    {
+        m_NewPrimitiveContextualMenuOpen = false;
+        m_SelectedPrimitiveContextualMenuOpen = false;
     }
+
     if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
         if (aabb_test_point(&m_EditionZone, m_MousePosition))
         {
-            m_NewPrimitiveContextualMenuOpen = !m_NewPrimitiveContextualMenuOpen;
+            if (SelectedPrimitiveValid() && cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->TestMouseCursor(m_MousePosition, false))
+            {
+                m_SelectedPrimitiveContextualMenuOpen = !m_SelectedPrimitiveContextualMenuOpen;
+            }
+            else
+            {
+                m_NewPrimitiveContextualMenuOpen = !m_NewPrimitiveContextualMenuOpen;
+                SetSelectedPrimitive(INVALID_INDEX);
+            }
             m_ContextualMenuPosition = m_MousePosition;
-            SetSelectedPrimitive(INVALID_INDEX);
         }
     }
     // selecting primitive
@@ -424,6 +433,37 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_PrimitiveType = command_type::primitive_pie;
                 SetState(state::ADDING_POINTS);
             }
+
+            mu_end_window(gui_context);
+        }
+    }
+    else if (m_SelectedPrimitiveContextualMenuOpen)
+    {
+        if (mu_begin_window_ex(gui_context, "edit", mu_rect((int)m_ContextualMenuPosition.x,
+            (int)m_ContextualMenuPosition.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y), 
+            MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+        {
+            mu_layout_row(gui_context, 1, (int[]) {90}, 0);
+            if (mu_button_ex(gui_context, "rotate", 0, 0)&MU_RES_SUBMIT)
+            {
+                m_SelectedPrimitiveContextualMenuOpen = false;
+            }
+            if (mu_button_ex(gui_context, "scale", 0, 0)&MU_RES_SUBMIT)
+            {
+                m_SelectedPrimitiveContextualMenuOpen = false;
+            }
+
+            if (mu_button_ex(gui_context, "front", 0, 0)&MU_RES_SUBMIT)
+            {
+                m_SelectedPrimitiveContextualMenuOpen = false;
+            }
+
+            if (mu_button_ex(gui_context, "back", 0, 0)&MU_RES_SUBMIT)
+            {
+                m_SelectedPrimitiveContextualMenuOpen = false;
+            }
+
+            
 
             mu_end_window(gui_context);
         }
