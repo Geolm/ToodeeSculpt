@@ -74,4 +74,13 @@ bool point_in_pie(vec2 center, vec2 p1, float aperture, vec2 point)
     return vec2_dot(to_point, direction) > cosf(aperture);
 }
 
+//-----------------------------------------------------------------------------
+bool point_in_circle(vec2 center, float radius, float thickness, vec2 point)
+{
+    float outter_radius = radius + thickness * .5f;
+    float inner_radius = outter_radius - thickness;
+
+    return point_in_disc(center, outter_radius, point) && !point_in_disc(center, inner_radius, point);
+}
+
 

@@ -2,6 +2,7 @@
 #include "../system/palettes.h"
 #include "../system/point_in.h"
 #include "../system/microui.h"
+#include "../system/arc.h"
 #include "color_box.h"
 #include "Primitive.h"
 
@@ -129,6 +130,14 @@ bool Primitive::TestMouseCursor(vec2 mouse_position, bool test_vertices)
     case command_type::primitive_pie:
         {
             result = point_in_pie(m_Points[0], m_Points[1], m_Aperture, mouse_position);
+            break;
+        }
+    case command_type::primitive_ring:
+        {
+            vec2 center;
+            float radius;
+            circle_from_points(m_Points[0], m_Points[1], m_Points[2], &center, &radius);
+            result = point_in_circle(center, radius, m_Thickness, mouse_position);
             break;
         }
 
