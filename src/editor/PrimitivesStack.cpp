@@ -86,7 +86,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 {
-    bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS);
+    bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) && !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen;
 
     if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
@@ -105,8 +105,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         }
     }
     // selecting primitive
-    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition) && 
-             !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen)
+    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition))
     {
         if (SelectedPrimitiveValid())
         {
@@ -327,7 +326,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     {
         renderer.DrawPieFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, m_SelectedPrimitiveColor);
     }
-    else if (GetState() == state::IDLE)
+    else if (GetState() == state::IDLE && !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen)
     {
         MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
