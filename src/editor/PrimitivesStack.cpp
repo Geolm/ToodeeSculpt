@@ -10,7 +10,7 @@
 #include "../system/hash.h"
 #include "PrimitivesStack.h"
 
-const vec2 contextual_menu_size = {100.f, 170.f};
+const vec2 contextual_menu_size = {100.f, 190.f};
 
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
@@ -87,14 +87,6 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
 void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 {
     bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS);
-
-    // close contextual menus if we click 
-    aabb contextual_bbox = (aabb) {.min = m_ContextualMenuPosition, .max = m_ContextualMenuPosition + contextual_menu_size};
-    if (!aabb_test_point(&contextual_bbox, m_MousePosition) && left_button_pressed)
-    {
-        m_NewPrimitiveContextualMenuOpen = false;
-        m_SelectedPrimitiveContextualMenuOpen = false;
-    }
 
     if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
@@ -287,6 +279,11 @@ void PrimitivesStack::Draw(Renderer& renderer)
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
                 renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
         }
+        else if (m_PrimitiveType == command_type::primitive_ring)
+        {
+            if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
+                renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
+        }
         renderer.DrawCircleFilled(m_MousePosition, Primitive::point_radius, m_PointColor);
     }
     else if (GetState() == state::SET_WIDTH)
@@ -314,6 +311,10 @@ void PrimitivesStack::Draw(Renderer& renderer)
 
         case command_type::primitive_oriented_box:
             renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, m_SelectedPrimitiveColor);
+            break;
+
+        case command_type::primitive_ring:
+            renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_Roundness, m_SelectedPrimitiveColor);
             break;
 
         default:break;
@@ -398,12 +399,16 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 {
+    aabb window_aabb {.min = m_ContextualMenuPosition - vec2_scale(contextual_menu_size, .5f), .max = m_ContextualMenuPosition + vec2_scale(contextual_menu_size, .5f)};
+    mu_Rect window_rect = mu_rect((int)window_aabb.min.x, (int)window_aabb.min.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y);
+
     if (m_NewPrimitiveContextualMenuOpen)
     {
-        if (mu_begin_window_ex(gui_context, "new", mu_rect((int)m_ContextualMenuPosition.x,
-            (int)m_ContextualMenuPosition.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y), 
-            MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+        if (mu_begin_window_ex(gui_context, "new", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
+            if (!aabb_test_point(&window_aabb, m_MousePosition))
+                m_NewPrimitiveContextualMenuOpen = false;
+
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0)&MU_RES_SUBMIT)
             {
@@ -435,15 +440,21 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 SetState(state::ADDING_POINTS);
             }
 
+            if (mu_button_ex(gui_context, "arc", 0, 0)&MU_RES_SUBMIT)
+            {
+                m_PrimitiveType = command_type::primitive_ring;
+                SetState(state::ADDING_POINTS);
+            }
             mu_end_window(gui_context);
         }
     }
     else if (m_SelectedPrimitiveContextualMenuOpen && SelectedPrimitiveValid())
     {
-        if (mu_begin_window_ex(gui_context, "edit", mu_rect((int)m_ContextualMenuPosition.x,
-            (int)m_ContextualMenuPosition.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y), 
-            MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
+        if (mu_begin_window_ex(gui_context, "edit", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
+            if (!aabb_test_point(&window_aabb, m_MousePosition))
+                m_SelectedPrimitiveContextualMenuOpen = false;
+
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "rotate", 0, 0)&MU_RES_SUBMIT)
             {
@@ -466,7 +477,6 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 
             if (cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->ContextualPropertyGrid(gui_context)&MU_RES_SUBMIT)
             {
-                m_SelectedPrimitiveContextualMenuOpen = false;
                 UndoSnapshot();
             }
 
