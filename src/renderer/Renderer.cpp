@@ -757,7 +757,10 @@ void Renderer::PrivateDrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_
 
     // colinear points
     if (radius<0.f)
+    {
+        PrivateDrawOrientedBox(p0, p2, thickness, 0.f, -1.f, color, op);
         return;
+    }
 
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness * .5f, 0.f);

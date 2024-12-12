@@ -199,6 +199,9 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         Primitive new_primitive(m_PrimitiveType, op_union, unpacked_color(Primitive::m_Palette[0]), m_Roundness, m_Width);
 
+        if (m_PrimitiveType == command_type::primitive_ring)
+            new_primitive.SetThickness(m_Roundness);
+
         for(uint32_t i=0; i<Primitive::GetNumPoints(m_PrimitiveType); ++i)
             new_primitive.SetPoints(i, m_PrimitivePoints[i]);
 

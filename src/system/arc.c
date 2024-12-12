@@ -1,16 +1,18 @@
 #include "arc.h"
 
-#define FLT_SMALL_NUMBER (1.e-6f)
-
 //-----------------------------------------------------------------------------
 // https://www.xarg.org/2018/02/create-a-circle-out-of-three-points/
 void circle_from_points(vec2 p0, vec2 p1, vec2 p2, vec2* center, float* radius)
 {
     float a = p0.x * (p1.y - p2.y) - p0.y * (p1.x - p2.x) + p1.x * p2.y - p2.x * p1.y;
+    vec2 max = vec2_max3(p0, p1, p2);
+    float threshold = float_max(max.x, max.y) * .01f;
 
     // colinear points
-    if (fabsf(a) < FLT_SMALL_NUMBER)
+    if (fabsf(a) < threshold)
+    {
         *radius = -1.f;
+    }
     else
     {
         float b = (p0.x * p0.x + p0.y * p0.y) * (p2.y - p1.y) 
@@ -38,9 +40,10 @@ void arc_from_points(vec2 p0, vec2 p1, vec2 p2, vec2* center, vec2* direction, f
         vec2 center_p1 = vec2_sub(p1, *center); vec2_normalize(&center_p1);
         vec2 center_p2 = vec2_sub(p2, *center); vec2_normalize(&center_p2);
  
-        *aperture = acosf(vec2_dot(center_p0, center_p2)) * .5f;
         *direction = vec2_add(center_p0, center_p2);
         vec2_normalize(direction);
+
+        *aperture = acosf(vec2_dot(center_p0, *direction));
 
         // if p1 is out of cone, reverse cone in order to get all 3 points on the arc
         if (vec2_dot(*direction, center_p1) < vec2_dot(*direction, center_p2))

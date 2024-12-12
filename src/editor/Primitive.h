@@ -37,6 +37,7 @@ public:
     uint32_t GetNumPoints() const {return GetNumPoints(m_Type);}
     vec2 ComputerCenter() const;
     void SetAperture(float value) {m_Aperture = value;}
+    void SetThickness(float value) {m_Thickness = value;}
 
 public:
     static constexpr const float point_radius {6.f};
@@ -65,6 +66,7 @@ inline uint32_t Primitive::GetNumPoints(command_type type)
     case primitive_ellipse:
     case primitive_pie:
     case primitive_oriented_box: return 2;
+    case primitive_ring:
     case primitive_triangle: return 3;
     default: return 0;
     }

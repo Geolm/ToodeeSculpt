@@ -85,6 +85,13 @@ void Primitive::Draw(Renderer& renderer, float roundness, draw_color color, sdf_
             renderer.DrawPieFilled(m_Points[0], m_Points[1], m_Aperture, color, op);
         else
             renderer.DrawPie(m_Points[0], m_Points[1], m_Aperture, m_Thickness, color, op);
+        break;
+    }
+
+    case command_type::primitive_ring:
+    {
+        renderer.DrawRingFilled(m_Points[0], m_Points[1], m_Points[2], m_Thickness, color, op);
+        break;
     }
 
     default: 
@@ -205,12 +212,20 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
             res |= mu_slider_ex(gui_context, &m_Aperture, 0.f, VEC2_PI, 0.01f, "%3.2f", 0);
             break;
         }
+    case command_type::primitive_ring :
+        {
+            mu_text(gui_context, "pie");
+            break;
+        }
 
     default : break;
     }
 
-    mu_label(gui_context, "filled");
-    res |= mu_checkbox(gui_context, "filled", &m_Filled);
+    if (m_Type != command_type::primitive_ring)
+    {
+        mu_label(gui_context, "filled");
+        res |= mu_checkbox(gui_context, "filled", &m_Filled);
+    }
 
     mu_label(gui_context, "thickness");
     res |= mu_slider_ex(gui_context, &m_Thickness, 0.f, 100.f, 0.1f, "%3.2f", 0);
@@ -238,7 +253,8 @@ int Primitive::ContextualPropertyGrid(struct mu_Context* gui_context)
 {
     int res = 0;
 
-    res |= mu_checkbox(gui_context, "filled", &m_Filled);
+    if (m_Type != command_type::primitive_ring)
+        res |= mu_checkbox(gui_context, "filled", &m_Filled);
 
     return res;
 }
