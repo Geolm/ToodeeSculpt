@@ -1293,7 +1293,6 @@ int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, co
 //----------------------------------------------------------------------------------------------------------------------------
 int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
 {
-    //const float hash_array[3] = {*red, *green, *blue};
     int res = 0;
     mu_layout_row(ctx, 2, (int[]) { 100, -1 }, 0);
     mu_label(ctx, "color");
