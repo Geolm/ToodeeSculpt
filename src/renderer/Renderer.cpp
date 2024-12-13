@@ -446,7 +446,6 @@ static inline void write_aabb(quantized_aabb* box, float min_x, float min_y, flo
     min_y = max(min_y, 0.f);
     max_x = max(max_x, 0.f);
     max_y = max(max_y, 0.f);
-
     box->min_x = uint8_t(min(uint32_t(min_x) / TILE_SIZE, (uint32_t)UINT8_MAX));
     box->min_y = uint8_t(min(uint32_t(min_y) / TILE_SIZE, (uint32_t)UINT8_MAX));
     box->max_x = uint8_t(min(uint32_t(max_x) / TILE_SIZE, (uint32_t)UINT8_MAX));
