@@ -1,4 +1,5 @@
 float2 skew(float2 v) {return float2(-v.y, v.x);}
+float cross2(float2 a, float2 b ) {return a.x*b.y - a.y*b.x;}
 
 //-----------------------------------------------------------------------------
 float sd_disc(float2 position, float2 center, float radius)
@@ -104,4 +105,25 @@ float sd_oriented_ring(float2 position, float2 center, float2 direction, float2 
     position.x = abs(position.x);
     position = float2x2(aperture.y,aperture.x,-aperture.x,aperture.y)*position;
     return max(abs(length(position)-radius)-thickness*0.5,length(float2(position.x,max(0.0,abs(radius-position.y)-thickness*0.5)))*sign(position.x) );
+}
+
+//-----------------------------------------------------------------------------
+float sd_uneven_capsule(float2 p, float2 pa, float2 pb, float ra, float rb)
+{
+    p  -= pa;
+    pb -= pa;
+    float h = dot(pb,pb);
+    float2  q = float2( dot(p,float2(pb.y,-pb.x)), dot(p,pb) )/h;
+    
+    q.x = abs(q.x);
+    float b = ra-rb;
+    float2  c = float2(sqrt(h-b*b),b);
+    
+    float k = cross2(c,q);
+    float m = dot(c,q);
+    float n = dot(q,q);
+
+         if( k < 0.0 ) return sqrt(h*(n            )) - ra;
+    else if( k > c.x ) return sqrt(h*(n+1.f-2.f*q.y)) - rb;
+                       return m                       - ra;
 }
