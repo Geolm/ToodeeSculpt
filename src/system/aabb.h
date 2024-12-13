@@ -29,7 +29,6 @@ static aabb aabb_from_bezier(vec2 p0, vec2 p1, vec2 p2);
 static aabb aabb_from_capsule(vec2 p0, vec2 p1, float radius);
 static aabb aabb_from_obb(vec2 p0, vec2 p1, float width);
 static aabb aabb_from_circle(vec2 center, float radius);
-static aabb aabb_from_sector(vec2 center, float radius, float rotation, float aperture);
 static aabb aabb_from_triangle(vec2 v0, vec2 v1, vec2 v2);
 static aabb aabb_from_center(vec2 center, vec2 extent);
 static bool aabb_test_point(const aabb* box, vec2 point);

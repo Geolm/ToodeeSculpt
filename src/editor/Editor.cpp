@@ -219,10 +219,6 @@ void Editor::MenuBar(struct mu_Context* gui_context)
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
 
-                // const char* log_level_name[] = {"LOG_TRACE", "LOG_DEBUG", "LOG_INFO", "LOG_WARN", "LOG_ERROR", "LOG_FATAL"};
-                // if (mu_combo_box(gui_context, &m_LogLevelCombo, &m_LogLevel, 6, log_level_name)&MU_RES_SUBMIT)
-                //     log_set_level(m_LogLevel);
-
                 if (mu_checkbox(gui_context, "Culling debug", &m_CullingDebug))
                     m_PrimitivesStack.SetDebugInfo((bool)m_CullingDebug);
 

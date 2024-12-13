@@ -83,4 +83,18 @@ bool point_in_circle(vec2 center, float radius, float thickness, vec2 point)
     return point_in_disc(center, outter_radius, point) && !point_in_disc(center, inner_radius, point);
 }
 
+//-----------------------------------------------------------------------------
+bool point_in_arc(vec2 center, vec2 direction, float aperture, float radius, float thickness, vec2 point)
+{
+    if (!point_in_circle(center, radius, thickness, point))
+        return false;
+
+    vec2 center_to_point = vec2_sub(point, center);
+    vec2_normalize(&center_to_point);
+    if (vec2_dot(direction, center_to_point) > cosf(aperture))
+        return true;
+
+    return false;
+}
+
 
