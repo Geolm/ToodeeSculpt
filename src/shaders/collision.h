@@ -32,13 +32,13 @@ float3 edge_init(float2 a, float2 b)
     return edge;
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 float edge_distance(float3 e, float2 p)
 {
     return e.x * p.x + e.y * p.y + e.z;
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 float edge_sign(float2 p, float2 e0, float2 e1)
 {
     return (p.x - e1.x) * (e0.y - e1.y) - (e0.x - e1.x) * (p.y - e1.y);
@@ -52,7 +52,7 @@ struct obb
     float2 extents;
 };
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 obb compute_obb(float2 p0, float2 p1, float width)
 {
     obb result;
@@ -65,7 +65,7 @@ obb compute_obb(float2 p0, float2 p1, float width)
     return result;
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 float2 obb_transform(obb obox, float2 point)
 {
     point = point - obox.center;
@@ -76,7 +76,7 @@ float2 obb_transform(obb obox, float2 point)
 // Intersections functions
 // ---------------------------------------------------------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 // slab test
 bool intersection_aabb_ray(aabb box, float2 origin, float2 direction)
 {
@@ -105,16 +105,16 @@ bool intersection_aabb_ray(aabb box, float2 origin, float2 direction)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-bool intersection_aabb_disc(aabb box, float2 center, float sq_radius)
+bool intersection_aabb_disc(aabb box, float2 center, float radius)
 {
     float2 nearest_point = clamp(center.xy, box.min, box.max);
-    return distance_squared(nearest_point, center) < sq_radius;
+    return distance_squared(nearest_point, center) < square(radius);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_aabb_circle(aabb box, float2 center, float radius, float half_width)
 {
-    if (!intersection_aabb_disc(box, center, square(radius + half_width)))
+    if (!intersection_aabb_disc(box, center, radius + half_width))
         return false;
 
     float2 candidate0 = abs(center.xy - box.min);
@@ -228,9 +228,9 @@ bool intersection_aabb_triangle(aabb box, float2 p0, float2 p1, float2 p2)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 aperture, float squared_radius)
+bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 aperture, float radius)
 {
-    if (!intersection_aabb_disc(box, center, squared_radius))
+    if (!intersection_aabb_disc(box, center, radius))
         return false;
 
     float2 aabb_vertices[4]; 
@@ -248,7 +248,17 @@ bool intersection_aabb_pie(aabb box, float2 center, float2 direction, float2 ape
     return intersection_aabb_ray(box, center, direction);
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
+bool intersection_aabb_arc(aabb box, float2 center, float2 direction, float2 aperture, float radius, float thickness)
+{
+    float half_thickness = thickness * .5f;
+    if (!intersection_aabb_pie(box, center, direction, aperture, radius + half_thickness))
+        return false;
+
+    return intersection_aabb_circle(box, center, radius, half_thickness);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
 bool point_in_triangle(float2 p0, float2 p1, float2 p2, float2 point)
 {
     float d1, d2, d3;
@@ -264,7 +274,7 @@ bool point_in_triangle(float2 p0, float2 p1, float2 p2, float2 point)
     return !(has_neg && has_pos);
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 bool point_in_ellipse(float2 p0, float2 p1, float width, float2 point)
 {
     obb obox = compute_obb(p0, p1, width);
@@ -274,17 +284,17 @@ bool point_in_ellipse(float2 p0, float2 p1, float width, float2 point)
     return (distance <= 1.f);
 }
 
-//-----------------------------------------------------------------------------
-bool point_in_pie(float2 center, float2 direction, float squared_radius, float cos_aperture, float2 point)
+// ---------------------------------------------------------------------------------------------------------------------------
+bool point_in_pie(float2 center, float2 direction, float radius, float cos_aperture, float2 point)
 {
-    if (distance_squared(center, point) > squared_radius)
+    if (distance_squared(center, point) > square(radius))
         return false;
 
     float2 to_point = normalize(point - center);
     return dot(to_point, direction) > cos_aperture;
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 bool intersection_ellipse_circle(float2 p0, float2 p1, float width, float2 center, float radius)
 {
     obb obox = compute_obb(p0, p1, width);
@@ -297,7 +307,7 @@ bool intersection_ellipse_circle(float2 p0, float2 p1, float width, float2 cente
     return (squared_distance <= square(1.f + scaled_radius));
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 bool is_aabb_inside_ellipse(float2 p0, float2 p1, float width, aabb box)
 {
     float2 aabb_vertices[4]; 
@@ -319,7 +329,7 @@ bool is_aabb_inside_ellipse(float2 p0, float2 p1, float width, aabb box)
     return true;
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 bool is_aabb_inside_triangle(float2 p0, float2 p1, float2 p2, aabb box)
 {
     float2 aabb_vertices[4]; 
@@ -347,7 +357,7 @@ bool is_aabb_inside_triangle(float2 p0, float2 p1, float2 p2, aabb box)
     return true;
 }
 
-//-----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------
 bool is_aabb_inside_obb(float2 p0, float2 p1, float width, aabb box)
 {
     float2 aabb_vertices[4]; 
@@ -367,8 +377,8 @@ bool is_aabb_inside_obb(float2 p0, float2 p1, float width, aabb box)
     return true;
 }
 
-//-----------------------------------------------------------------------------
-bool is_aabb_inside_pie(float2 center, float2 direction, float2 aperture, float squared_radius, aabb box)
+// ---------------------------------------------------------------------------------------------------------------------------
+bool is_aabb_inside_pie(float2 center, float2 direction, float2 aperture, float radius, aabb box)
 {
     float2 aabb_vertices[4]; 
     aabb_vertices[0] = box.min;
@@ -378,7 +388,7 @@ bool is_aabb_inside_pie(float2 center, float2 direction, float2 aperture, float 
 
     for(int i=0; i<4; ++i)
     {
-        if (!point_in_pie(center, direction, squared_radius, aperture.y, aabb_vertices[i]))
+        if (!point_in_pie(center, direction, radius, aperture.y, aabb_vertices[i]))
             return false;
     }
     return true;
