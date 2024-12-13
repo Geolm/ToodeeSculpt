@@ -57,7 +57,7 @@ private:
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
-    bool SelectPrimitive(bool cycle_through);
+    bool SelectPrimitive();
     inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
     inline bool SetSelectedPrimitive(uint32_t index);
 

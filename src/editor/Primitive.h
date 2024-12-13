@@ -36,6 +36,7 @@ public:
     static inline uint32_t GetNumPoints(command_type type);
     uint32_t GetNumPoints() const {return GetNumPoints(m_Type);}
     vec2 ComputerCenter() const;
+    float DistanceToNearestPoint(vec2 reference) const;     // returns square distance
     void SetAperture(float value) {m_Aperture = value;}
     void SetThickness(float value) {m_Thickness = value;}
 

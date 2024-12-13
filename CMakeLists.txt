@@ -37,7 +37,6 @@ add_executable(ToodeeSculpt
 ./src/system/arc.c
 ./src/system/color.c
 ./src/system/format.c
-./src/system/hash.c
 ./src/system/log.c
 ./src/system/microui.c
 ./src/system/point_in.c

@@ -7,7 +7,6 @@
 #include "../system/point_in.h"
 #include "../system/undo.h"
 #include "../system/format.h"
-#include "../system/hash.h"
 #include "PrimitivesStack.h"
 
 const vec2 contextual_menu_size = {100.f, 190.f};
@@ -111,38 +110,40 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         }
     }
     // selecting primitive
-    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition))
+    else if (GetState() == state::IDLE && left_button_pressed)
     {
-        if (SelectedPrimitiveValid())
+        if (aabb_test_point(&m_EditionZone, m_MousePosition))
         {
-            Primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            for(uint32_t i=0; i<primitive->GetNumPoints(); ++i)
+            if (SelectedPrimitiveValid())
             {
-                if (point_in_disc(primitive->GetPoints(i), Primitive::point_radius, m_MousePosition))
+                Primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+                for(uint32_t i=0; i<primitive->GetNumPoints(); ++i)
                 {
-                    m_pGrabbedPoint = &primitive->GetPoints(i);
-                    *m_pGrabbedPoint = m_MousePosition;
-                    SetState(state::MOVING_POINT);
+                    if (point_in_disc(primitive->GetPoints(i), Primitive::point_radius, m_MousePosition))
+                    {
+                        m_pGrabbedPoint = &primitive->GetPoints(i);
+                        *m_pGrabbedPoint = m_MousePosition;
+                        SetState(state::MOVING_POINT);
+                    }
+                }
+
+                // clicking on already selected primitive to move/duplicate
+                if (GetState() == state::IDLE && !SelectPrimitive() && SelectedPrimitiveValid())
+                {
+                    // copy a primitive
+                    if (mods&GLFW_MOD_SUPER)
+                        DuplicateSelected();
+                    
+                    m_Reference = m_MousePosition;
+                    m_StartingPoint = m_MousePosition;
+                    SetState(state::MOVING_PRIMITIVE);
                 }
             }
+            else
+                SelectPrimitive();
         }
-        
-        if (GetState() == state::IDLE)
-        {
-            bool new_selection = SelectPrimitive(mods&GLFW_MOD_CONTROL);
-
-            // clicking on already selected primitive to move/duplicate
-            if (!new_selection && GetState() == state::IDLE && SelectedPrimitiveValid() && cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->TestMouseCursor(m_MousePosition, false))
-            {
-                // copy a primitive
-                if (mods&GLFW_MOD_SUPER)
-                    DuplicateSelected();
-                
-                m_Reference = m_MousePosition;
-                m_StartingPoint = m_MousePosition;
-                SetState(state::MOVING_PRIMITIVE);
-            }
-        }
+        else
+            SetSelectedPrimitive(INVALID_INDEX);
     }
     // moving point
     else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
@@ -205,7 +206,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         Primitive new_primitive(m_PrimitiveType, op_union, unpacked_color(Primitive::m_Palette[0]), m_Roundness, m_Width);
 
         if (m_PrimitiveType == command_type::primitive_ring)
-            new_primitive.SetThickness(m_Roundness);
+            new_primitive.SetThickness(m_Roundness * 2.f);
 
         for(uint32_t i=0; i<Primitive::GetNumPoints(m_PrimitiveType); ++i)
             new_primitive.SetPoints(i, m_PrimitivePoints[i]);
@@ -221,7 +222,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-bool PrimitivesStack::SelectPrimitive(bool cycle_through)
+bool PrimitivesStack::SelectPrimitive()
 {
     cc_clear(&m_MultipleSelection);
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
@@ -231,32 +232,31 @@ bool PrimitivesStack::SelectPrimitive(bool cycle_through)
             cc_push(&m_MultipleSelection, i);
     }
 
-    if (cc_size(&m_MultipleSelection)>0)
+    size_t num_primitives = cc_size(&m_MultipleSelection);
+
+    if (num_primitives == 0)
+        return SetSelectedPrimitive(INVALID_INDEX);
+
+    if (num_primitives == 1)
+        return SetSelectedPrimitive(*cc_get(&m_MultipleSelection, 0));
+
+    uint32_t nearest_primitive_index = INVALID_INDEX;
+    float min_distance = FLT_MAX;
+    for(uint32_t i=0; i<cc_size(&m_MultipleSelection); ++i)
     {
-        uint32_t new_hash = hash_fnv_1a(cc_get(&m_MultipleSelection, 0), sizeof(uint32_t) * cc_size(&m_MultipleSelection));
-
-        log_debug("clicking on %d primitives, hash : 0x%X", cc_size(&m_MultipleSelection), new_hash);
-
-        // same selection candidate
-        if (new_hash == m_MultipleSelectionHash)
+        Primitive *p = cc_get(&m_Primitives, *cc_get(&m_MultipleSelection, i));
+        float distance = p->DistanceToNearestPoint(m_MousePosition);
+        if (distance < min_distance)
         {
-            // cycle through selected primitive or keep the same if shift not pressed
-            if (cycle_through)
-            {
-                if (++m_MultipleSelectionIndex >= cc_size(&m_MultipleSelection))
-                    m_MultipleSelectionIndex = 0;
-            }
+            min_distance = distance;
+            nearest_primitive_index = i;
         }
-        else m_MultipleSelectionIndex = 0;
+    }
 
-        m_MultipleSelectionHash = new_hash;
-        return SetSelectedPrimitive(*cc_get(&m_MultipleSelection, m_MultipleSelectionIndex));
-    }
+    if (nearest_primitive_index == INVALID_INDEX)
+        return SetSelectedPrimitive(INVALID_INDEX);
     else
-    {
-        SetSelectedPrimitive(INVALID_INDEX);
-        return false;
-    }
+        return SetSelectedPrimitive(*cc_get(&m_MultipleSelection,nearest_primitive_index));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -322,7 +322,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
             break;
 
         case command_type::primitive_ring:
-            renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_Roundness, m_SelectedPrimitiveColor);
+            renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_Roundness * 2.f, m_SelectedPrimitiveColor);
             break;
 
         default:break;

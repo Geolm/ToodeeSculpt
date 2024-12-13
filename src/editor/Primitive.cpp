@@ -284,3 +284,16 @@ vec2 Primitive::ComputerCenter() const
 
     return vec2_scale(center, 1.f / float(GetNumPoints()));
 }
+
+//----------------------------------------------------------------------------------------------------------------------------
+float Primitive::DistanceToNearestPoint(vec2 reference) const
+{
+    float min_distance = FLT_MAX;
+    for(uint32_t i=0; i<GetNumPoints(); ++i)
+    {
+        float distance = vec2_sq_distance(GetPoints(i), reference);
+        if (distance < min_distance)
+            min_distance = distance;
+    }
+    return min_distance;
+}

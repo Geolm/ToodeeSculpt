@@ -763,7 +763,7 @@ void Renderer::PrivateDrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_
     }
 
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
-    thickness = float_max(thickness * .5f, 0.f);
+    thickness = float_max(thickness, 0.f);
 
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
