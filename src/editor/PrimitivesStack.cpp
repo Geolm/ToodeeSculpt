@@ -17,30 +17,36 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
 {
     cc_init(&m_Primitives);
     cc_reserve(&m_Primitives, PRIMITIVES_STACK_RESERVATION);
+    cc_init(&m_MultipleSelection);
+    cc_reserve(&m_MultipleSelection, PRIMITIVES_STACK_RESERVATION);
+    m_EditionZone = zone;
+    m_pUndoContext = undo;
+    m_SnapToGrid = false;
+    m_GridSubdivision = 20.f;
+    m_DebugInfo = false;
+    m_PointColor = draw_color(0x10e010, 128);
+    m_SelectedPrimitiveColor = draw_color(0x101020, 128);
+    m_HoveredPrimitiveColor = draw_color(0x101020, 64);
+    New();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::New()
+{
     m_NewPrimitiveContextualMenuOpen = false;
     m_SelectedPrimitiveContextualMenuOpen = false;
-    m_EditionZone = zone;
     m_CurrentState = state::IDLE;
     m_CurrentPoint = 0;
     m_SDFOperationComboBox = 0;
     m_SmoothBlend = 1.f;
     m_AlphaValue = 1.f;
     SetSelectedPrimitive(INVALID_INDEX);
-    m_pUndoContext = undo;
-    m_pGrabbedPoint = nullptr;
-    m_SnapToGrid = false;
-    m_GridSubdivision = 20.f;
     m_CopiedPrimitive.SetInvalid();
-    m_DebugInfo = false;
-    cc_init(&m_MultipleSelection);
-    cc_reserve(&m_MultipleSelection, PRIMITIVES_STACK_RESERVATION);
+    m_pGrabbedPoint = nullptr;
     m_MultipleSelectionHash = 0;
     m_MultipleSelectionIndex = 0;
-
-    m_PointColor = draw_color(0x10e010, 128);
-    m_SelectedPrimitiveColor = draw_color(0x101020, 128);
-    m_HoveredPrimitiveColor = draw_color(0x101020, 64);
-
+    cc_clear(&m_Primitives);
+    cc_clear(&m_MultipleSelection);
     UndoSnapshot();
 }
 

@@ -161,6 +161,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
                 if (mu_button_ex(gui_context, "New", 0, 0))
                 {
+                    New();
                     m_MenuBarState = MenuBar_None;
                 }
                 if (mu_button_ex(gui_context, "Load", 0, 0))
@@ -371,6 +372,12 @@ void Editor::Undo()
 void Editor::Delete()
 {
     m_PrimitivesStack.DeleteSelected();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Editor::New()
+{
+    m_PrimitivesStack.New();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
