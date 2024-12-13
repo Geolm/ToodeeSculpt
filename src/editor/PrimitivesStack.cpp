@@ -412,37 +412,37 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_NewPrimitiveContextualMenuOpen = false;
 
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
-            if (mu_button_ex(gui_context, "disc", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "disc", 0, 0))
             {
                 m_PrimitiveType = command_type::primitive_disc;
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "ellipse", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "ellipse", 0, 0))
             {
                 m_PrimitiveType = command_type::primitive_ellipse;
                 SetState(state::ADDING_POINTS);
             }
             
-            if (mu_button_ex(gui_context, "box", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "box", 0, 0))
             {
                 m_PrimitiveType = command_type::primitive_oriented_box;
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "triangle", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "triangle", 0, 0))
             {
                 m_PrimitiveType = command_type::primitive_triangle;
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "pie", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "pie", 0, 0))
             {
                 m_PrimitiveType = command_type::primitive_pie;
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "arc", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "arc", 0, 0))
             {
                 m_PrimitiveType = command_type::primitive_ring;
                 SetState(state::ADDING_POINTS);
@@ -458,26 +458,26 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_SelectedPrimitiveContextualMenuOpen = false;
 
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
-            if (mu_button_ex(gui_context, "rotate", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "rotate", 0, 0))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
-            if (mu_button_ex(gui_context, "scale", 0, 0)&MU_RES_SUBMIT)
-            {
-                m_SelectedPrimitiveContextualMenuOpen = false;
-            }
-
-            if (mu_button_ex(gui_context, "front", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "scale", 0, 0))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            if (mu_button_ex(gui_context, "back", 0, 0)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "front", 0, 0))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            if (cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->ContextualPropertyGrid(gui_context)&MU_RES_SUBMIT)
+            if (mu_button_ex(gui_context, "back", 0, 0))
+            {
+                m_SelectedPrimitiveContextualMenuOpen = false;
+            }
+
+            if (cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->ContextualPropertyGrid(gui_context))
             {
                 UndoSnapshot();
             }

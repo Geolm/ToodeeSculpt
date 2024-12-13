@@ -128,30 +128,28 @@ void Editor::MenuBar(struct mu_Context* gui_context)
     int row_size = gui_context->text_width(NULL, NULL, 10);
     int window_options = MU_OPT_NOSCROLL|MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOTITLE;
 
-    if (mu_begin_window_ex(gui_context, "toodeesculpt menubar", mu_rect(0, 0, row_size*3 + 20, text_height + padding), window_options))
+    if (mu_begin_window_ex(gui_context, "toodeesculpt menubar", mu_rect(0, 0, row_size*3 + 15, text_height + padding), window_options))
     {
         mu_layout_row(gui_context, 3, (int[]) {row_size, row_size,  row_size}, 0);
 
         if (!m_PopupOpen)
         {
-            int res;
-            
-            res = mu_button(gui_context, "File");
-            if (res&MU_RES_SUBMIT)
+            if (mu_button(gui_context, "File"))
                 m_MenuBarState = (m_MenuBarState == MenuBar_File) ? MenuBar_None : MenuBar_File;
-            else if (res&MU_RES_HOVER)
-                m_MenuBarState = (m_MenuBarState != MenuBar_None) ? MenuBar_File : MenuBar_None;
             
-            res = mu_button(gui_context, "Edit");
-            if (res&MU_RES_SUBMIT)
+            if (mu_mouse_over(gui_context, gui_context->last_rect))
+                m_MenuBarState = (m_MenuBarState != MenuBar_None) ? MenuBar_File : MenuBar_None;
+
+            if (mu_button(gui_context, "Edit"))
                 m_MenuBarState = (m_MenuBarState == MenuBar_Edit) ? MenuBar_None : MenuBar_Edit;
-            else if (res&MU_RES_HOVER)
+
+            if (mu_mouse_over(gui_context, gui_context->last_rect))
                 m_MenuBarState = (m_MenuBarState != MenuBar_None) ? MenuBar_Edit : MenuBar_None;
 
-            res = mu_button(gui_context, "Options");
-            if (res&MU_RES_SUBMIT)
+            if (mu_button(gui_context, "Options"))
                 m_MenuBarState = (m_MenuBarState == MenuBar_Options) ? MenuBar_None : MenuBar_Options;
-            else if (res&MU_RES_HOVER)
+
+            if (mu_mouse_over(gui_context, gui_context->last_rect))
                 m_MenuBarState = (m_MenuBarState != MenuBar_None) ? MenuBar_Options : MenuBar_None;
         }
 
@@ -161,21 +159,21 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_rect(0, text_height + padding, row_size + padding, text_height * 4 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
-                if (mu_button(gui_context, "New")&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "New", 0, 0))
                 {
                     m_MenuBarState = MenuBar_None;
                 }
-                if (mu_button(gui_context, "Load")&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "Load", 0, 0))
                 {
                     Load();
                     m_MenuBarState = MenuBar_None;
                 }
-                if (mu_button(gui_context, "Save")&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "Save", 0, 0))
                 {
                     Save();
                     m_MenuBarState = MenuBar_None;
                 }
-                if (mu_button(gui_context, "Export")&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "Export", 0, 0))
                 {
                     m_MenuBarState = MenuBar_None;
                 }
@@ -189,22 +187,22 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_rect(row_size + padding, text_height + padding, row_size + padding, text_height * 4 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
-                if (mu_button_ex(gui_context, "Undo ~Z", 0, 0)&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "Undo ~Z", 0, 0))
                 {
                     Undo();
                     m_MenuBarState = MenuBar_None;
                 }
-                if (mu_button_ex(gui_context, "Delete", 0, 0)&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "Delete", 0, 0))
                 {
                     Delete();
                     m_MenuBarState = MenuBar_None;
                 }
-                if (mu_button_ex(gui_context, "Copy ~C", 0, 0)&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "Copy ~C", 0, 0))
                 {
                     m_PrimitivesStack.CopySelected();
                     m_MenuBarState = MenuBar_None;
                 }
-                if (mu_button_ex(gui_context, "Paste ~V", 0, 0)&MU_RES_SUBMIT)
+                if (mu_button_ex(gui_context, "Paste ~V", 0, 0))
                 {
                     m_PrimitivesStack.Paste();
                     m_MenuBarState = MenuBar_None;
