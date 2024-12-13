@@ -223,7 +223,7 @@ int Primitive::PropertyGrid(struct mu_Context* gui_context)
         }
     case command_type::primitive_ring :
         {
-            mu_text(gui_context, "pie");
+            mu_text(gui_context, "arc");
             break;
         }
 
