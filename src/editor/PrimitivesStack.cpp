@@ -110,40 +110,35 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         }
     }
     // selecting primitive
-    else if (GetState() == state::IDLE && left_button_pressed)
+    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition))
     {
-        if (aabb_test_point(&m_EditionZone, m_MousePosition))
+        if (SelectedPrimitiveValid())
         {
-            if (SelectedPrimitiveValid())
+            Primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+            for(uint32_t i=0; i<primitive->GetNumPoints(); ++i)
             {
-                Primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-                for(uint32_t i=0; i<primitive->GetNumPoints(); ++i)
+                if (point_in_disc(primitive->GetPoints(i), Primitive::point_radius, m_MousePosition))
                 {
-                    if (point_in_disc(primitive->GetPoints(i), Primitive::point_radius, m_MousePosition))
-                    {
-                        m_pGrabbedPoint = &primitive->GetPoints(i);
-                        *m_pGrabbedPoint = m_MousePosition;
-                        SetState(state::MOVING_POINT);
-                    }
-                }
-
-                // clicking on already selected primitive to move/duplicate
-                if (GetState() == state::IDLE && !SelectPrimitive() && SelectedPrimitiveValid())
-                {
-                    // copy a primitive
-                    if (mods&GLFW_MOD_SUPER)
-                        DuplicateSelected();
-                    
-                    m_Reference = m_MousePosition;
-                    m_StartingPoint = m_MousePosition;
-                    SetState(state::MOVING_PRIMITIVE);
+                    m_pGrabbedPoint = &primitive->GetPoints(i);
+                    *m_pGrabbedPoint = m_MousePosition;
+                    SetState(state::MOVING_POINT);
                 }
             }
-            else
-                SelectPrimitive();
+
+            // clicking on already selected primitive to move/duplicate
+            if (GetState() == state::IDLE && !SelectPrimitive() && SelectedPrimitiveValid())
+            {
+                // copy a primitive
+                if (mods&GLFW_MOD_SUPER)
+                    DuplicateSelected();
+                
+                m_Reference = m_MousePosition;
+                m_StartingPoint = m_MousePosition;
+                SetState(state::MOVING_PRIMITIVE);
+            }
         }
         else
-            SetSelectedPrimitive(INVALID_INDEX);
+            SelectPrimitive();
     }
     // moving point
     else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
@@ -475,11 +470,25 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 
             if (mu_button_ex(gui_context, "front", 0, 0))
             {
+                if (SelectedPrimitiveValid())
+                {
+                    Primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+                    *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_last(&m_Primitives);
+                    *cc_last(&m_Primitives) = temp;
+                    UndoSnapshot();
+                }
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
             if (mu_button_ex(gui_context, "back", 0, 0))
             {
+                if (SelectedPrimitiveValid())
+                {
+                    Primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+                    *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_first(&m_Primitives);
+                    *cc_first(&m_Primitives) = temp;
+                    UndoSnapshot();
+                }
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
