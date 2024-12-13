@@ -129,15 +129,22 @@ bool Primitive::TestMouseCursor(vec2 mouse_position, bool test_vertices)
         }
     case command_type::primitive_pie:
         {
-            result = point_in_pie(m_Points[0], m_Points[1], m_Aperture, mouse_position);
+            vec2 direction = vec2_sub(m_Points[1], m_Points[0]);
+            float radius = vec2_normalize(&direction);
+
+            result = point_in_pie(m_Points[0], direction, radius, m_Aperture, mouse_position);
             break;
         }
     case command_type::primitive_ring:
         {
-            vec2 center;
-            float radius;
-            circle_from_points(m_Points[0], m_Points[1], m_Points[2], &center, &radius);
-            result = point_in_circle(center, radius, m_Thickness, mouse_position);
+            vec2 center,direction;
+            float aperture, radius;
+            arc_from_points(m_Points[0], m_Points[1], m_Points[2], &center, &direction, &aperture, &radius);
+
+            if (radius>0.f)
+                result = point_in_circle(center, radius, m_Thickness, mouse_position) && point_in_pie(center, direction, radius, aperture, mouse_position);
+            else
+                result = false;
             break;
         }
 

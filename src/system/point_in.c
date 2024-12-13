@@ -61,11 +61,8 @@ bool point_in_ellipse(vec2 p0, vec2 p1, float width, vec2 point)
 }
 
 //-----------------------------------------------------------------------------
-bool point_in_pie(vec2 center, vec2 p1, float aperture, vec2 point)
+bool point_in_pie(vec2 center, vec2 direction, float radius, float aperture, vec2 point)
 {
-    vec2 direction = vec2_sub(p1, center);
-    float radius = vec2_normalize(&direction);
-
     if (vec2_sq_distance(center, point) > float_square(radius))
         return false;
 
