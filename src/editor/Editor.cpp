@@ -7,6 +7,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include "Editor.h"
+#include "tds.h"
 
 #define UNUSED_VARIABLE(a) (void)(a)
 
@@ -270,7 +271,7 @@ void Editor::Save()
     if (result == NFD_OKAY)
     {
         // prepare the file in memory
-        size_t length = m_PrimitivesStack.GetSerializedDataLength() + sizeof(uint32_t) + 2 * sizeof(uint16_t);
+        size_t length = TDS_FILE_MAXSIZE;
         void* buffer = malloc(length);
         serializer_context serializer;
 
@@ -285,7 +286,7 @@ void Editor::Save()
             FILE* f = fopen(save_path, "wb");
             if (f != NULL)
             {
-                fwrite(serializer.buffer, length, 1, f);
+                fwrite(serializer.buffer, serializer.position, 1, f);
                 fclose(f);
             }
             else
@@ -327,12 +328,16 @@ void Editor::Load()
 
                 if (serializer_read_uint32_t(&serializer) == TDS_FOURCC)
                 {
+                    uint16_t major = serializer_read_uint16_t(&serializer);
+
                     // check only the major for compatibility
-                    if (serializer_read_uint16_t(&serializer) == TDS_MAJOR)
+                    if (major == TDS_MAJOR)
                     {
                         // discard minor version
-                        serializer_read_uint16_t(&serializer);
-                        m_PrimitivesStack.Deserialize(&serializer);
+                        uint16_t minor = serializer_read_uint16_t(&serializer);
+                        log_debug("loading file version %d.%03d", major, minor);
+
+                        m_PrimitivesStack.Deserialize(&serializer, major, minor);
 
                         if (serializer_get_status(&serializer) != serializer_no_error)
                             Popup("load failure", "unable to load primitives");

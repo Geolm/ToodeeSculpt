@@ -26,7 +26,7 @@ public:
     void Undo();
     size_t GetSerializedDataLength();
     void Serialize(serializer_context* context);
-    void Deserialize(serializer_context* context);
+    void Deserialize(serializer_context* context, uint16_t major, uint16_t minor);
     void CopySelected();
     void Paste();
     void DeleteSelected();

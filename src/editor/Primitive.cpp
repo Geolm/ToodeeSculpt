@@ -183,6 +183,60 @@ void Primitive::Expand(const aabb* box)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void Primitive::Serialize(serializer_context* context)
+{
+    serializer_write_blob(context, m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
+    serializer_write_struct(context, m_Type);
+    if (m_Type == command_type::primitive_ellipse || m_Type == command_type::primitive_oriented_box )
+        serializer_write_float(context, m_Width);
+    if (m_Type == command_type::primitive_pie || m_Type == command_type::primitive_ring)
+        serializer_write_float(context, m_Aperture);
+    if (m_Type != command_type::primitive_pie && m_Type != command_type::primitive_pie && m_Type != command_type::primitive_ring)
+        serializer_write_float(context, m_Roundness);
+
+    serializer_write_float(context, m_Thickness);
+    serializer_write_uint8_t(context, (uint8_t)m_Filled);
+    serializer_write_struct(context, m_Operator);
+    serializer_write_struct(context, m_Color);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Primitive::Deserialize(serializer_context* context, uint16_t major, uint16_t minor)
+{
+    if (major == 2)
+    {
+        if (minor == 0)
+        {
+            serializer_read_blob(context, m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
+            m_Width = serializer_read_float(context);
+            m_Aperture = serializer_read_float(context);
+            m_Roundness = serializer_read_float(context);
+            m_Thickness = serializer_read_float(context);
+            serializer_read_struct(context, m_Type);
+            m_Filled = serializer_read_uint32_t(context);
+            serializer_read_struct(context, m_Operator);
+            serializer_read_struct(context, m_Color);
+        }
+        else if (minor == 1)
+        {
+            serializer_read_blob(context, m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
+            serializer_read_struct(context, m_Type);
+            if (m_Type == command_type::primitive_ellipse || m_Type == command_type::primitive_oriented_box )
+                m_Width = serializer_read_float(context);
+            if (m_Type == command_type::primitive_pie || m_Type == command_type::primitive_ring)
+                m_Aperture = serializer_read_float(context);
+            if (m_Type != command_type::primitive_pie && m_Type != command_type::primitive_pie && m_Type != command_type::primitive_ring)
+                m_Roundness = serializer_read_float(context);
+            m_Thickness = serializer_read_float(context);
+            m_Filled = serializer_read_uint8_t(context);
+            serializer_read_struct(context, m_Operator);
+            serializer_read_struct(context, m_Color);
+        }
+
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 int Primitive::PropertyGrid(struct mu_Context* gui_context)
 {
     int res = 0;

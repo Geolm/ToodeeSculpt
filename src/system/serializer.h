@@ -99,6 +99,7 @@ static inline void serializer_write_blob(serializer_context* context, const void
 }
 
 #define serializer_write_struct(context, variable) serializer_write_blob(context, &variable, sizeof(variable))
+#define serializer_read_struct(context, variable) serializer_read_blob(context, &variable, sizeof(variable))
 
 //-----------------------------------------------------------------------------------------------------------------------------
 // read functions

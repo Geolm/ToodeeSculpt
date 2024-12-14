@@ -2,6 +2,7 @@
 
 #include "../system/vec2.h"
 #include "../system/color.h"
+#include "../system/serializer.h"
 #include "../shaders/common.h"
 #include <assert.h>
 
@@ -26,6 +27,8 @@ public:
     void Expand(const aabb* box);
     int PropertyGrid(struct mu_Context* gui_context);
     int ContextualPropertyGrid(struct mu_Context* gui_context);
+    void Serialize(serializer_context* context);
+    void Deserialize(serializer_context* context, uint16_t major, uint16_t minor);
 
     void SetInvalid() {m_Type = combination_begin;}
     bool IsValid() {return m_Type != combination_begin;}

@@ -8,6 +8,7 @@
 #include "../system/undo.h"
 #include "../system/format.h"
 #include "PrimitivesStack.h"
+#include "tds.h"
 
 const vec2 contextual_menu_size = {100.f, 190.f};
 
@@ -516,20 +517,22 @@ void PrimitivesStack::Serialize(serializer_context* context)
     serializer_write_float(context, m_SmoothBlend);
     serializer_write_uint32_t(context, m_SelectedPrimitiveIndex);
     serializer_write_size_t(context, cc_size(&m_Primitives));
-    if (array_size != 0)
-        serializer_write_blob(context, cc_get(&m_Primitives, 0), cc_size(&m_Primitives) * sizeof(Primitive));
+    
+     for(uint32_t i=0; i<array_size; ++i)
+        cc_get(&m_Primitives, i)->Serialize(context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Deserialize(serializer_context* context)
+void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, uint16_t minor)
 {
     m_AlphaValue = serializer_read_float(context);
     m_SmoothBlend = serializer_read_float(context);
     m_SelectedPrimitiveIndex = serializer_read_uint32_t(context);
     size_t array_size = serializer_read_size_t(context);
     cc_resize(&m_Primitives, array_size);
-    if (array_size != 0)
-        serializer_read_blob(context, cc_get(&m_Primitives, 0), array_size * sizeof(Primitive));
+
+    for(uint32_t i=0; i<array_size; ++i)
+        cc_get(&m_Primitives, i)->Deserialize(context, major, minor);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -564,7 +567,7 @@ void PrimitivesStack::Undo()
         if (pBuffer != nullptr)
         {
             serializer_init(&serializer, pBuffer, max_size);
-            Deserialize(&serializer);
+            Deserialize(&serializer, TDS_MAJOR, TDS_MINOR);
             if (serializer_get_status(&serializer) == serializer_read_error)
                 log_fatal("corrupted undo buffer");
         }
