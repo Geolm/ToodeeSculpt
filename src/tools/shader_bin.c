@@ -1,6 +1,6 @@
-#include "renderer/shader_reader.h"
-#include "system/bin2h.h"
-#include "system/format.h"
+#include "../renderer/shader_reader.h"
+#include "../system/bin2h.h"
+#include "../system/format.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

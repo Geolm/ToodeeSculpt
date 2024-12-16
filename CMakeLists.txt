@@ -8,7 +8,7 @@ set(CMAKE_RELEASE_FLAGS "-O3 -DNDEBUG -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno
 project(ToodeeSculpt)
 
 # --- Build the shader_bin ---
-add_executable(shader_bin ./src/shader_bin.c ./src/system/bin2h.c ./src/system/format.c ./src/renderer/shader_reader.c)
+add_executable(shader_bin ./src/tools/shader_bin.c ./src/system/bin2h.c ./src/system/format.c ./src/renderer/shader_reader.c)
 
 # --- Prebuild step ---
 add_custom_command(
