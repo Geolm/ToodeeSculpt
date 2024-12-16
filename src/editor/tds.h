@@ -8,7 +8,7 @@ static constexpr const uint16_t TDS_MAJOR = 2;
 static constexpr const uint16_t TDS_MINOR = 2;
 static constexpr const long TDS_FILE_MAXSIZE = (1<<16);
 
-constexpr bool tds_normalizion_support() {return (TDS_MAJOR>=2) && (TDS_MINOR>=2);}
+static inline bool tds_normalizion_support(uint16_t major, uint16_t minor) {return (major>=2) && (minor>=2);}
 
 /*
 
