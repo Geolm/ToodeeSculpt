@@ -493,8 +493,8 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 if (SelectedPrimitiveValid())
                 {
                     primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-                    *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_last(&m_Primitives);
-                    *cc_last(&m_Primitives) = temp;
+                    cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
+                    cc_push(&m_Primitives, temp);
                     SetSelectedPrimitive(INVALID_INDEX);
                     UndoSnapshot();
                 }
@@ -506,8 +506,8 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 if (SelectedPrimitiveValid())
                 {
                     primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-                    *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_first(&m_Primitives);
-                    *cc_first(&m_Primitives) = temp;
+                    cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
+                    cc_insert(&m_Primitives, 0, temp);
                     SetSelectedPrimitive(INVALID_INDEX);
                     UndoSnapshot();
                 }
