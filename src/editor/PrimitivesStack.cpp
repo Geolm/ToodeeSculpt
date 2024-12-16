@@ -429,9 +429,6 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
     {
         if (mu_begin_window_ex(gui_context, "new", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
-            if (!aabb_test_point(&window_aabb, m_MousePosition))
-                m_NewPrimitiveContextualMenuOpen = false;
-
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0))
             {
@@ -468,6 +465,10 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_PrimitiveType = command_type::primitive_ring;
                 SetState(state::ADDING_POINTS);
             }
+
+            if (!aabb_test_point(&window_aabb, m_MousePosition))
+                m_NewPrimitiveContextualMenuOpen = false;
+
             mu_end_window(gui_context);
         }
     }
@@ -475,9 +476,6 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
     {
         if (mu_begin_window_ex(gui_context, "edit", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
-            if (!aabb_test_point(&window_aabb, m_MousePosition))
-                m_SelectedPrimitiveContextualMenuOpen = false;
-
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "rotate", 0, 0))
             {
@@ -514,10 +512,15 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context))
+            bool over_popup;
+            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context, &over_popup))
             {
+                m_SelectedPrimitiveContextualMenuOpen = false;
                 UndoSnapshot();
             }
+
+            if (!aabb_test_point(&window_aabb, m_MousePosition) && !over_popup)
+                m_SelectedPrimitiveContextualMenuOpen = false;
 
             mu_end_window(gui_context);
         }

@@ -4,10 +4,12 @@
 #include "../system/palettes.h"
 #include "../system/microui.h"
 #include "../system/serializer.h"
+#include "../system/log.h"
 #include "../renderer/crenderer.h"
 #include "color_box.h"
 
 static int g_SDFOperationComboBox = 0;
+static const char* g_sdf_op_names[op_last] = {"add", "blend", "sub", "overlap"};
 
 packed_color primitive_palette[16] = 
 {
@@ -211,8 +213,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
 
     _Static_assert(sizeof(p->m_Operator) == sizeof(int), "operator");
     mu_label(gui_context, "operation");
-    const char* op_names[op_last] = {"add", "blend", "sub", "overlap"};
-    res |= mu_combo_box(gui_context, &g_SDFOperationComboBox, (int*)&p->m_Operator, op_last, op_names);
+    res |= mu_combo_box(gui_context, &g_SDFOperationComboBox, (int*)&p->m_Operator, op_last, g_sdf_op_names);
 
     struct color_box color = 
     {
@@ -238,12 +239,48 @@ vec2 primitive_compute_center(struct primitive const* p)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context)
+int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context, bool *over_popup)
 {
     int res = 0;
 
+    *over_popup = false;
+
     if (p->m_Type != primitive_ring)
         res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
+
+    if (mu_button_ex(gui_context, "op", 0, 0))
+        mu_open_popup(gui_context, "operation");
+    
+    if (mu_begin_popup(gui_context, "operation"))
+    {
+        for(uint32_t i=0; i<op_last; ++i)
+        {
+            if (mu_button_ex(gui_context, g_sdf_op_names[i], 0, 0))
+            {
+                p->m_Operator = (enum sdf_operator)i;
+                res |= MU_RES_SUBMIT;
+            }
+
+            if (p->m_Operator == i)
+            {
+                mu_Rect r = gui_context->last_rect;
+                r.x += r.w-r.h;
+                r.w = r.h;
+                mu_draw_icon(gui_context, MU_ICON_CHECK, r, gui_context->style->colors[MU_COLOR_TEXT]);
+            }
+        }
+
+        mu_Container* container =  mu_get_current_container(gui_context);
+        if (mu_mouse_over(gui_context, container->rect))
+            *over_popup = true;
+
+        mu_end_popup(gui_context);
+    }
+
+    mu_Rect r = gui_context->last_rect;
+    r.x += r.w-r.h;
+    r.w = r.h;
+    mu_draw_icon(gui_context, MU_ICON_COLLAPSED, r, gui_context->style->colors[MU_COLOR_TEXT]);
 
     return res;
 }
