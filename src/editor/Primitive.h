@@ -49,6 +49,7 @@ void primitive_expand(struct primitive* p, const aabb* box);
 void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_color color, enum sdf_operator op);
 void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color);
 void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha);
+void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color);
 
 
 #ifdef __cplusplus

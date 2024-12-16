@@ -35,55 +35,58 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
 {
     bool result = false;
 
-    switch(p->m_Type)
+    if (aabb_test_point(&p->m_AABB, mouse_position))
     {
-    case primitive_triangle: 
+        switch(p->m_Type)
         {
-            result = point_in_triangle(p->m_Points[0], p->m_Points[1], p->m_Points[2], mouse_position);
-            break;
-        }
-    case primitive_disc:
-        {
-            result = point_in_disc(p->m_Points[0], p->m_Roundness, mouse_position);
-            break;
-        }
-    case primitive_ellipse:
-        {
-            result = point_in_ellipse(p->m_Points[0], p->m_Points[1], p->m_Width, mouse_position);
-            break;
-        }
-    case primitive_oriented_box:
-        {
-            result = point_in_oriented_box(p->m_Points[0], p->m_Points[1], p->m_Width, mouse_position);
-            break;
-        }
-    case primitive_pie:
-        {
-            vec2 direction = vec2_sub(p->m_Points[1], p->m_Points[0]);
-            float radius = vec2_normalize(&direction);
-
-            result = point_in_pie(p->m_Points[0], direction, radius, p->m_Aperture, mouse_position);
-            break;
-        }
-    case primitive_ring:
-        {
-            vec2 center,direction;
-            float aperture, radius;
-            arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &center, &direction, &aperture, &radius);
-
-            if (radius>0.f)
+        case primitive_triangle: 
             {
-                float half_thickness = p->m_Thickness * .5f;
-                result = !point_in_disc(center, radius - half_thickness , mouse_position);
-                result &= point_in_pie(center, direction, radius + half_thickness, aperture, mouse_position);
+                result = point_in_triangle(p->m_Points[0], p->m_Points[1], p->m_Points[2], mouse_position);
+                break;
             }
-            else
-                result = false;
-            break;
-        }
+        case primitive_disc:
+            {
+                result = point_in_disc(p->m_Points[0], p->m_Roundness, mouse_position);
+                break;
+            }
+        case primitive_ellipse:
+            {
+                result = point_in_ellipse(p->m_Points[0], p->m_Points[1], p->m_Width, mouse_position);
+                break;
+            }
+        case primitive_oriented_box:
+            {
+                result = point_in_oriented_box(p->m_Points[0], p->m_Points[1], p->m_Width, mouse_position);
+                break;
+            }
+        case primitive_pie:
+            {
+                vec2 direction = vec2_sub(p->m_Points[1], p->m_Points[0]);
+                float radius = vec2_normalize(&direction);
 
-    default: 
-        return false;
+                result = point_in_pie(p->m_Points[0], direction, radius, p->m_Aperture, mouse_position);
+                break;
+            }
+        case primitive_ring:
+            {
+                vec2 center,direction;
+                float aperture, radius;
+                arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &center, &direction, &aperture, &radius);
+
+                if (radius>0.f)
+                {
+                    float half_thickness = p->m_Thickness * .5f;
+                    result = !point_in_disc(center, radius - half_thickness , mouse_position);
+                    result &= point_in_pie(center, direction, radius + half_thickness, aperture, mouse_position);
+                }
+                else
+                    result = false;
+                break;
+            }
+
+        default: 
+            return false;
+        }
     }
 
     if (test_vertices)
@@ -124,10 +127,18 @@ void primitive_update_aabb(struct primitive* p)
     }
     case primitive_oriented_box : p->m_AABB = aabb_from_rounded_obb(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Roundness); break;
     case primitive_pie :
-    case primitive_ring :
     {
         float radius = vec2_length(vec2_sub(p->m_Points[1], p->m_Points[0]));
         p->m_AABB = aabb_from_circle(p->m_Points[0], radius);
+        break;
+    }
+    case primitive_ring :
+    {
+        vec2 center, direction;
+        float radius, aperture;
+        arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &center, &direction, &aperture, &radius);
+        p->m_AABB = aabb_from_arc(center, direction, radius, aperture);
+        aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
         break;
     }
     default: p->m_AABB = aabb_invalid();
@@ -270,6 +281,8 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
             serializer_read_struct(context, p->m_Color);
         }
     }
+
+    primitive_update_aabb(p);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -370,6 +383,12 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
     default: 
         break;
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color)
+{
+    renderer_drawbox(renderer, p->m_AABB, color);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

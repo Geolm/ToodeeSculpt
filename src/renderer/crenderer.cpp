@@ -3,6 +3,11 @@
 
 // just redirect the call to c++ class
 
+void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color)
+{
+    ((Renderer*) cpp_renderer)->DrawBox(box, color);
+}
+
 void renderer_drawcircle(void* cpp_renderer, vec2 center, float radius, float thickness, draw_color color, enum sdf_operator op)
 {
     ((Renderer*) cpp_renderer)->DrawCircle(center, radius, thickness, color, op);

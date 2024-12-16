@@ -668,7 +668,7 @@ void PrimitivesStack::SetState(enum state new_state)
 
     m_CurrentState = new_state;
 
-    log_debug("state : %d", m_CurrentState);
+    //log_debug("state : %d", m_CurrentState);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 #define __CRENDERER__H__
 
 
-#include "../system/vec2.h"
+#include "../system/aabb.h"
 #include "../shaders/common.h"
 
 // this is the C-interface of the renderer
@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color);
 void renderer_drawcircle(void* cpp_renderer, vec2 center, float radius, float thickness, draw_color color, enum sdf_operator op);
 void renderer_drawcircle_filled(void* cpp_renderer, vec2 center, float radius, draw_color color, enum sdf_operator op);
 void renderer_draworientedbox(void* cpp_renderer, vec2 p0, vec2 p1, float width, float thickness, draw_color color, enum sdf_operator op);
