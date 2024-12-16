@@ -10,6 +10,7 @@
 enum {PRIMITIVE_MAXPOINTS = 3};
 
 #define primitive_point_radius (6.f)
+#define primitive_max_thickness (100.f)
 
 struct primitive
 {

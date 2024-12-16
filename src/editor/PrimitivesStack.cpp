@@ -308,19 +308,28 @@ void PrimitivesStack::Draw(Renderer& renderer)
         switch(m_PrimitiveType)
         {
         case command_type::primitive_triangle:
+        {
             renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 
                                         m_Roundness, m_SelectedPrimitiveColor);break;
+        }
 
         case command_type::primitive_disc:
+        {
             renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, m_SelectedPrimitiveColor);break;
+        }
 
         case command_type::primitive_oriented_box:
+        {
             renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, m_SelectedPrimitiveColor);
             break;
+        }
 
         case command_type::primitive_ring:
-            renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_Roundness * 2.f, m_SelectedPrimitiveColor);
+        {
+            float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
+            renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, m_SelectedPrimitiveColor);
             break;
+        }
 
         default:break;
         }
@@ -652,6 +661,8 @@ void PrimitivesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Default();
 
     m_CurrentState = new_state;
+
+    log_debug("state : %d", m_CurrentState);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

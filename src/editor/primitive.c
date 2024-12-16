@@ -196,7 +196,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     }
 
     mu_label(gui_context, "thickness");
-    res |= mu_slider_ex(gui_context, &p->m_Thickness, 0.f, 100.f, 0.1f, "%3.2f", 0);
+    res |= mu_slider_ex(gui_context, &p->m_Thickness, 0.f, primitive_max_thickness, 0.1f, "%3.2f", 0);
 
     _Static_assert(sizeof(p->m_Operator) == sizeof(int), "operator");
     mu_label(gui_context, "operation");
