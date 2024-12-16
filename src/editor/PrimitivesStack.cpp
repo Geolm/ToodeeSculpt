@@ -166,7 +166,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         assert(m_CurrentPoint < PRIMITIVE_MAXPOINTS);
         m_PrimitivePoints[m_CurrentPoint++] = m_MousePosition;
 
-        if (m_CurrentPoint == Primitive::GetNumPoints(m_PrimitiveType))
+        if (m_CurrentPoint == primitive_get_num_points(m_PrimitiveType))
         {
             if (m_PrimitiveType == command_type::primitive_oriented_box || m_PrimitiveType == command_type::primitive_ellipse)
                 SetState(state::SET_WIDTH);
@@ -199,12 +199,12 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     // primitive creation
     if (GetState() == state::CREATE_PRIMITIVE)
     {
-        Primitive new_primitive(m_PrimitiveType, op_union, unpacked_color(Primitive::m_Palette[0]), m_Roundness, m_Width);
+        Primitive new_primitive(m_PrimitiveType, op_union, unpacked_color(primitive_palette[0]), m_Roundness, m_Width);
 
         if (m_PrimitiveType == command_type::primitive_ring)
             new_primitive.SetThickness(m_Roundness * 2.f);
 
-        for(uint32_t i=0; i<Primitive::GetNumPoints(m_PrimitiveType); ++i)
+        for(uint32_t i=0; i<primitive_get_num_points(m_PrimitiveType); ++i)
             new_primitive.SetPoints(i, m_PrimitivePoints[i]);
 
         if (m_PrimitiveType == command_type::primitive_pie)
@@ -656,5 +656,7 @@ void PrimitivesStack::SetState(enum state new_state)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Terminate()
 {
+    log_debug("primitive stack terminate");
     cc_cleanup(&m_Primitives);
+    cc_cleanup(&m_MultipleSelection);
 }

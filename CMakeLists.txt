@@ -31,7 +31,9 @@ add_executable(ToodeeSculpt
 ./src/editor/color_box.c
 ./src/editor/Editor.cpp
 ./src/editor/Primitive.cpp
+./src/editor/primitive_base.c
 ./src/editor/PrimitivesStack.cpp
+./src/renderer/crenderer.cpp
 ./src/renderer/Renderer.cpp
 ./src/renderer/shader_reader.c
 ./src/system/arc.c

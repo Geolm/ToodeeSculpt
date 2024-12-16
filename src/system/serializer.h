@@ -25,7 +25,7 @@ typedef struct
 	uint8_t* buffer;
 	size_t position;	
 	size_t buffer_size;
-    serializer_status status;
+    enum serializer_status status;
 } serializer_context;
 
 //-----------------------------------------------------------------------------------------------------------------------------

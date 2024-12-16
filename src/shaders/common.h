@@ -15,7 +15,11 @@
 #define atomic_uint uint32_t
 #define device
 #define command_buffer void*
-typedef struct alignas(8) {float x, y;} float2;
+#ifdef __cplusplus
+    typedef struct alignas(8) {float x, y;} float2;
+#else
+    typedef struct {float x, y;} float2;
+#endif
 #else
 using namespace metal;
 #endif
@@ -49,7 +53,7 @@ enum sdf_operator
     op_last = 4
 };
 
-struct draw_color
+typedef struct draw_color
 {
     uint32_t packed_data;
 
@@ -73,9 +77,9 @@ struct draw_color
         packed_data = (uint8_t(alpha * 255.f)<<24) | (uint8_t(blue * 255.f)<<16) | (uint8_t(green*255.f)<<8) | uint8_t(red*255.f);
     }
 #endif
-};
+} draw_color;
 
-struct draw_command
+typedef struct draw_command
 {
     uint8_t type;
     uint8_t clip_index;
@@ -83,7 +87,7 @@ struct draw_command
     uint8_t custom_data;
     draw_color color;
     uint32_t data_index;
-};
+} draw_command;
 
 static inline uint8_t pack_type(enum command_type type,  bool filled)
 {
@@ -102,30 +106,30 @@ static inline enum command_type primitive_get_type(uint8_t type)
     return (enum command_type)(type&COMMAND_TYPE_MASK);
 }
 
-struct tile_node
+typedef struct tile_node
 {
     uint32_t command_index;
     uint32_t next;
-};
+} tile_node;
 
-struct counters
+typedef struct counters
 {
     atomic_uint num_nodes;
     atomic_uint num_tiles;
     uint32_t pad[2];
-};
+} counters;
 
-struct clip_rect
+typedef struct clip_rect
 {
     uint16_t min_x, min_y, max_x, max_y;
-};
+} clip_rect;
 
-struct quantized_aabb
+typedef struct quantized_aabb
 {
     uint8_t min_x, min_y, max_x, max_y;
-};
+} quantized_aabb;
 
-struct draw_cmd_arguments
+typedef struct draw_cmd_arguments
 {
     constant draw_command* commands;
     constant quantized_aabb* commands_aabb;
@@ -141,19 +145,19 @@ struct draw_cmd_arguments
     float2 font_size;
     float font_scale;
     bool culling_debug;
-};
+} draw_cmd_arguments;
 
-struct tiles_data
+typedef struct tiles_data
 {
     device tile_node* head;
     device tile_node* nodes;
     device uint16_t* tile_indices;
-};
+} tiles_data;
 
-struct output_command_buffer
+typedef struct output_command_buffer
 {
     command_buffer cmd_buffer;
-};
+} output_command_buffer;
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
