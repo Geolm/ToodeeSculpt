@@ -20,6 +20,19 @@ packed_color primitive_palette[16] =
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
+void primitive_init(struct primitive_base* p, enum command_type type, enum sdf_operator op, color4f color, float roundness, float width)
+{
+    p->m_Width = width;
+    p->m_Roundness = roundness;
+    p->m_Thickness = 0.f;
+    p->m_Type = type;
+    p->m_Filled = 1;
+    p->m_Operator = op;
+    p->m_Color = color;
+    p->m_AABB = aabb_invalid();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 bool primitive_test_mouse_cursor(struct primitive_base const* p, vec2 mouse_position, bool test_vertices)
 {
     bool result = false;
@@ -357,3 +370,18 @@ void primitive_draw(struct primitive_base* p, void* renderer, float roundness, d
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------------
+void primitive_draw_gizmo(struct primitive_base* p, void* renderer, draw_color color)
+{
+    primitive_draw(p, renderer, 0.f, color, op_add);
+
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+        renderer_drawcircle_filled(renderer, p->m_Points[i], point_radius, (draw_color){.packed_data = 0x7f10e010}, op_union);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void primitive_draw_alpha(struct primitive_base* p, void* renderer, float alpha)
+{
+    draw_color color = draw_color_from_float(p->m_Color.red, p->m_Color.green, p->m_Color.blue, alpha);
+    primitive_draw(p, renderer, p->m_Roundness, color, p->m_Operator);
+}

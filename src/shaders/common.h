@@ -79,6 +79,13 @@ typedef struct draw_color
 #endif
 } draw_color;
 
+static inline draw_color draw_color_from_float(float red, float green, float blue, float alpha)
+{
+    draw_color color;
+    color.packed_data = ((uint8_t)(alpha * 255.f)<<24) | ((uint8_t)(blue * 255.f)<<16) | ((uint8_t)(green*255.f)<<8) | (uint8_t)(red*255.f);
+    return color;
+}
+
 typedef struct draw_command
 {
     uint8_t type;

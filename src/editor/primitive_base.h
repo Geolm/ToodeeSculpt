@@ -30,6 +30,7 @@ extern "C" {
 
 struct mu_Context;
 
+void primitive_init(struct primitive_base* p, enum command_type type, enum sdf_operator op, color4f color, float roundness, float width);
 bool primitive_test_mouse_cursor(struct primitive_base const* primitive, vec2 mouse_position, bool test_vertices);
 float primitive_distance_to_nearest_point(struct primitive_base const* primitive, vec2 reference);
 void primitive_update_aabb(struct primitive_base* primitive);
@@ -42,6 +43,8 @@ void primitive_translate(struct primitive_base* p, vec2 translation);
 void primitive_normalize(struct primitive_base* p, const aabb* box);
 void primitive_expand(struct primitive_base* p, const aabb* box);
 void primitive_draw(struct primitive_base* p, void* renderer, float roundness, draw_color color, enum sdf_operator op);
+void primitive_draw_gizmo(struct primitive_base* p, void* renderer, draw_color color);
+void primitive_draw_alpha(struct primitive_base* p, void* renderer, float alpha);
 
 
 #ifdef __cplusplus

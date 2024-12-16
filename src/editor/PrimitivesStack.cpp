@@ -84,7 +84,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
     }
     else if (GetState() == state::MOVING_PRIMITIVE)
     {
-        cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->Translate(m_MousePosition - m_Reference);
+        primitive_translate(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), m_MousePosition - m_Reference);
         m_Reference = m_MousePosition;
     }
 }
@@ -98,7 +98,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         if (aabb_test_point(&m_EditionZone, m_MousePosition))
         {
-            if (SelectedPrimitiveValid() && cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->TestMouseCursor(m_MousePosition, false))
+            if (SelectedPrimitiveValid() && primitive_test_mouse_cursor(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), m_MousePosition, false))
             {
                 m_SelectedPrimitiveContextualMenuOpen = !m_SelectedPrimitiveContextualMenuOpen;
             }
@@ -224,7 +224,7 @@ bool PrimitivesStack::SelectPrimitive()
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
     {
         Primitive *p = cc_get(&m_Primitives, i);
-        if (p->TestMouseCursor(m_MousePosition, true))
+        if (primitive_test_mouse_cursor(p, m_MousePosition, true))
             cc_push(&m_MultipleSelection, i);
     }
 
@@ -241,7 +241,7 @@ bool PrimitivesStack::SelectPrimitive()
     for(uint32_t i=0; i<cc_size(&m_MultipleSelection); ++i)
     {
         Primitive *p = cc_get(&m_Primitives, *cc_get(&m_MultipleSelection, i));
-        float distance = p->DistanceToNearestPoint(m_MousePosition);
+        float distance = primitive_distance_to_nearest_point(p, m_MousePosition);
         if (distance < min_distance)
         {
             min_distance = distance;
@@ -263,9 +263,9 @@ void PrimitivesStack::Draw(Renderer& renderer)
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
     {
         Primitive *primitive = cc_get(&m_Primitives, i);
-        primitive->Draw(renderer, m_AlphaValue);
+        primitive_draw_alpha(primitive, &renderer, m_AlphaValue);
         if (m_DebugInfo)
-            renderer.DrawText(primitive->ComputerCenter(), format("%d", i), draw_color(na16_black));
+            renderer.DrawText(primitive_compute_center(primitive), format("%d", i), draw_color(na16_black));
     }
     renderer.EndCombination();
 
@@ -334,26 +334,26 @@ void PrimitivesStack::Draw(Renderer& renderer)
         for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
         {
             Primitive *primitive = cc_get(&m_Primitives, i);
-            if (primitive->TestMouseCursor(m_MousePosition, true))
+            if (primitive_test_mouse_cursor(primitive, m_MousePosition, true))
             {
-                primitive->DrawGizmo(renderer, m_HoveredPrimitiveColor);
+                primitive_draw_gizmo(primitive, &renderer, m_HoveredPrimitiveColor);
                 if (i == m_SelectedPrimitiveIndex)
                     MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
         if (SelectedPrimitiveValid())
-            cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->DrawGizmo(renderer, m_SelectedPrimitiveColor);
+            primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), &renderer, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
         {
             Primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            primitive->DrawGizmo(renderer, m_SelectedPrimitiveColor);
+            primitive_draw_gizmo(primitive, &renderer, m_SelectedPrimitiveColor);
 
             if (m_DebugInfo)
-                renderer.DrawText(primitive->ComputerCenter(), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
+                renderer.DrawText(primitive_compute_center(primitive), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
         }
     }
 }
@@ -388,7 +388,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
     if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 500), window_options))
     {
         if (SelectedPrimitiveValid())
-            res |= cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->PropertyGrid(gui_context);
+            res |= primitive_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context);
 
         mu_end_window(gui_context);
     }
@@ -493,7 +493,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            if (cc_get(&m_Primitives, m_SelectedPrimitiveIndex)->ContextualPropertyGrid(gui_context))
+            if (primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context))
             {
                 UndoSnapshot();
             }
@@ -519,7 +519,7 @@ void PrimitivesStack::Serialize(serializer_context* context)
     serializer_write_size_t(context, cc_size(&m_Primitives));
     
      for(uint32_t i=0; i<array_size; ++i)
-        cc_get(&m_Primitives, i)->Serialize(context);
+        primitive_serialize(cc_get(&m_Primitives, i), context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -532,7 +532,7 @@ void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, u
     cc_resize(&m_Primitives, array_size);
 
     for(uint32_t i=0; i<array_size; ++i)
-        cc_get(&m_Primitives, i)->Deserialize(context, major, minor);
+        primitive_deserialize(cc_get(&m_Primitives, i), context, major, minor);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -589,8 +589,8 @@ void PrimitivesStack::Paste()
 {
     if (m_CopiedPrimitive.IsValid())
     {
-        vec2 center = m_CopiedPrimitive.ComputerCenter();
-        m_CopiedPrimitive.Translate(m_MousePosition - center);
+        vec2 center = primitive_compute_center(&m_CopiedPrimitive);
+        primitive_translate(&m_CopiedPrimitive, m_MousePosition - center);
         cc_push(&m_Primitives, m_CopiedPrimitive);
         SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         UndoSnapshot();
