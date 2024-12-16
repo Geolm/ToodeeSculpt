@@ -72,7 +72,11 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
             arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &center, &direction, &aperture, &radius);
 
             if (radius>0.f)
-                result = point_in_circle(center, radius, p->m_Thickness, mouse_position) && point_in_pie(center, direction, radius, aperture, mouse_position);
+            {
+                float half_thickness = p->m_Thickness * .5f;
+                result = !point_in_disc(center, radius - half_thickness , mouse_position);
+                result &= point_in_pie(center, direction, radius + half_thickness, aperture, mouse_position);
+            }
             else
                 result = false;
             break;
