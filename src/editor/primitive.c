@@ -85,7 +85,7 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
     if (test_vertices)
     {
         for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
-            result |= point_in_disc(p->m_Points[i], point_radius, mouse_position);
+            result |= point_in_disc(p->m_Points[i], primitive_point_radius, mouse_position);
     }
 
     return result;
@@ -374,7 +374,7 @@ void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color)
     primitive_draw(p, renderer, 0.f, color, op_add);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
-        renderer_drawcircle_filled(renderer, p->m_Points[i], point_radius, (draw_color){.packed_data = 0x7f10e010}, op_union);
+        renderer_drawcircle_filled(renderer, p->m_Points[i], primitive_point_radius, (draw_color){.packed_data = 0x7f10e010}, op_union);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
