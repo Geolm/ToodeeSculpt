@@ -146,6 +146,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
         {
+            primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
             SetState(state::IDLE);
             UndoSnapshot();
         }
@@ -153,6 +154,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     // moving primitive
     else if (GetState() == state::MOVING_PRIMITIVE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {
+        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
         SetState(state::IDLE);
         if (m_StartingPoint != m_MousePosition)
             UndoSnapshot();
@@ -210,6 +212,8 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 
         if (m_PrimitiveType == command_type::primitive_pie)
             new_primitive.m_Aperture = m_Aperture;
+
+        primitive_update_aabb(&new_primitive);
 
         cc_push(&m_Primitives, new_primitive);
         SetState(state::IDLE);
@@ -395,17 +399,22 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
+    primitive* selected = (SelectedPrimitiveValid()) ? cc_get(&m_Primitives, m_SelectedPrimitiveIndex) : nullptr;
+
     if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 500), window_options))
     {
-        if (SelectedPrimitiveValid())
-            res |= primitive_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context);
+        if (selected)
+            res |= primitive_property_grid(selected, gui_context);
 
         mu_end_window(gui_context);
     }
 
     // if something has changed, handle undo
     if (res & MU_RES_SUBMIT)
+    {
+        primitive_update_aabb(selected);
         UndoSnapshot();
+    }
 
     ContextualMenu(gui_context);
 }
@@ -486,6 +495,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                     primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
                     *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_last(&m_Primitives);
                     *cc_last(&m_Primitives) = temp;
+                    SetSelectedPrimitive(INVALID_INDEX);
                     UndoSnapshot();
                 }
                 m_SelectedPrimitiveContextualMenuOpen = false;
@@ -498,12 +508,13 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                     primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
                     *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_first(&m_Primitives);
                     *cc_first(&m_Primitives) = temp;
+                    SetSelectedPrimitive(INVALID_INDEX);
                     UndoSnapshot();
                 }
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            if (primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context))
+            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context))
             {
                 UndoSnapshot();
             }
@@ -511,12 +522,6 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             mu_end_window(gui_context);
         }
     }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-size_t PrimitivesStack::GetSerializedDataLength()
-{
-    return 2 * sizeof(float) + sizeof(uint32_t) + sizeof(size_t) + cc_size(&m_Primitives) * sizeof(primitive);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -601,6 +606,7 @@ void PrimitivesStack::Paste()
     {
         vec2 center = primitive_compute_center(&m_CopiedPrimitive);
         primitive_translate(&m_CopiedPrimitive, m_MousePosition - center);
+        primitive_update_aabb(&m_CopiedPrimitive);
         cc_push(&m_Primitives, m_CopiedPrimitive);
         SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         UndoSnapshot();
