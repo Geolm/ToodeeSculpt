@@ -24,8 +24,8 @@ public:
     void UserInterface(struct mu_Context* gui_context);
     void UndoSnapshot();
     void Undo();
-    void Serialize(serializer_context* context);
-    void Deserialize(serializer_context* context, uint16_t major, uint16_t minor);
+    void Serialize(serializer_context* context, bool normalization);
+    void Deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization);
     void CopySelected();
     void Paste();
     void DeleteSelected();

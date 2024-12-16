@@ -525,7 +525,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Serialize(serializer_context* context)
+void PrimitivesStack::Serialize(serializer_context* context, bool normalization)
 {
     size_t array_size = cc_size(&m_Primitives);
     serializer_write_float(context, m_AlphaValue);
@@ -534,11 +534,17 @@ void PrimitivesStack::Serialize(serializer_context* context)
     serializer_write_size_t(context, cc_size(&m_Primitives));
     
      for(uint32_t i=0; i<array_size; ++i)
-        primitive_serialize(cc_get(&m_Primitives, i), context);
+     {
+        primitive p = *cc_get(&m_Primitives, i);
+        if (normalization)
+            primitive_normalize(&p, &m_EditionZone);
+
+        primitive_serialize(&p, context);
+     }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, uint16_t minor)
+void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization)
 {
     m_AlphaValue = serializer_read_float(context);
     m_SmoothBlend = serializer_read_float(context);
@@ -547,7 +553,14 @@ void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, u
     cc_resize(&m_Primitives, array_size);
 
     for(uint32_t i=0; i<array_size; ++i)
-        primitive_deserialize(cc_get(&m_Primitives, i), context, major, minor);
+    {
+        primitive* p = cc_get(&m_Primitives, i);
+
+        primitive_deserialize(p, context, major, minor);
+        if (normalization)
+            primitive_expand(p, &m_EditionZone);
+        primitive_update_aabb(p);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -558,7 +571,7 @@ void PrimitivesStack::UndoSnapshot()
 
     void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
     serializer_init(&serializer, buffer, max_size);
-    Serialize(&serializer);
+    Serialize(&serializer, false);
     undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
 
     if (serializer_get_status(&serializer) == serializer_write_error)
@@ -582,7 +595,7 @@ void PrimitivesStack::Undo()
         if (pBuffer != nullptr)
         {
             serializer_init(&serializer, pBuffer, max_size);
-            Deserialize(&serializer, TDS_MAJOR, TDS_MINOR);
+            Deserialize(&serializer, TDS_MAJOR, TDS_MINOR, false);
             if (serializer_get_status(&serializer) == serializer_read_error)
                 log_fatal("corrupted undo buffer");
         }

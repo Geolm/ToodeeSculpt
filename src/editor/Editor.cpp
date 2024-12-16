@@ -279,7 +279,7 @@ void Editor::Save()
         serializer_write_uint32_t(&serializer, TDS_FOURCC);
         serializer_write_uint16_t(&serializer, TDS_MAJOR);
         serializer_write_uint16_t(&serializer, TDS_MINOR);
-        m_PrimitivesStack.Serialize(&serializer);
+        m_PrimitivesStack.Serialize(&serializer, tds_normalizion_support());
 
         if (serializer_get_status(&serializer) == serializer_no_error)
         {
@@ -337,7 +337,7 @@ void Editor::Load()
                         uint16_t minor = serializer_read_uint16_t(&serializer);
                         log_debug("loading file version %d.%03d", major, minor);
 
-                        m_PrimitivesStack.Deserialize(&serializer, major, minor);
+                        m_PrimitivesStack.Deserialize(&serializer, major, minor, tds_normalizion_support());
 
                         if (serializer_get_status(&serializer) != serializer_no_error)
                             Popup("load failure", "unable to load primitives");

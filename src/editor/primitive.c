@@ -265,7 +265,7 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
             serializer_read_struct(context, p->m_Operator);
             serializer_read_struct(context, p->m_Color);
         }
-        else if (minor == 1)
+        else if (minor >= 1)
         {
             serializer_read_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
             serializer_read_struct(context, p->m_Type);
@@ -281,8 +281,6 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
             serializer_read_struct(context, p->m_Color);
         }
     }
-
-    primitive_update_aabb(p);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -313,15 +311,27 @@ void primitive_translate(struct primitive* p, vec2 translation)
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_normalize(struct primitive* p, const aabb* box)
 {
+    float normalization_factor = 1.f / aabb_get_size(box).x;
+
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
         p->m_Points[i] = aabb_get_uv(box, p->m_Points[i]);
+
+    p->m_Roundness *= normalization_factor;
+    p->m_Thickness *= normalization_factor;
+    p->m_Width *= normalization_factor;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_expand(struct primitive* p, const aabb* box)
 {
+    float expand_factor = aabb_get_size(box).x;
+
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
         p->m_Points[i] = aabb_bilinear(box, p->m_Points[i]);
+
+    p->m_Roundness *= expand_factor;
+    p->m_Thickness *= expand_factor;
+    p->m_Width *= expand_factor;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

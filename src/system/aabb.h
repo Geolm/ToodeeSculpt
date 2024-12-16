@@ -30,7 +30,7 @@ static aabb aabb_from_capsule(vec2 p0, vec2 p1, float radius);
 static aabb aabb_from_obb(vec2 p0, vec2 p1, float width);
 static aabb aabb_from_circle(vec2 center, float radius);
 static aabb aabb_from_triangle(vec2 v0, vec2 v1, vec2 v2);
-static aabb aabb_from_center(vec2 center, vec2 extent);
+static aabb aabb_from_center(vec2 center, vec2 half_extent);
 static bool aabb_test_point(const aabb* box, vec2 point);
 
 //-----------------------------------------------------------------------------
@@ -68,10 +68,10 @@ static inline void aabb_encompass(aabb* box, vec2 point)
 //-----------------------------------------------------------------------------
 static inline void aabb_scale(aabb* box, float scale)
 {
-    vec2 extent = vec2_scale(vec2_sub(box->max, box->min), .5f * scale);
+    vec2 half_extent = vec2_scale(vec2_sub(box->max, box->min), .5f * scale);
     vec2 center = vec2_scale(vec2_add(box->max, box->min), .5f);
-    box->min = vec2_sub(center, extent);
-    box->max = vec2_add(center, extent);
+    box->min = vec2_sub(center, half_extent);
+    box->max = vec2_add(center, half_extent);
 }
 
 //-----------------------------------------------------------------------------
@@ -144,9 +144,9 @@ static inline aabb aabb_from_triangle(vec2 v0, vec2 v1, vec2 v2)
 }
 
 //-----------------------------------------------------------------------------
-static inline aabb aabb_from_center(vec2 center, vec2 extent)
+static inline aabb aabb_from_center(vec2 center, vec2 half_extent)
 {
-    return (aabb) {.min = vec2_sub(center, extent), .max = vec2_add(center, extent)};
+    return (aabb) {.min = vec2_sub(center, half_extent), .max = vec2_add(center, half_extent)};
 }
 
 //-----------------------------------------------------------------------------
