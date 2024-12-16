@@ -41,7 +41,7 @@ void PrimitivesStack::New()
     m_SmoothBlend = 1.f;
     m_AlphaValue = 1.f;
     SetSelectedPrimitive(INVALID_INDEX);
-    m_CopiedPrimitive.SetInvalid();
+    primitive_set_invalid(&m_CopiedPrimitive);
     m_pGrabbedPoint = nullptr;
     m_MultipleSelectionHash = 0;
     m_MultipleSelectionIndex = 0;
@@ -115,12 +115,12 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         if (SelectedPrimitiveValid())
         {
-            Primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            for(uint32_t i=0; i<primitive->GetNumPoints(); ++i)
+            primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+            for(uint32_t i=0; i<primitive_get_num_points(primitive->m_Type); ++i)
             {
-                if (point_in_disc(primitive->GetPoints(i), Primitive::point_radius, m_MousePosition))
+                if (point_in_disc(primitive_get_points(primitive, i), primitive_point_radius, m_MousePosition))
                 {
-                    m_pGrabbedPoint = &primitive->GetPoints(i);
+                    m_pGrabbedPoint = &primitive->m_Points[i];
                     *m_pGrabbedPoint = m_MousePosition;
                     SetState(state::MOVING_POINT);
                 }
@@ -199,16 +199,17 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     // primitive creation
     if (GetState() == state::CREATE_PRIMITIVE)
     {
-        Primitive new_primitive(m_PrimitiveType, op_union, unpacked_color(primitive_palette[0]), m_Roundness, m_Width);
+        primitive new_primitive;
+        primitive_init(&new_primitive, m_PrimitiveType, op_union, unpacked_color(primitive_palette[0]), m_Roundness, m_Width);
 
         if (m_PrimitiveType == command_type::primitive_ring)
-            new_primitive.SetThickness(m_Roundness * 2.f);
+            new_primitive.m_Thickness = m_Roundness * 2.f;
 
         for(uint32_t i=0; i<primitive_get_num_points(m_PrimitiveType); ++i)
-            new_primitive.SetPoints(i, m_PrimitivePoints[i]);
+            primitive_set_points(&new_primitive, i, m_PrimitivePoints[i]);
 
         if (m_PrimitiveType == command_type::primitive_pie)
-            new_primitive.SetAperture(m_Aperture);
+            new_primitive.m_Aperture = m_Aperture;
 
         cc_push(&m_Primitives, new_primitive);
         SetState(state::IDLE);
@@ -223,7 +224,7 @@ bool PrimitivesStack::SelectPrimitive()
     cc_clear(&m_MultipleSelection);
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
     {
-        Primitive *p = cc_get(&m_Primitives, i);
+        primitive *p = cc_get(&m_Primitives, i);
         if (primitive_test_mouse_cursor(p, m_MousePosition, true))
             cc_push(&m_MultipleSelection, i);
     }
@@ -240,7 +241,7 @@ bool PrimitivesStack::SelectPrimitive()
     float min_distance = FLT_MAX;
     for(uint32_t i=0; i<cc_size(&m_MultipleSelection); ++i)
     {
-        Primitive *p = cc_get(&m_Primitives, *cc_get(&m_MultipleSelection, i));
+        primitive *p = cc_get(&m_Primitives, *cc_get(&m_MultipleSelection, i));
         float distance = primitive_distance_to_nearest_point(p, m_MousePosition);
         if (distance < min_distance)
         {
@@ -262,7 +263,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     renderer.BeginCombination(m_SmoothBlend);
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
     {
-        Primitive *primitive = cc_get(&m_Primitives, i);
+        primitive *primitive = cc_get(&m_Primitives, i);
         primitive_draw_alpha(primitive, &renderer, m_AlphaValue);
         if (m_DebugInfo)
             renderer.DrawText(primitive_compute_center(primitive), format("%d", i), draw_color(na16_black));
@@ -272,7 +273,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     if (GetState() == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawCircleFilled(m_PrimitivePoints[i], Primitive::point_radius, m_PointColor);
+            renderer.DrawCircleFilled(m_PrimitivePoints[i], primitive_point_radius, m_PointColor);
 
         // preview primitive
         if (m_CurrentPoint == 1)
@@ -288,11 +289,11 @@ void PrimitivesStack::Draw(Renderer& renderer)
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
                 renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
         }
-        renderer.DrawCircleFilled(m_MousePosition, Primitive::point_radius, m_PointColor);
+        renderer.DrawCircleFilled(m_MousePosition, primitive_point_radius, m_PointColor);
     }
     else if (GetState() == state::SET_WIDTH)
     {
-        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, m_PointColor);
+        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
 
         if (m_PrimitiveType == command_type::primitive_oriented_box)
             renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, m_SelectedPrimitiveColor);
@@ -301,7 +302,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
-        renderer.DrawCircleFilled(m_Reference, Primitive::point_radius, m_PointColor);
+        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
 
         // preview primitive
         switch(m_PrimitiveType)
@@ -333,7 +334,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
         {
-            Primitive *primitive = cc_get(&m_Primitives, i);
+            primitive *primitive = cc_get(&m_Primitives, i);
             if (primitive_test_mouse_cursor(primitive, m_MousePosition, true))
             {
                 primitive_draw_gizmo(primitive, &renderer, m_HoveredPrimitiveColor);
@@ -349,7 +350,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     {
         if (SelectedPrimitiveValid())
         {
-            Primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+            primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
             primitive_draw_gizmo(primitive, &renderer, m_SelectedPrimitiveColor);
 
             if (m_DebugInfo)
@@ -363,7 +364,7 @@ void PrimitivesStack::DuplicateSelected()
 {
     if (SelectedPrimitiveValid())
     {
-        Primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+        primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         cc_push(&m_Primitives, new_primitive);
         SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
         log_debug("primitive duplicated");
@@ -473,7 +474,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             {
                 if (SelectedPrimitiveValid())
                 {
-                    Primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+                    primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
                     *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_last(&m_Primitives);
                     *cc_last(&m_Primitives) = temp;
                     UndoSnapshot();
@@ -485,7 +486,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             {
                 if (SelectedPrimitiveValid())
                 {
-                    Primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+                    primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
                     *cc_get(&m_Primitives, m_SelectedPrimitiveIndex) = *cc_first(&m_Primitives);
                     *cc_first(&m_Primitives) = temp;
                     UndoSnapshot();
@@ -506,7 +507,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 size_t PrimitivesStack::GetSerializedDataLength()
 {
-    return 2 * sizeof(float) + sizeof(uint32_t) + sizeof(size_t) + cc_size(&m_Primitives) * sizeof(Primitive);
+    return 2 * sizeof(float) + sizeof(uint32_t) + sizeof(size_t) + cc_size(&m_Primitives) * sizeof(primitive);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -587,7 +588,7 @@ void PrimitivesStack::CopySelected()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Paste()
 {
-    if (m_CopiedPrimitive.IsValid())
+    if (primitive_is_valid(&m_CopiedPrimitive))
     {
         vec2 center = primitive_compute_center(&m_CopiedPrimitive);
         primitive_translate(&m_CopiedPrimitive, m_MousePosition - center);

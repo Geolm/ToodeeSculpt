@@ -1,4 +1,4 @@
-#include "primitive_base.h"
+#include "primitive.h"
 #include "../system/point_in.h"
 #include "../system/arc.h"
 #include "../system/palettes.h"
@@ -6,8 +6,6 @@
 #include "../system/serializer.h"
 #include "../renderer/crenderer.h"
 #include "color_box.h"
-
-#define point_radius (6.f)
 
 static int g_SDFOperationComboBox = 0;
 
@@ -20,7 +18,7 @@ packed_color primitive_palette[16] =
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_init(struct primitive_base* p, enum command_type type, enum sdf_operator op, color4f color, float roundness, float width)
+void primitive_init(struct primitive* p, enum command_type type, enum sdf_operator op, color4f color, float roundness, float width)
 {
     p->m_Width = width;
     p->m_Roundness = roundness;
@@ -33,7 +31,7 @@ void primitive_init(struct primitive_base* p, enum command_type type, enum sdf_o
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-bool primitive_test_mouse_cursor(struct primitive_base const* p, vec2 mouse_position, bool test_vertices)
+bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position, bool test_vertices)
 {
     bool result = false;
 
@@ -95,7 +93,7 @@ bool primitive_test_mouse_cursor(struct primitive_base const* p, vec2 mouse_posi
 
 
 //----------------------------------------------------------------------------------------------------------------------------
-float primitive_distance_to_nearest_point(struct primitive_base const* p, vec2 reference)
+float primitive_distance_to_nearest_point(struct primitive const* p, vec2 reference)
 {
     float min_distance = FLT_MAX;
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
@@ -108,7 +106,7 @@ float primitive_distance_to_nearest_point(struct primitive_base const* p, vec2 r
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_update_aabb(struct primitive_base* p)
+void primitive_update_aabb(struct primitive* p)
 {
     switch(p->m_Type)
     {
@@ -133,7 +131,7 @@ void primitive_update_aabb(struct primitive_base* p)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-int primitive_property_grid(struct primitive_base* p, struct mu_Context* gui_context)
+int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
 {
     int res = 0;
 
@@ -214,7 +212,7 @@ int primitive_property_grid(struct primitive_base* p, struct mu_Context* gui_con
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-vec2 primitive_compute_center(struct primitive_base const* p)
+vec2 primitive_compute_center(struct primitive const* p)
 {
     vec2 center = {.x = 0.f, .y = 0.f};
     uint32_t num_points = primitive_get_num_points(p->m_Type);
@@ -225,7 +223,7 @@ vec2 primitive_compute_center(struct primitive_base const* p)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-int primitive_contextual_property_grid(struct primitive_base* p, struct mu_Context* gui_context)
+int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context)
 {
     int res = 0;
 
@@ -236,7 +234,7 @@ int primitive_contextual_property_grid(struct primitive_base* p, struct mu_Conte
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_deserialize(struct primitive_base* p, serializer_context* context, uint16_t major, uint16_t minor)
+void primitive_deserialize(struct primitive* p, serializer_context* context, uint16_t major, uint16_t minor)
 {
     if (major == 2)
     {
@@ -271,7 +269,7 @@ void primitive_deserialize(struct primitive_base* p, serializer_context* context
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_serialize(struct primitive_base const* p, serializer_context* context)
+void primitive_serialize(struct primitive const* p, serializer_context* context)
 {
     serializer_write_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
     serializer_write_struct(context, p->m_Type);
@@ -289,28 +287,28 @@ void primitive_serialize(struct primitive_base const* p, serializer_context* con
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_translate(struct primitive_base* p, vec2 translation)
+void primitive_translate(struct primitive* p, vec2 translation)
 {
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
         p->m_Points[i] = vec2_add(p->m_Points[i], translation);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_normalize(struct primitive_base* p, const aabb* box)
+void primitive_normalize(struct primitive* p, const aabb* box)
 {
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
         p->m_Points[i] = aabb_get_uv(box, p->m_Points[i]);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_expand(struct primitive_base* p, const aabb* box)
+void primitive_expand(struct primitive* p, const aabb* box)
 {
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
         p->m_Points[i] = aabb_bilinear(box, p->m_Points[i]);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw(struct primitive_base* p, void* renderer, float roundness, draw_color color, enum sdf_operator op)
+void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_color color, enum sdf_operator op)
 {
     switch(p->m_Type)
     {
@@ -371,7 +369,7 @@ void primitive_draw(struct primitive_base* p, void* renderer, float roundness, d
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_gizmo(struct primitive_base* p, void* renderer, draw_color color)
+void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color)
 {
     primitive_draw(p, renderer, 0.f, color, op_add);
 
@@ -380,7 +378,7 @@ void primitive_draw_gizmo(struct primitive_base* p, void* renderer, draw_color c
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_alpha(struct primitive_base* p, void* renderer, float alpha)
+void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha)
 {
     draw_color color = draw_color_from_float(p->m_Color.red, p->m_Color.green, p->m_Color.blue, alpha);
     primitive_draw(p, renderer, p->m_Roundness, color, p->m_Operator);

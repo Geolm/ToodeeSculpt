@@ -6,7 +6,7 @@
 #include "../system/aabb.h"
 #include "../system/serializer.h"
 #include "../shaders/common.h"
-#include "Primitive.h"
+#include "primitive.h"
 
 struct mu_Context;
 class Renderer;
@@ -63,7 +63,7 @@ private:
 
 private:
     // serialized data 
-    cc_vec(Primitive) m_Primitives;
+    cc_vec(primitive) m_Primitives;
     float m_SmoothBlend;
     float m_AlphaValue;
 
@@ -103,7 +103,7 @@ private:
 
     struct undo_context* m_pUndoContext;
     vec2* m_pGrabbedPoint;
-    Primitive m_CopiedPrimitive;
+    primitive m_CopiedPrimitive;
 };
 
 //----------------------------------------------------------------------------------------------------------------------------

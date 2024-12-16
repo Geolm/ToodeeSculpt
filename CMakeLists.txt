@@ -30,8 +30,7 @@ add_executable(ToodeeSculpt
 ./src/MouseCursors.cpp
 ./src/editor/color_box.c
 ./src/editor/Editor.cpp
-./src/editor/Primitive.cpp
-./src/editor/primitive_base.c
+./src/editor/primitive.c
 ./src/editor/PrimitivesStack.cpp
 ./src/renderer/crenderer.cpp
 ./src/renderer/Renderer.cpp
