@@ -26,4 +26,14 @@ static const uint32_t na16_black = 0xff1c0e1f;
 static const uint32_t slso8_numentries = 8;
 static const uint32_t slso8_palette[slso8_numentries] = {0xff452b0d, 0xff563c20, 0xff684e54, 0xff7a698d, 0xff5981d0, 0xff5eaaff, 0xffa3d4ff, 0xffd6ecff};
 
+
+struct palette
+{
+    uint32_t* entries;
+    uint32_t num_entries;
+};
+
+// returns null on error
+struct palette* palette_load_from_hex(const char* filename);
+
 #endif // __PALETTES_H
