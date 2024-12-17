@@ -416,7 +416,6 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
     }
 
     primitive* selected = (SelectedPrimitiveValid()) ? cc_get(&m_Primitives, m_SelectedPrimitiveIndex) : nullptr;
-
     if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 500), window_options))
     {
         if (selected)
@@ -428,7 +427,9 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
     // if something has changed, handle undo
     if (res & MU_RES_SUBMIT)
     {
-        primitive_update_aabb(selected);
+        if (selected)
+            primitive_update_aabb(selected);
+
         UndoSnapshot();
     }
 
