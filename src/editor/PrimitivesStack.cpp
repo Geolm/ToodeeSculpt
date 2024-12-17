@@ -705,7 +705,6 @@ void PrimitivesStack::SetState(enum state new_state)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Terminate()
 {
-    log_debug("primitive stack terminate");
     cc_cleanup(&m_Primitives);
     cc_cleanup(&m_MultipleSelection);
 }

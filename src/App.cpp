@@ -300,7 +300,6 @@ void App::OnMouseButton(int button, int action, int mods)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::Terminate()
 {
-    log_debug("app terminate");
     MouseCursors::GetInstance().Terminate();
     m_pEditor->Terminate();
     delete m_pEditor;

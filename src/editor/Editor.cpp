@@ -396,7 +396,6 @@ void Editor::Paste()
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Terminate()
 {
-    log_debug("editor terminate");
     undo_terminate(m_pUndoContext);
     m_PrimitivesStack.Terminate();
 }
