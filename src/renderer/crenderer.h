@@ -1,7 +1,7 @@
 #ifndef __CRENDERER__H__
 #define __CRENDERER__H__
 
-
+#include <stdint.h>
 #include "../system/aabb.h"
 #include "../shaders/common.h"
 
@@ -12,6 +12,8 @@
 extern "C" {
 #endif
 
+void renderer_begin_combination(void* cpp_renderer, float smooth_value);
+void renderer_end_combination(void* cpp_renderer);
 void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color);
 void renderer_drawcircle(void* cpp_renderer, vec2 center, float radius, float thickness, draw_color color, enum sdf_operator op);
 void renderer_drawcircle_filled(void* cpp_renderer, vec2 center, float radius, draw_color color, enum sdf_operator op);

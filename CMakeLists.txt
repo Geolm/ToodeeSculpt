@@ -24,7 +24,7 @@ find_package(glfw3 3.3 REQUIRED)
 
 add_executable(ToodeeSculpt
 ./src/App.cpp
-./src/Icons.cpp
+./src/Icons.c
 ./src/main.mm
 ./src/MetalLayerHelper.mm
 ./src/MouseCursors.cpp

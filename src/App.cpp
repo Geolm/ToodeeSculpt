@@ -15,7 +15,7 @@
 #include <string.h>
 #include "editor/Editor.h"
 #include "MouseCursors.h"
-#include "Icons.h"
+#include "icons.h"
 
 #define UNUSED_VARIABLE(a) (void)(a)
 
@@ -173,10 +173,10 @@ void App::DrawGui()
                               .max = (vec2) {(float)(cmd->icon.rect.x + cmd->icon.rect.w), (float)(cmd->icon.rect.y + cmd->icon.rect.h)}};
             switch(cmd->icon.id)
             {
-                case MU_ICON_CLOSE : DrawIcon(m_Renderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
-                case MU_ICON_COLLAPSED : DrawIcon(m_Renderer, box, ICON_COLLAPSED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
-                case MU_ICON_EXPANDED : DrawIcon(m_Renderer, box, ICON_EXPANDED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
-                case MU_ICON_CHECK : DrawIcon(m_Renderer, box, ICON_CHECK, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                case MU_ICON_CLOSE : DrawIcon(&m_Renderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
+                case MU_ICON_COLLAPSED : DrawIcon(&m_Renderer, box, ICON_COLLAPSED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                case MU_ICON_EXPANDED : DrawIcon(&m_Renderer, box, ICON_EXPANDED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                case MU_ICON_CHECK : DrawIcon(&m_Renderer, box, ICON_CHECK, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
             }
 
             break;

@@ -3,6 +3,16 @@
 
 // just redirect the call to c++ class
 
+void renderer_begin_combination(void* cpp_renderer, float smooth_value)
+{
+    ((Renderer*) cpp_renderer)->BeginCombination(smooth_value);
+}
+
+void renderer_end_combination(void* cpp_renderer)
+{
+    ((Renderer*) cpp_renderer)->EndCombination();
+}
+
 void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color)
 {
     ((Renderer*) cpp_renderer)->DrawBox(box, color);
