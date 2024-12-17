@@ -346,6 +346,20 @@ void primitive_translate(struct primitive* p, vec2 translation)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void primitive_rotate(struct primitive* p, float angle)
+{
+    vec2 center = primitive_compute_center(p);
+    vec2 rotation = vec2_angle(angle);
+
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    {
+        p->m_Points[i] = vec2_sub(p->m_Points[i], center);
+        p->m_Points[i] = vec2_rotate(p->m_Points[i], rotation);
+        p->m_Points[i] = vec2_add(p->m_Points[i], center);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void primitive_normalize(struct primitive* p, const aabb* box)
 {
     float normalization_factor = 1.f / aabb_get_size(box).x;

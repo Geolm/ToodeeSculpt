@@ -44,6 +44,7 @@ int primitive_contextual_property_grid(struct primitive* primitive, struct mu_Co
 void primitive_deserialize(struct primitive* primitive, serializer_context* context, uint16_t major, uint16_t minor);
 void primitive_serialize(struct primitive const* primitive, serializer_context* context);
 void primitive_translate(struct primitive* p, vec2 translation);
+void primitive_rotate(struct primitive* p, float angle);
 void primitive_normalize(struct primitive* p, const aabb* box);
 void primitive_expand(struct primitive* p, const aabb* box);
 void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_color color, enum sdf_operator op);

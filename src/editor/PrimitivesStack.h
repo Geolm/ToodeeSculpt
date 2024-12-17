@@ -49,7 +49,8 @@ private:
         SET_ANGLE,
         CREATE_PRIMITIVE,
         MOVING_POINT,
-        MOVING_PRIMITIVE
+        MOVING_PRIMITIVE,
+        ROTATING_PRIMITIVE
     };
 
 private:
@@ -92,6 +93,7 @@ private:
     float m_Width;
     float m_Roundness;
     float m_Aperture;
+    float m_Angle;
     command_type m_PrimitiveType;
 
     // primitive selection

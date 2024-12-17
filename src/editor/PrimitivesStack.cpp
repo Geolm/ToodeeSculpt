@@ -87,6 +87,12 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
         primitive_translate(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), m_MousePosition - m_Reference);
         m_Reference = m_MousePosition;
     }
+    else if (GetState() == state::ROTATING_PRIMITIVE)
+    {
+        primitive* selected = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+        *selected = m_CopiedPrimitive;
+        primitive_rotate(selected, vec2_atan2(m_MousePosition - m_Reference));
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -196,6 +202,11 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     else if (GetState() == state::SET_ANGLE && left_button_pressed)
     {
         SetState(state::CREATE_PRIMITIVE);
+    }
+    else if (GetState() == state::ROTATING_PRIMITIVE && left_button_pressed)
+    {
+        SetState(state::IDLE);
+        UndoSnapshot();
     }
 
     // primitive creation
@@ -370,6 +381,11 @@ void PrimitivesStack::Draw(Renderer& renderer)
                 renderer.DrawText(primitive_compute_center(primitive), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
         }
     }
+    else if (GetState() == state::ROTATING_PRIMITIVE)
+    {
+        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
+        primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), &renderer, m_SelectedPrimitiveColor);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -479,36 +495,29 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "rotate", 0, 0))
             {
+                SetState(state::ROTATING_PRIMITIVE);
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
-            if (mu_button_ex(gui_context, "scale", 0, 0))
+            else if (mu_button_ex(gui_context, "scale", 0, 0))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
-
-            if (mu_button_ex(gui_context, "front", 0, 0))
+            else if (mu_button_ex(gui_context, "front", 0, 0))
             {
-                if (SelectedPrimitiveValid())
-                {
-                    primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-                    cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
-                    cc_push(&m_Primitives, temp);
-                    SetSelectedPrimitive(INVALID_INDEX);
-                    UndoSnapshot();
-                }
+                primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+                cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
+                cc_push(&m_Primitives, temp);
+                SetSelectedPrimitive(INVALID_INDEX);
+                UndoSnapshot();
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
-
-            if (mu_button_ex(gui_context, "back", 0, 0))
+            else if (mu_button_ex(gui_context, "back", 0, 0))
             {
-                if (SelectedPrimitiveValid())
-                {
-                    primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-                    cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
-                    cc_insert(&m_Primitives, 0, temp);
-                    SetSelectedPrimitive(INVALID_INDEX);
-                    UndoSnapshot();
-                }
+                primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+                cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
+                cc_insert(&m_Primitives, 0, temp);
+                SetSelectedPrimitive(INVALID_INDEX);
+                UndoSnapshot();
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
@@ -652,6 +661,14 @@ void PrimitivesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
     }
 
+    if (new_state == state::ROTATING_PRIMITIVE)
+    {
+        m_CopiedPrimitive = *(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        m_Reference = primitive_compute_center(&m_CopiedPrimitive);
+        m_Angle = 0.f;
+        MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
+    }
+
     if (new_state == state::SET_ROUNDNESS)
     {
         m_Reference = m_MousePosition;
@@ -683,8 +700,6 @@ void PrimitivesStack::SetState(enum state new_state)
         MouseCursors::GetInstance().Default();
 
     m_CurrentState = new_state;
-
-    //log_debug("state : %d", m_CurrentState);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
