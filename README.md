@@ -6,7 +6,7 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 
 ###### Work in progress
 * only available on macOS Apple Silicon
-* lot of bugs, missing features
+* bugs, missing features
 
 ## Why
 * analytical shape, can adapt any resolution
@@ -16,10 +16,11 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 * out of the box anti-aliasing
 
 ## Features
-* Primitives : disc, triangle, oriented box, ellipse, 
+* Primitives : disc, triangle, oriented box, ellipse, pie, arc
 * Primitive can be rounded
 * Boolean operator : union, substraction, [smooth blend](https://iquilezles.org/articles/smin/)
-* Intuitive editor, undo support, grid snapping
+* Intuitive editor, undo support, grid snapping, copy/paste, rotation
+* Save/load
 
 ## GPU driven SDF renderer
 
@@ -34,10 +35,9 @@ More details to come in the documentation.
 
 ## Planned Dev
 
-* more primitives : arc, pie
+* more primitives : capsule
 * export to PNG, shadertoy shader
-* editor : multiple selection, copy/paste, zoom
-* save/load
+* editor : multiple selection, zoom
 
 ## How to build
 ### Prerequisite
