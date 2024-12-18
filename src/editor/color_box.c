@@ -1,6 +1,9 @@
 #include "../system/microui.h"
+#include "../system/palettes.h"
+#include "../system/nfd.h"
 #include "color_box.h"
 #include <assert.h>
+#include <stdlib.h>
 
 //----------------------------------------------------------------------------------------------------------------------------
 int color_property_grid(struct mu_Context* gui_context, struct color_box* context)
@@ -58,18 +61,18 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
 
     if (mu_header_ex(gui_context, "palette", MU_OPT_EXPANDED))
     {
-        assert(context->num_palette_entries < 32);
+        assert(context->palette->num_entries <= 32);
         r = mu_layout_next(gui_context);
 
         int width = r.w / context->palette_entries_per_row;
 
-        for(uint32_t i=0; i<context->num_palette_entries; ++i)
+        for(uint32_t i=0; i<context->palette->num_entries; ++i)
         {
             uint32_t x = i%context->palette_entries_per_row;
             if (x==0 && i > 0)
                 r = mu_layout_next(gui_context);
 
-            packed_color entry = context->palette_entries[i];
+            packed_color entry = context->palette->entries[i];
             mu_Rect entry_rect = mu_rect(r.x + x*width, r.y, width, r.h);
 
             if (mu_mouse_over(gui_context, entry_rect))
@@ -84,7 +87,7 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
                 }
                 else if ((gui_context->mouse_pressed&MU_MOUSE_RIGHT))
                 {
-                    context->palette_entries[i] = color4f_to_packed_color(*context->rgba_output);
+                    context->palette->entries[i] = color4f_to_packed_color(*context->rgba_output);
                 }
                 else
                 {
@@ -96,6 +99,20 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
 
             mu_draw_rect(gui_context, entry_rect, mu_color(packed_color_get_red(entry), packed_color_get_green(entry), packed_color_get_blue(entry), 255));
         }
+
+        if (mu_button(gui_context, "load"))
+        {
+            nfdchar_t *load_path = NULL;
+            nfdresult_t result = NFD_OpenDialog( "hex", NULL, &load_path);
+
+            if (result == NFD_OKAY)
+            {
+                palette_load_from_hex(load_path, context->palette);
+            }
+
+            free(load_path);
+        }
+
     }
 
     return res;

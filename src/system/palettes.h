@@ -2,6 +2,7 @@
 #define __PALETTES_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // https://lospec.com/palette-list/na16
 static const uint32_t na16_light_grey = 0xffae8f8c;
@@ -33,7 +34,19 @@ struct palette
     uint32_t num_entries;
 };
 
-// returns null on error
-struct palette* palette_load_from_hex(const char* filename);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void palette_default(struct palette* output);
+
+// returns false on error
+bool palette_load_from_hex(const char* filename, struct palette* output);
+
+void palette_free(struct palette* p);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __PALETTES_H

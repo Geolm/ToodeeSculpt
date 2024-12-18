@@ -2,6 +2,7 @@
 #define __COLOR_BOX__H__
 
 #include "../system/color.h"
+#include "../system/palettes.h"
 
 struct mu_Context;
 
@@ -10,8 +11,7 @@ struct color_box
 {
     color4f* rgba_output;
     hsv4f hsv;
-    packed_color* palette_entries;
-    uint32_t num_palette_entries;
+    struct palette *palette;
     uint32_t palette_entries_per_row;
 };
 

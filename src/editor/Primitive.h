@@ -6,6 +6,7 @@
 #include "../system/color.h"
 #include "../shaders/common.h"
 #include "../system/serializer.h"
+#include "../system/palettes.h"
 
 enum {PRIMITIVE_MAXPOINTS = 3};
 
@@ -26,7 +27,7 @@ struct primitive
     color4f m_Color;
 };
 
-extern packed_color primitive_palette[16];
+extern struct palette primitive_palette;
 
 #ifdef __cplusplus
 extern "C" {

@@ -11,14 +11,6 @@
 static int g_SDFOperationComboBox = 0;
 static const char* g_sdf_op_names[op_last] = {"add", "blend", "sub", "overlap"};
 
-packed_color primitive_palette[16] = 
-{
-    na16_light_grey, na16_dark_grey, na16_dark_brown, na16_brown,
-    na16_light_brown, na16_light_green, na16_green, na16_dark_green, 
-    na16_orange, na16_red, na16_pink, na16_purple,
-    na16_light_blue, na16_blue, na16_dark_blue, na16_black
-};
-
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_init(struct primitive* p, enum command_type type, enum sdf_operator op, color4f color, float roundness, float width)
 {
@@ -218,8 +210,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     struct color_box color = 
     {
         .rgba_output = &p->m_Color,
-        .num_palette_entries = 16,
-        .palette_entries = primitive_palette,
+        .palette = &primitive_palette,
         .palette_entries_per_row = 8
     };
 

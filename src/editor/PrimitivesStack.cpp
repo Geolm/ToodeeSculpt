@@ -11,6 +11,7 @@
 #include "tds.h"
 
 const vec2 contextual_menu_size = {100.f, 190.f};
+struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
@@ -27,6 +28,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_PointColor = draw_color(0x10e010, 128);
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
+    palette_default(&primitive_palette);
     New();
 }
 
@@ -213,7 +215,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     if (GetState() == state::CREATE_PRIMITIVE)
     {
         primitive new_primitive;
-        primitive_init(&new_primitive, m_PrimitiveType, op_union, unpacked_color(primitive_palette[0]), m_Roundness, m_Width);
+        primitive_init(&new_primitive, m_PrimitiveType, op_union, unpacked_color(primitive_palette.entries[0]), m_Roundness, m_Width);
 
         if (m_PrimitiveType == command_type::primitive_ring)
             new_primitive.m_Thickness = m_Roundness * 2.f;
@@ -416,7 +418,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
     }
 
     primitive* selected = (SelectedPrimitiveValid()) ? cc_get(&m_Primitives, m_SelectedPrimitiveIndex) : nullptr;
-    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 500), window_options))
+    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 540), window_options))
     {
         if (selected)
             res |= primitive_property_grid(selected, gui_context);
@@ -706,6 +708,7 @@ void PrimitivesStack::SetState(enum state new_state)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Terminate()
 {
+    palette_free(&primitive_palette);
     cc_cleanup(&m_Primitives);
     cc_cleanup(&m_MultipleSelection);
 }

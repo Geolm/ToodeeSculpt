@@ -8,7 +8,7 @@ set(CMAKE_RELEASE_FLAGS "-O3 -DNDEBUG -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno
 project(ToodeeSculpt)
 
 # --- Build the binarize ---
-add_executable(binarize ./src/tools/binarize.c ./src/system/bin2h.c ./src/system/format.c ./src/renderer/shader_reader.c ./src/system/palettes.c)
+add_executable(binarize ./src/tools/binarize.c ./src/system/bin2h.c ./src/system/format.c ./src/renderer/shader_reader.c)
 
 # --- Prebuild step ---
 add_custom_command(

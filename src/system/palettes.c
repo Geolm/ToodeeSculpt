@@ -1,22 +1,51 @@
 #include "palettes.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "log.h"
 
-struct palette* palette_load_from_hex(const char* filename)
+//-----------------------------------------------------------------------------
+void palette_default(struct palette* output)
+{
+    output->num_entries = 16;
+    output->entries = (uint32_t*) malloc(sizeof(uint32_t) * output->num_entries);
+    output->entries[0] = na16_light_grey;
+    output->entries[1] = na16_dark_grey;
+    output->entries[2] = na16_dark_brown;
+    output->entries[3] = na16_brown;
+    output->entries[4] = na16_light_brown;
+    output->entries[5] = na16_light_green;
+    output->entries[6] = na16_green;
+    output->entries[7] = na16_dark_green;
+    output->entries[8] = na16_orange;
+    output->entries[9] = na16_red;
+    output->entries[10] = na16_pink;
+    output->entries[11] = na16_purple;
+    output->entries[12] = na16_light_blue;
+    output->entries[13] = na16_blue;
+    output->entries[14] = na16_dark_blue;
+    output->entries[15] = na16_black;
+}
+
+//-----------------------------------------------------------------------------
+bool palette_load_from_hex(const char* filename, struct palette* output)
 {
     FILE* f = fopen(filename, "r");
 
-    if (f == NULL)
-        return NULL;
+    log_debug("try to open '%s'", filename);
 
-    struct palette* output = (struct palette*) malloc(sizeof(struct palette));
+    if (f == NULL)
+    {
+        log_debug("unable to open file");
+        return false;
+    }
+
     output->num_entries = 0;
-    
+
     // first pass count the number of entries
     uint32_t dummy;
     int scanf_result = fscanf(f, "%x", &dummy);
     
-    while (scanf_result)
+    while (scanf_result==1)
     {
         output->num_entries++;
         scanf_result = fscanf(f, "%x", &dummy);
@@ -24,18 +53,34 @@ struct palette* palette_load_from_hex(const char* filename)
 
     if (output->num_entries == 0)
     {
+        log_debug("unable to read palette");
         free(output);
         fclose(f);
-        return NULL;
+        return false;
     }
+
+    log_debug("found %d palette entries", output->num_entries);
 
     output->entries = (uint32_t*) malloc(sizeof(uint32_t) * output->num_entries);
     rewind(f);
 
     for(uint32_t i=0; i<output->num_entries; ++i)
-        fscanf(f, "%x", &output->entries[i]);
-    
-    fclose(f);
+    {
+        uint32_t raw_color;
+        fscanf(f, "%x", &raw_color);
+        output->entries[i] = (raw_color&0xff)<<16;
+        output->entries[i] |= (raw_color>>16)&0xff;
+        output->entries[i] |= raw_color&0xff00ff00;
+    }
 
-    return output;
+    fclose(f);
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+void palette_free(struct palette* p)
+{
+    p->num_entries = 0;
+    free(p->entries);
+    p->entries = NULL;
 }
