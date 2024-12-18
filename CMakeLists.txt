@@ -7,15 +7,15 @@ set(CMAKE_RELEASE_FLAGS "-O3 -DNDEBUG -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno
 
 project(ToodeeSculpt)
 
-# --- Build the shader_bin ---
-add_executable(shader_bin ./src/tools/shader_bin.c ./src/system/bin2h.c ./src/system/format.c ./src/renderer/shader_reader.c)
+# --- Build the binarize ---
+add_executable(binarize ./src/tools/binarize.c ./src/system/bin2h.c ./src/system/format.c ./src/renderer/shader_reader.c ./src/system/palettes.c)
 
 # --- Prebuild step ---
 add_custom_command(
-        OUTPUT shader_bin_output.txt
+        OUTPUT bin_output.txt
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        COMMAND shader_bin > shader_bin_output.txt
-        DEPENDS shader_bin
+        COMMAND binarize > bin_output.txt
+        DEPENDS binarize
 )
 
 # --- Build ToodeeSculpt ---
@@ -47,7 +47,7 @@ add_executable(ToodeeSculpt
 ./src/system/whereami.c
 )
 
-add_custom_target(prebuild_step DEPENDS shader_bin_output.txt)
+add_custom_target(prebuild_step DEPENDS bin_output.txt)
 add_dependencies(ToodeeSculpt prebuild_step)
 
 target_link_libraries(ToodeeSculpt glfw)
