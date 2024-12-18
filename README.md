@@ -2,7 +2,7 @@
 
 Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) with smooth operator to sculpt your shape
 
-![2024-11 screenshot](/images/Screenshot%202024-12-12%20at%2021.27.20.png)
+![2024-11 screenshot](/images/Screenshot%202024-12-18%20at%2011.24.02.png)
 
 ###### Work in progress
 * only available on macOS Apple Silicon
@@ -48,7 +48,7 @@ More details to come in the documentation.
 * open a terminal in the folder
 * mkdir build
 * cd build
-* cmake ..
+* cmake -DCMAKE_BUILD_TYPE=Release ..
 * cmake --build .
 * ./ToodeeSculpt
 
