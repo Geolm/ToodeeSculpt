@@ -39,7 +39,7 @@ int main(int argc, const char * argv[])
     UNUSED_VARIABLE(argc);
     UNUSED_VARIABLE(argv);
 
-    fprintf(stdout, "shader_bin\n");
+    fprintf(stdout, "binarize shaders\n");
 
     if (!bin_shader("binning"))
         return -1;
