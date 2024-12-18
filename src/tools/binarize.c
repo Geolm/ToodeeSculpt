@@ -9,12 +9,12 @@
 #define SHADERS_PATH "../src/shaders/"
 
 // ---------------------------------------------------------------------------------------------------------------------------
-bool bin_shader(const char* shader_name)
+bool bin_shader(const char* shader_name, const char* extension)
 {
     bool result = false;
-    char* shader_buffer = read_shader_include(SHADERS_PATH, format("%s.metal", shader_name));
+    char* shader_buffer = read_shader_include(SHADERS_PATH, format("%s.%s", shader_name, extension));
 
-    fprintf(stdout, "opening %s%s.metal ", SHADERS_PATH, shader_name);
+    fprintf(stdout, "opening %s%s.%s ", SHADERS_PATH, shader_name, extension);
 
     if (shader_buffer != NULL)
     {
@@ -41,10 +41,13 @@ int main(int argc, const char * argv[])
 
     fprintf(stdout, "binarize shaders\n");
 
-    if (!bin_shader("binning"))
+    if (!bin_shader("binning", "metal"))
         return -1;
 
-    if (!bin_shader("rasterizer"))
+    if (!bin_shader("rasterizer", "metal"))
+        return -1;
+
+    if (!bin_shader("shadertoy_boilerplate", "glsl"))
         return -1;
 
     fprintf(stdout, "\n\nall good");
