@@ -351,6 +351,23 @@ void primitive_rotate(struct primitive* p, float angle)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void primitive_scale(struct primitive* p, float scale)
+{
+    if (scale < 1.e-3f)
+        return;
+
+    vec2 center = primitive_compute_center(p);
+
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    {
+        vec2 to_point = vec2_sub(p->m_Points[i], center);
+        p->m_Points[i] = vec2_add(vec2_scale(to_point, scale), center);
+    }
+
+    p->m_Width *= scale;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void primitive_normalize(struct primitive* p, const aabb* box)
 {
     float normalization_factor = 1.f / aabb_get_size(box).x;

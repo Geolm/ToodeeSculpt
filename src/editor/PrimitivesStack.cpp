@@ -95,6 +95,19 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
         *selected = m_CopiedPrimitive;
         primitive_rotate(selected, vec2_atan2(m_MousePosition - m_Reference));
     }
+    else if (GetState() == state::SCALING_PRIMITIVE)
+    {
+        primitive* selected = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+        *selected = m_CopiedPrimitive;
+
+        float scale = (m_MousePosition.x - m_Reference.x); ;
+        if (scale>0.f)
+            scale = (scale / (aabb_get_size(&m_EditionZone).x * 0.1f)) + 1.f;
+        else
+            scale = float_max(1.f + (scale / (aabb_get_size(&m_EditionZone).x * 0.1f)), 0.1f);
+
+        primitive_scale(selected, scale);
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -205,8 +218,9 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         SetState(state::CREATE_PRIMITIVE);
     }
-    else if (GetState() == state::ROTATING_PRIMITIVE && left_button_pressed)
+    else if ((GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE) && left_button_pressed)
     {
+        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
         SetState(state::IDLE);
         UndoSnapshot();
     }
@@ -383,7 +397,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
                 renderer.DrawText(primitive_compute_center(primitive), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
         }
     }
-    else if (GetState() == state::ROTATING_PRIMITIVE)
+    else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
         renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
         primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), &renderer, m_SelectedPrimitiveColor);
@@ -503,6 +517,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             }
             else if (mu_button_ex(gui_context, "scale", 0, 0))
             {
+                SetState(state::SCALING_PRIMITIVE);
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
             else if (mu_button_ex(gui_context, "front", 0, 0))
@@ -601,7 +616,7 @@ void PrimitivesStack::Undo()
         SetState(state::IDLE);
     
     // if idle, call undo manager
-    else if (GetState() == state::IDLE || GetState() == state::PRIMITIVE_SELECTED)
+    else if (GetState() == state::IDLE)
     {
         serializer_context serializer;
         size_t max_size;
@@ -662,6 +677,13 @@ void PrimitivesStack::SetState(enum state new_state)
         m_CurrentPoint = 0;
         m_NewPrimitiveContextualMenuOpen = false;
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
+    }
+
+    if (new_state == state::SCALING_PRIMITIVE)
+    {
+        m_Reference = m_MousePosition;
+        m_CopiedPrimitive = *(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
 
     if (new_state == state::ROTATING_PRIMITIVE)

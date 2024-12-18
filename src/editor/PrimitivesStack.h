@@ -42,7 +42,6 @@ private:
     enum state
     {
         IDLE,
-        PRIMITIVE_SELECTED,
         ADDING_POINTS,
         SET_WIDTH,
         SET_ROUNDNESS,
@@ -50,7 +49,8 @@ private:
         CREATE_PRIMITIVE,
         MOVING_POINT,
         MOVING_PRIMITIVE,
-        ROTATING_PRIMITIVE
+        ROTATING_PRIMITIVE,
+        SCALING_PRIMITIVE
     };
 
 private:

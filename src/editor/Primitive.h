@@ -46,6 +46,7 @@ void primitive_deserialize(struct primitive* primitive, serializer_context* cont
 void primitive_serialize(struct primitive const* primitive, serializer_context* context);
 void primitive_translate(struct primitive* p, vec2 translation);
 void primitive_rotate(struct primitive* p, float angle);
+void primitive_scale(struct primitive* p, float scale);
 void primitive_normalize(struct primitive* p, const aabb* box);
 void primitive_expand(struct primitive* p, const aabb* box);
 void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_color color, enum sdf_operator op);
