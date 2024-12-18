@@ -365,6 +365,9 @@ void primitive_scale(struct primitive* p, float scale)
     }
 
     p->m_Width *= scale;
+
+    if (p->m_Type == primitive_disc)
+        p->m_Roundness *= scale;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
