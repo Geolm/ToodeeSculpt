@@ -24,7 +24,8 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_pUndoContext = undo;
     m_SnapToGrid = false;
     m_GridSubdivision = 20.f;
-    m_DebugInfo = false;
+    m_PrimitiveIdDebug = false;
+    m_AABBDebug = false;
     m_PointColor = draw_color(0x10e010, 128);
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
@@ -296,7 +297,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     {
         primitive *primitive = cc_get(&m_Primitives, i);
         primitive_draw_alpha(primitive, &renderer, m_AlphaValue);
-        if (m_DebugInfo)
+        if (m_PrimitiveIdDebug)
             renderer.DrawText(primitive_compute_center(primitive), format("%d", i), draw_color(na16_black));
     }
     renderer.EndCombination();
@@ -393,7 +394,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
             primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
             primitive_draw_gizmo(primitive, &renderer, m_SelectedPrimitiveColor);
 
-            if (m_DebugInfo)
+            if (m_PrimitiveIdDebug)
                 renderer.DrawText(primitive_compute_center(primitive), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
         }
     }
@@ -401,6 +402,15 @@ void PrimitivesStack::Draw(Renderer& renderer)
     {
         renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
         primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), &renderer, m_SelectedPrimitiveColor);
+    }
+
+    if (m_AABBDebug)
+    {
+        for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+        {
+            primitive *p = cc_get(&m_Primitives, i);
+            primitive_draw_aabb(p, &renderer, draw_color(0x3fe01010));
+        }
     }
 }
 

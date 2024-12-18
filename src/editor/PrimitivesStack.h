@@ -35,7 +35,8 @@ public:
     void DuplicateSelected();
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
-    void SetDebugInfo(bool flag) {m_DebugInfo = flag;}
+    void SetPrimimitiveIdDebug(bool flag) {m_PrimitiveIdDebug = flag;}
+    void setAABBDebug(bool flag) {m_AABBDebug = flag;}
 
 private:
     
@@ -75,7 +76,8 @@ private:
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
     vec2 m_MouseLastPosition;
-    bool m_DebugInfo;
+    bool m_PrimitiveIdDebug;
+    bool m_AABBDebug;
     bool m_SnapToGrid;
     float m_GridSubdivision;
 

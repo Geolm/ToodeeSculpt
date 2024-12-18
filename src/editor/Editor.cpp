@@ -27,6 +27,7 @@ void Editor::Init(aabb zone, const char* folder_path)
     m_pFolderPath = folder_path;
     m_PopupOpen = false;
     m_CullingDebug = false;
+    m_AABBDebug = false;
     m_LogLevel = 0;
     m_LogLevelCombo = 0;
 }
@@ -215,13 +216,16 @@ void Editor::MenuBar(struct mu_Context* gui_context)
 
         if (m_MenuBarState == MenuBar_Options)
         {
-            if (mu_begin_window_ex(gui_context, "edit", 
+            if (mu_begin_window_ex(gui_context, "options", 
                 mu_rect(row_size * 2 + 10, text_height + padding, 250.f, text_height * 5 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
 
-                if (mu_checkbox(gui_context, "Culling debug", &m_CullingDebug))
-                    m_PrimitivesStack.SetDebugInfo((bool)m_CullingDebug);
+                mu_checkbox(gui_context, "Culling debug", &m_CullingDebug);
+
+                if (mu_checkbox(gui_context, "AABB debug", &m_AABBDebug))
+                    m_PrimitivesStack.setAABBDebug((bool)m_AABBDebug);
+
 
                 if (mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid))
                     m_PrimitivesStack.SetSnapToGrid((bool)m_SnapToGrid);

@@ -55,6 +55,7 @@ private:
     int m_ShowGrid;
     float m_GridSubdivision;
     int m_CullingDebug;
+    int m_AABBDebug;
     int m_LogLevel;
     int m_LogLevelCombo;
 
