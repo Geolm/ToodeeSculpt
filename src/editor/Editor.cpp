@@ -317,6 +317,7 @@ void Editor::Load()
         FILE* f = fopen(load_path, "rb");
         if (f != NULL)
         {
+            log_debug("opening file '%s'", load_path);
             fseek(f, 0L, SEEK_END);
             size_t file_length = ftell(f);
             fseek(f, 0L, SEEK_SET);
