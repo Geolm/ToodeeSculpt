@@ -1,3 +1,28 @@
+// This shader has been automatically generated from ToodeeSculpt (https://github.com/Geolm/ToodeeSculpt)
+// MIT License
+
+// Copyright (c) 2024 Geolm
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Signed Distance Field functions
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,12 +209,15 @@ float smooth_intersection(float d1, float d2, float k )
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 // SDF world
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
-float map(vec2 p)
+vec4 map(vec2 p)
 {
     float d = 100000.0;
+    vec2 blend = vec2(0.0);
+    vec3 color = vec3(0.0);
+    float pixel_size = length(dFdx(p) + dFdy(p));
 
 
-    return d;
+    return vec4(color, d);
 }
 
 
@@ -199,14 +227,13 @@ float map(vec2 p)
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-	vec2 p = fragCoord/iResolution.y;
+    vec2 p = fragCoord/iResolution.y;
 
     p.y = 1.0 - p.y;
 
-	float d = map(p);
-    
-    vec3 col = mix( vec3(0.0), vec3(1.0), 1.0-smoothstep(0.0,length(dFdx(p) + dFdy(p)),d) );
+    vec4 color_distance = map(p);
 
-    
-	fragColor = vec4(col,1.0);
+    vec3 col = mix( vec3(0.0), vec3(color_distance.rgb), 1.0-smoothstep(0.0,length(dFdx(p) + dFdy(p)), color_distance.a) );
+
+    fragColor = vec4(col,1.0);
 }
