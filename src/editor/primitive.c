@@ -117,7 +117,6 @@ void primitive_update_aabb(struct primitive* p)
     {
         p->m_Direction = vec2_sub(p->m_Points[1], p->m_Points[0]);
         p->m_Radius = vec2_normalize(&p->m_Direction);
-        p->m_Direction = vec2_scale(p->m_Direction, 1.f / p->m_Radius);
         p->m_AABB = aabb_from_circle(p->m_Points[0], p->m_Radius);
         break;
     }
