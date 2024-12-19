@@ -178,6 +178,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button_ex(gui_context, "Export", 0, 0))
                 {
+                    m_PrimitivesStack.Export();
                     m_MenuBarState = MenuBar_None;
                 }
                 mu_end_window(gui_context);

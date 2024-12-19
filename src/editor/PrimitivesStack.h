@@ -30,6 +30,7 @@ public:
     void Paste();
     void DeleteSelected();
     void New();
+    void Export();
     void Terminate();
 
     void DuplicateSelected();

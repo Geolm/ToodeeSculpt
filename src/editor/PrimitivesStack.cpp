@@ -9,6 +9,7 @@
 #include "../system/format.h"
 #include "PrimitivesStack.h"
 #include "tds.h"
+#include "export.h"
 
 const vec2 contextual_menu_size = {100.f, 190.f};
 struct palette primitive_palette;
@@ -676,6 +677,19 @@ void PrimitivesStack::DeleteSelected()
         SetSelectedPrimitive(INVALID_INDEX);
         log_debug("primitive deleted");
         UndoSnapshot();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitivesStack::Export()
+{
+    float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
+    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    {
+        primitive p = *cc_get(&m_Primitives, i);
+
+        primitive_normalize(&p, &m_EditionZone);
+        primitive_export_shadertoy(&p, i, normalized_smooth_blend);
     }
 }
 
