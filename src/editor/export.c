@@ -42,8 +42,21 @@ void primitive_export_shadertoy(struct primitive * const p, uint32_t index, floa
 
     switch(p->m_Operator)
     {
-        case op_add : printf("\td = smooth_minimum(d, d%d, 0.0).x;\n", index);break;
-        case op_union : printf("\td = smooth_minimum(d, d%d, %f).x;\n", index, smooth_value);break;
+        case op_add : 
+        {
+            printf("\tblend = smooth_minimum(max(d, 0.0), d%d, pixel_size);\n", index);
+            printf("\td = blend.x;\n");
+            printf("\tcolor = mix(color, vec3(%f, %f, %f), blend.y);\n", p->m_Color.red, p->m_Color.green, p->m_Color.blue);
+            break;
+        }
+        case op_union : 
+        {
+            printf("\tblend = smooth_minimum(max(d, 0.0), d%d, %f);\n", index, smooth_value);
+            printf("\td = blend.x;\n");
+            printf("\tcolor = mix(color, vec3(%f, %f, %f), blend.y);\n", p->m_Color.red, p->m_Color.green, p->m_Color.blue);
+            break;
+        }
+        
         case op_subtraction : printf("\td = smooth_substraction(d, d%d, 0.0);\n", index);break;
         default:break;
     }
