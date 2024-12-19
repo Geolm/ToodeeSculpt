@@ -24,25 +24,17 @@ void primitive_export_shadertoy(struct primitive * const p, uint32_t index, floa
 
         case primitive_pie : 
         {
-            vec2 direction = vec2_sub(p->m_Points[1], p->m_Points[0]);
-            float radius = vec2_normalize(&direction);
-            direction = vec2_scale(direction, 1.f/radius);
-        
             printf("sd_oriented_pie(p, vec2(%f, %f), vec2(%f, %f), vec2(%f, %f), %f);\n", 
-                                    p->m_Points[0].x, p->m_Points[0].y, direction.x, direction.y,
-                                    sinf(p->m_Aperture), cosf(p->m_Aperture), radius); 
+                                    p->m_Points[0].x, p->m_Points[0].y, p->m_Direction.x, p->m_Direction.y,
+                                    sinf(p->m_Aperture), cosf(p->m_Aperture), p->m_Radius); 
             break;
         }
 
         case primitive_ring :
         {
-            vec2 center, direction;
-            float aperture, radius;
-            arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &center, &direction, &aperture, &radius);
-
             printf("sd_oriented_ring(p, vec2(%f, %f), vec2(%f, %f), vec2(%f, %f), %f, %f);\n",
-                                     center.x, center.y, direction.x, direction.y, 
-                                     sinf(aperture), cosf(aperture), radius, p->m_Thickness); 
+                                     p->m_Center.x, p->m_Center.y, p->m_Direction.x, p->m_Direction.y, 
+                                     sinf(p->m_Aperture), cosf(p->m_Aperture), p->m_Radius, p->m_Thickness); 
             break;
         }
         default:break;

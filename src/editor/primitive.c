@@ -55,23 +55,16 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
             }
         case primitive_pie:
             {
-                vec2 direction = vec2_sub(p->m_Points[1], p->m_Points[0]);
-                float radius = vec2_normalize(&direction);
-
-                result = point_in_pie(p->m_Points[0], direction, radius, p->m_Aperture, mouse_position);
+                result = point_in_pie(p->m_Points[0], p->m_Direction, p->m_Radius, p->m_Aperture, mouse_position);
                 break;
             }
         case primitive_ring:
             {
-                vec2 center,direction;
-                float aperture, radius;
-                arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &center, &direction, &aperture, &radius);
-
-                if (radius>0.f)
+                if (p->m_Radius>0.f)
                 {
                     float half_thickness = p->m_Thickness * .5f;
-                    result = !point_in_disc(center, radius - half_thickness , mouse_position);
-                    result &= point_in_pie(center, direction, radius + half_thickness, aperture, mouse_position);
+                    result = !point_in_disc(p->m_Center, p->m_Radius - half_thickness , mouse_position);
+                    result &= point_in_pie(p->m_Center, p->m_Direction, p->m_Radius + half_thickness, p->m_Aperture, mouse_position);
                 }
                 else
                     result = false;
@@ -122,16 +115,16 @@ void primitive_update_aabb(struct primitive* p)
     case primitive_oriented_box : p->m_AABB = aabb_from_rounded_obb(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Roundness); break;
     case primitive_pie :
     {
-        float radius = vec2_length(vec2_sub(p->m_Points[1], p->m_Points[0]));
-        p->m_AABB = aabb_from_circle(p->m_Points[0], radius);
+        p->m_Direction = vec2_sub(p->m_Points[1], p->m_Points[0]);
+        p->m_Radius = vec2_normalize(&p->m_Direction);
+        p->m_Direction = vec2_scale(p->m_Direction, 1.f / p->m_Radius);
+        p->m_AABB = aabb_from_circle(p->m_Points[0], p->m_Radius);
         break;
     }
     case primitive_ring :
     {
-        vec2 center, direction;
-        float radius, aperture;
-        arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &center, &direction, &aperture, &radius);
-        p->m_AABB = aabb_from_arc(center, direction, radius, aperture);
+        arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &p->m_Center, &p->m_Direction, &p->m_Aperture, &p->m_Radius);
+        p->m_AABB = aabb_from_arc(p->m_Center, p->m_Direction, p->m_Radius, p->m_Aperture);
         aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
         break;
     }
@@ -378,9 +371,12 @@ void primitive_normalize(struct primitive* p, const aabb* box)
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
         p->m_Points[i] = aabb_get_uv(box, p->m_Points[i]);
 
+    p->m_Center = aabb_get_uv(box, p->m_Center);
+
     p->m_Roundness *= normalization_factor;
     p->m_Thickness *= normalization_factor;
     p->m_Width *= normalization_factor;
+    p->m_Radius *= normalization_factor;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -391,9 +387,12 @@ void primitive_expand(struct primitive* p, const aabb* box)
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
         p->m_Points[i] = aabb_bilinear(box, p->m_Points[i]);
 
+    p->m_Center = aabb_bilinear(box, p->m_Center);
+
     p->m_Roundness *= expand_factor;
     p->m_Thickness *= expand_factor;
     p->m_Width *= expand_factor;
+    p->m_Radius *= expand_factor;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

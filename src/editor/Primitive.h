@@ -17,10 +17,13 @@ struct primitive
 {
     aabb m_AABB;
     vec2 m_Points[PRIMITIVE_MAXPOINTS];
+    vec2 m_Direction;
+    vec2 m_Center;
     float m_Width; 
     float m_Aperture;
     float m_Roundness;
     float m_Thickness;
+    float m_Radius;
     enum command_type m_Type;
     int m_Filled;
     enum sdf_operator m_Operator;
