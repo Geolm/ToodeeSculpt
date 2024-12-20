@@ -1,5 +1,9 @@
 #include "biarc.h"
 
+#include "log.h"
+
+static inline float relative_epsilon(vec2 a, vec2 b, float epsilon) {return vec2_distance(a, b) * epsilon;}
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 // based on κ-Curves: Interpolation at Local Maximum Curvature
 float compute_t(vec2 p0, vec2 p1, vec2 p2)
@@ -68,7 +72,7 @@ bool intersection_line_line(vec2 p0, vec2 d0, vec2 p1, vec2 d1, vec2* intersecti
 {
     float det = vec2_cross(d0, d1);
 
-    if (fabsf(det) < 1e-3f) 
+    if (fabsf(det) < relative_epsilon(p0, p1, 1e-3f)) 
         return false;
 
     float t = ((p1.x - p0.x) * d1.y - (p1.y - p0.y) * d1.x) / det;
@@ -81,7 +85,7 @@ bool intersection_line_line(vec2 p0, vec2 d0, vec2 p1, vec2 d1, vec2* intersecti
 // based on https://dlacko.org/blog/2016/10/19/approximating-bezier-curves-by-biarcs/
 void biarc_from_path(vec2 p0, vec2 p1, vec2 p2, struct arc* arcs)
 {
-    if (fabsf(vec2_cross(vec2_sub(p1, p0), vec2_sub(p2, p1))) < 1.e-3f)
+    if (fabsf(vec2_cross(vec2_sub(p1, p0), vec2_sub(p2, p1))) < relative_epsilon(p0, p2,1.e-3f))
     {
         arcs[0].radius = -1.f;
         arcs[1].radius = -1.f;
@@ -107,7 +111,12 @@ void biarc_from_bezier(vec2 c0, vec2 c1, vec2 c2, struct arc* arcs)
         arcs[0].aperture = acosf(vec2_dot(arcs[0].direction, vec2_normalized(vec2_sub(incenter, arcs[0].center))));
     }
     else
+    {
+        // colinear vectors put the segment coordinates to be draw instead of an arc
+        arcs[0].center = c0;
+        arcs[0].direction = middle;
         arcs[0].radius = -1.f;
+    }
 
     tangent = vec2_sub(c2, c1);
     middle = vec2_scale(vec2_add(c2, incenter), .5f);
@@ -119,7 +128,12 @@ void biarc_from_bezier(vec2 c0, vec2 c1, vec2 c2, struct arc* arcs)
         arcs[1].aperture = acosf(vec2_dot(arcs[1].direction, vec2_normalized(vec2_sub(incenter, arcs[1].center))));
     }
     else
+    {
+        // colinear vectors put the segment coordinates to be draw instead of an arc
+        arcs[1].center = c2;
+        arcs[1].direction = middle;
         arcs[1].radius = -1.f;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,6 +142,15 @@ void biarc_recursive(vec2 c0, vec2 c1, vec2 c2, uint32_t max_subdivision, struct
     vec2 incenter = triangle_incenter(c0, c1, c2);
     vec2 split = vec2_add(vec2_add(vec2_scale(c0, .25f), vec2_scale(c1, .5f)), vec2_scale(c2, .25f));
     vec2 split_tangent = vec2_sub(c2, c0);
+
+    if (fabsf(vec2_cross(vec2_sub(c0, split), vec2_sub(c2, split))) < relative_epsilon(c0, c2, 1.e-1f))
+    {
+        arcs[*num_arcs].center = c0;
+        arcs[*num_arcs].direction = c2;
+        arcs[*num_arcs].radius = -1.f;
+        (*num_arcs)++;
+        return;
+    }
 
     // measure how far from the bezier curve the approximation
     // if the approximation is perfect the incenter should be near the middle of the curve

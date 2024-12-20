@@ -212,9 +212,12 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     mu_label(gui_context, "thickness");
     res |= mu_slider_ex(gui_context, &p->m_Thickness, 0.f, primitive_max_thickness, 0.1f, "%3.2f", 0);
 
-    _Static_assert(sizeof(p->m_Operator) == sizeof(int), "operator");
-    mu_label(gui_context, "operation");
-    res |= mu_combo_box(gui_context, &g_SDFOperationComboBox, (int*)&p->m_Operator, op_last, g_sdf_op_names);
+    if (p->m_Shape != shape_curve)
+    {
+        _Static_assert(sizeof(p->m_Operator) == sizeof(int), "operator");
+        mu_label(gui_context, "operation");
+        res |= mu_combo_box(gui_context, &g_SDFOperationComboBox, (int*)&p->m_Operator, op_last, g_sdf_op_names);
+    }
 
     struct color_box color = 
     {
@@ -248,39 +251,42 @@ int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* g
     if (p->m_Shape != shape_arc)
         res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
 
-    if (mu_button_ex(gui_context, "op", 0, 0))
-        mu_open_popup(gui_context, "operation");
-    
-    if (mu_begin_popup(gui_context, "operation"))
+    if (p->m_Shape != shape_curve)
     {
-        for(uint32_t i=0; i<op_last; ++i)
+        if (mu_button_ex(gui_context, "op", 0, 0))
+        mu_open_popup(gui_context, "operation");
+
+        if (mu_begin_popup(gui_context, "operation"))
         {
-            if (mu_button_ex(gui_context, g_sdf_op_names[i], 0, 0))
+            for(uint32_t i=0; i<op_last; ++i)
             {
-                p->m_Operator = (enum sdf_operator)i;
-                res |= MU_RES_SUBMIT;
+                if (mu_button_ex(gui_context, g_sdf_op_names[i], 0, 0))
+                {
+                    p->m_Operator = (enum sdf_operator)i;
+                    res |= MU_RES_SUBMIT;
+                }
+
+                if (p->m_Operator == i)
+                {
+                    mu_Rect r = gui_context->last_rect;
+                    r.x += r.w-r.h;
+                    r.w = r.h;
+                    mu_draw_icon(gui_context, MU_ICON_CHECK, r, gui_context->style->colors[MU_COLOR_TEXT]);
+                }
             }
 
-            if (p->m_Operator == i)
-            {
-                mu_Rect r = gui_context->last_rect;
-                r.x += r.w-r.h;
-                r.w = r.h;
-                mu_draw_icon(gui_context, MU_ICON_CHECK, r, gui_context->style->colors[MU_COLOR_TEXT]);
-            }
+            mu_Container* container =  mu_get_current_container(gui_context);
+            if (mu_mouse_over(gui_context, container->rect))
+                *over_popup = true;
+
+            mu_end_popup(gui_context);
         }
 
-        mu_Container* container =  mu_get_current_container(gui_context);
-        if (mu_mouse_over(gui_context, container->rect))
-            *over_popup = true;
-
-        mu_end_popup(gui_context);
+         mu_Rect r = gui_context->last_rect;
+        r.x += r.w-r.h;
+        r.w = r.h;
+        mu_draw_icon(gui_context, MU_ICON_COLLAPSED, r, gui_context->style->colors[MU_COLOR_TEXT]);
     }
-
-    mu_Rect r = gui_context->last_rect;
-    r.x += r.w-r.h;
-    r.w = r.h;
-    mu_draw_icon(gui_context, MU_ICON_COLLAPSED, r, gui_context->style->colors[MU_COLOR_TEXT]);
 
     return res;
 }
@@ -470,8 +476,16 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
     case shape_curve:
     {
         for(uint32_t i=0; i<p->m_NumArcs; ++i)
+        {
             if (p->m_Arcs[i].radius > 0.f)
-                renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op);
+            {
+                renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op_add);
+            }
+            else
+            {
+                renderer_draworientedbox_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, 0.f, color, op_add);
+            }
+        }
         break;
     }
 
