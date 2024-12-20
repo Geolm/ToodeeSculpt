@@ -60,7 +60,18 @@ static inline float vec2_atan2(vec2 v) {return atan2f(v.y, v.x);}
 static inline void vec2_swap(vec2* a, vec2* b) {vec2 tmp = *a; *a = *b; *b = tmp;}
 static inline vec2 vec2_rotate(vec2 point, vec2 rotation) {return (vec2) {point.x * rotation.x - point.y * rotation.y, point.y * rotation.x + point.x * rotation.y};}
 static inline vec2 vec2_floor(vec2 a) {return (vec2) {floorf(a.x), floorf(a.y)};}
-static inline vec2 vec2_quadratic_bezier(vec2 p0, vec2 p1, vec2 p2, float t) {float omt = 1.f-t;return vec2_add(vec2_add(vec2_scale(p0, omt * omt), vec2_scale(p1, 2.f * omt * t)), vec2_scale(p2, t * t));}
+static inline vec2 vec2_quadratic_bezier(vec2 p0, vec2 p1, vec2 p2, float t) 
+{
+    float omt = 1.f-t;
+    return vec2_add(vec2_add(vec2_scale(p0, omt * omt), vec2_scale(p1, 2.f * omt * t)), vec2_scale(p2, t * t));
+}
+
+static inline vec2 vec2_quadratic_bezier_tangent(vec2 p0, vec2 p1, vec2 p2, float t)
+{
+    float omt = 1.f-t;
+    return vec2_add(vec2_scale(vec2_sub(p1, p0), omt * 2.f), vec2_scale(vec2_sub(p2, p1), 2.f * t));
+}
+
 static inline float vec2_normalize(vec2* v)
 {
     float norm = vec2_length(*v);
@@ -70,6 +81,7 @@ static inline float vec2_normalize(vec2* v)
     *v = vec2_scale(*v, 1.f / norm);
     return norm;
 }
+
 static inline vec2 vec2_normalized(vec2 v)
 {
     return vec2_scale(v, 1.f / vec2_length(v));
