@@ -42,7 +42,7 @@ void bezier_from_path(vec2 p0, vec2 p1, vec2 p2, vec2* output)
 
     vec2 ctrl_pt = vec2_sub(p1, vec2_scale(p0, om_t_sq));
     ctrl_pt = vec2_sub(ctrl_pt, vec2_scale(p2, t_sq));
-    ctrl_pt = vec2_div(ctrl_pt, vec2_splat((2.f * om_t * t)));
+    ctrl_pt = vec2_scale(ctrl_pt, 1.f / (2.f * om_t * t));
 
     output[0] = p0;
     output[1] = ctrl_pt;
@@ -79,34 +79,102 @@ bool intersection_line_line(vec2 p0, vec2 d0, vec2 p1, vec2 d1, vec2* intersecti
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 // generate a bi-arcs curve from a quadratic bezier curve
 // based on https://dlacko.org/blog/2016/10/19/approximating-bezier-curves-by-biarcs/
-bool biarc_generate(vec2 p0, vec2 p1, vec2 p2, struct arc* arcs)
+void biarc_generate(vec2 p0, vec2 p1, vec2 p2, struct arc* arcs)
 {
     if (fabsf(vec2_cross(vec2_sub(p1, p0), vec2_sub(p2, p1))) < 1.e-3f)
-        return false;
+    {
+        arcs[0].radius = -1.f;
+        arcs[1].radius = -1.f;
+        return;
+    }
 
-    vec2 ctrl_pts[3];
-    bezier_from_path(p0, p1, p2, ctrl_pts);
+    vec2 c[3];
+    bezier_from_path(p0, p1, p2, c);
 
-    vec2 incenter = triangle_incenter(ctrl_pts[0], ctrl_pts[1], ctrl_pts[2]);
-    vec2 tangent = vec2_sub(ctrl_pts[1], ctrl_pts[0]);
-    vec2 middle = vec2_scale(vec2_add(ctrl_pts[0], incenter), .5f);
+    vec2 incenter = triangle_incenter(c[0], c[1], c[2]);
+    vec2 tangent = vec2_sub(c[1], c[0]);
+    vec2 middle = vec2_scale(vec2_add(c[0], incenter), .5f);
 
-    if (!intersection_line_line(ctrl_pts[0], vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, ctrl_pts[0])), &arcs[0].center))
-        return false;
-    
-    arcs[0].direction = vec2_normalized(vec2_sub(middle, arcs[0].center)); 
-    arcs[0].radius = vec2_distance(arcs[0].center, ctrl_pts[0]);
-    arcs[0].aperture = acosf(vec2_dot(arcs[0].direction, vec2_normalized(vec2_sub(incenter, arcs[0].center))));
+    if (intersection_line_line(c[0], vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, c[0])), &arcs[0].center))
+    {
+        arcs[0].direction = vec2_normalized(vec2_sub(middle, arcs[0].center)); 
+        arcs[0].radius = vec2_distance(arcs[0].center, c[0]);
+        arcs[0].aperture = acosf(vec2_dot(arcs[0].direction, vec2_normalized(vec2_sub(incenter, arcs[0].center))));
+    }
+    else
+        arcs[0].radius = -1.f;
 
-    tangent = vec2_sub(ctrl_pts[2], ctrl_pts[1]);
-    middle = vec2_scale(vec2_add(ctrl_pts[2], incenter), .5f);
+    tangent = vec2_sub(c[2], c[1]);
+    middle = vec2_scale(vec2_add(c[2], incenter), .5f);
 
-    if (!intersection_line_line(ctrl_pts[2], vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, ctrl_pts[2])), &arcs[1].center))
-        return false;
+    if (intersection_line_line(c[2], vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, c[2])), &arcs[1].center))
+    {
+        arcs[1].direction = vec2_normalized(vec2_sub(middle, arcs[1].center));
+        arcs[1].radius = vec2_distance(arcs[1].center, c[2]);
+        arcs[1].aperture = acosf(vec2_dot(arcs[1].direction, vec2_normalized(vec2_sub(incenter, arcs[1].center))));
+    }
+    else
+        arcs[1].radius = -1.f;
+}
 
-    arcs[1].direction = vec2_normalized(vec2_sub(middle, arcs[1].center));
-    arcs[1].radius = vec2_distance(arcs[1].center, ctrl_pts[2]);
-    arcs[1].aperture = acosf(vec2_dot(arcs[1].direction, vec2_normalized(vec2_sub(incenter, arcs[1].center))));
+//----------------------------------------------------------------------------------------------------------------------------------------------------------
+// given a point on the bezier curve, returns the t
+float bezier_compute_t(vec2 p0, vec2 p1, vec2 p2, vec2 point)
+{
+    // coefficients of the quadratic equation at^2 + bt + c = 0
+    vec2 A = vec2_add(vec2_sub(p0, vec2_scale(p1, -2.f)), p2);
+    vec2 B = vec2_scale(vec2_sub(p1, p0), 2.f);
+    vec2 C = vec2_sub(p0, point);
 
-    return true;
+    // quadratic formula coefficients
+    float a = vec2_dot(A, A);
+    float b = vec2_dot(A, B);
+    float c = vec2_dot(A, C);
+
+    // solve the quadratic equation
+    float sq_discriminant = sqrtf(b * b - a * c);
+
+    // two possible solutions
+    float t0 = (-b - sq_discriminant) / a;
+    float t1 = (-b + sq_discriminant) / a;
+
+    // since point is on the curve, one of these must be in [0, 1]
+    if (t0 >= 0.f && t0 <= 1.f) 
+        return t1;
+
+    return t1; // t1 must be valid if t0 is not
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------
+void biarc_recursive(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, struct arc* arcs, uint32_t *num_arcs, uint32_t current_subdivision)
+{
+    vec2 c[3];
+    bezier_from_path(p0, p1, p2, c);
+
+    vec2 incenter = triangle_incenter(c[0], c[1], c[2]);
+
+    // measure how far from the bezier curve the approximation
+    // if the approximation is perfect the incenter should be near p1
+    // if we're far and we did not reach the max subdisivion, we subdivise the curve
+    if ((vec2_sq_distance(p1, incenter) > vec2_sq_distance(p0, p2) * 0.01f) && (current_subdivision < max_subdivision))
+    {
+        float t = bezier_compute_t(c[0], c[1], c[2], p1);
+        vec2 split = vec2_quadratic_bezier(c[0], c[1], c[2], t);
+        vec2 mid_left = vec2_quadratic_bezier(c[0], c[1], c[2], t * .5f);
+        vec2 mid_right = vec2_quadratic_bezier(c[0], c[1], c[2], t + (1.f - t) * .5f);
+
+        biarc_recursive(p0, mid_left, split, max_subdivision, arcs, num_arcs, current_subdivision+1);
+        biarc_recursive(split, mid_right, p2, max_subdivision, arcs, num_arcs, current_subdivision+1);
+    }
+    else
+    {
+        biarc_generate(p0, p1, p2, &arcs[*num_arcs]);
+        *num_arcs += 2;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------
+void biarc_tessellate(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, struct arc* arcs, uint32_t *num_arcs)
+{
+    biarc_recursive(p0, p1, p2, max_subdivision, arcs, num_arcs, 1);
 }
