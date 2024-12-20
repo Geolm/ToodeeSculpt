@@ -97,7 +97,7 @@ private:
     float m_Roundness;
     float m_Aperture;
     float m_Angle;
-    command_type m_PrimitiveType;
+    primitive_shape m_PrimitiveShape;
 
     // primitive selection
     uint32_t m_SelectedPrimitiveIndex;

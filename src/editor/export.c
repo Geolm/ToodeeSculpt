@@ -9,20 +9,20 @@ void primitive_export_shadertoy(struct primitive * const p, uint32_t index, floa
 {
     printf("\tfloat d%d = ", index);
 
-    switch(p->m_Type)
+    switch(p->m_Shape)
     {
-        case primitive_disc : printf("sd_disc(p, vec2(%f, %f), %f);\n", p->m_Points[0].x, p->m_Points[0].y, p->m_Roundness);break;
+        case shape_disc : printf("sd_disc(p, vec2(%f, %f), %f);\n", p->m_Points[0].x, p->m_Points[0].y, p->m_Roundness);break;
 
-        case primitive_oriented_box : printf("sd_oriented_box(p, vec2(%f, %f), vec2(%f, %f), %f);\n", 
+        case shape_oriented_box : printf("sd_oriented_box(p, vec2(%f, %f), vec2(%f, %f), %f);\n", 
                                              p->m_Points[0].x, p->m_Points[0].y, p->m_Points[1].x, p->m_Points[1].y, p->m_Width);break;
 
-        case primitive_triangle : printf("sd_triangle(p, vec2(%f, %f), vec2(%f, %f), vec2(%f, %f));\n",
+        case shape_triangle : printf("sd_triangle(p, vec2(%f, %f), vec2(%f, %f), vec2(%f, %f));\n",
                                          p->m_Points[0].x, p->m_Points[0].y, p->m_Points[1].x, p->m_Points[1].y, p->m_Points[2].x, p->m_Points[2].y);break;
 
-        case primitive_ellipse : printf("sd_oriented_ellipse(p, vec2(%f, %f), vec2(%f, %f), %f);\n",
+        case shape_oriented_ellipse : printf("sd_oriented_ellipse(p, vec2(%f, %f), vec2(%f, %f), %f);\n",
                                         p->m_Points[0].x, p->m_Points[0].y, p->m_Points[1].x, p->m_Points[1].y, p->m_Width);break;
 
-        case primitive_pie : 
+        case shape_pie : 
         {
             printf("sd_oriented_pie(p, vec2(%f, %f), vec2(%f, %f), vec2(%f, %f), %f);\n", 
                                     p->m_Points[0].x, p->m_Points[0].y, p->m_Direction.x, p->m_Direction.y,
@@ -30,7 +30,7 @@ void primitive_export_shadertoy(struct primitive * const p, uint32_t index, floa
             break;
         }
 
-        case primitive_ring :
+        case shape_arc :
         {
             printf("sd_oriented_ring(p, vec2(%f, %f), vec2(%f, %f), vec2(%f, %f), %f, %f);\n",
                                      p->m_Center.x, p->m_Center.y, p->m_Direction.x, p->m_Direction.y, 

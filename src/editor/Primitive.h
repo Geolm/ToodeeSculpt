@@ -13,6 +13,19 @@ enum {PRIMITIVE_MAXPOINTS = 3};
 #define primitive_point_radius (6.f)
 #define primitive_max_thickness (100.f)
 
+// almost in sync with primitive_type to not invalid old files
+enum primitive_shape
+{
+    shape_invalid = INVALID_INDEX,
+    shape_oriented_box = 2,
+    shape_disc = 3,
+    shape_oriented_ellipse = 5,
+    shape_triangle = 4,
+    shape_pie = 6,
+    shape_arc = 7,
+    shape_curve = 8
+};
+
 struct primitive
 {
     aabb m_AABB;
@@ -24,7 +37,7 @@ struct primitive
     float m_Roundness;
     float m_Thickness;
     float m_Radius;
-    enum command_type m_Type;
+    enum primitive_shape m_Shape;
     int m_Filled;
     enum sdf_operator m_Operator;
     color4f m_Color;
@@ -38,7 +51,7 @@ extern "C" {
 
 struct mu_Context;
 
-void primitive_init(struct primitive* p, enum command_type type, enum sdf_operator op, color4f color, float roundness, float width);
+void primitive_init(struct primitive* p, enum primitive_shape type, enum sdf_operator op, color4f color, float roundness, float width);
 bool primitive_test_mouse_cursor(struct primitive const* primitive, vec2 mouse_position, bool test_vertices);
 float primitive_distance_to_nearest_point(struct primitive const* primitive, vec2 reference);
 void primitive_update_aabb(struct primitive* primitive);
@@ -63,16 +76,17 @@ void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color);
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------------
-static inline uint32_t primitive_get_num_points(enum command_type type)
+static inline uint32_t primitive_get_num_points(enum primitive_shape shape)
 {
-    switch(type)
+    switch(shape)
     {
-    case primitive_disc: return 1;
-    case primitive_ellipse:
-    case primitive_pie:
-    case primitive_oriented_box: return 2;
-    case primitive_ring:
-    case primitive_triangle: return 3;
+    case shape_disc: return 1;
+    case shape_oriented_ellipse:
+    case shape_pie:
+    case shape_oriented_box: return 2;
+    case shape_arc:
+    case shape_curve:
+    case shape_triangle: return 3;
     default: return 0;
     }
 }
@@ -80,27 +94,27 @@ static inline uint32_t primitive_get_num_points(enum command_type type)
 //----------------------------------------------------------------------------------------------------------------------------
 static inline void primitive_set_points(struct primitive* p, uint32_t index, vec2 point) 
 {
-    assert(index < primitive_get_num_points(p->m_Type)); 
+    assert(index < primitive_get_num_points(p->m_Shape)); 
     p->m_Points[index] = point;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 static inline vec2 primitive_get_points(struct primitive* p, uint32_t index) 
 {
-    assert(index < primitive_get_num_points(p->m_Type)); 
+    assert(index < primitive_get_num_points(p->m_Shape)); 
     return p->m_Points[index];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 static inline void primitive_set_invalid(struct primitive* p)
 {
-    p->m_Type = combination_begin;
+    p->m_Shape = shape_invalid;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 static inline bool primitive_is_valid(struct primitive* p)
 {
-    return p->m_Type != combination_begin;
+    return p->m_Shape != shape_invalid;
 }
 
 #endif

@@ -139,7 +139,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         if (SelectedPrimitiveValid())
         {
             primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            for(uint32_t i=0; i<primitive_get_num_points(primitive->m_Type); ++i)
+            for(uint32_t i=0; i<primitive_get_num_points(primitive->m_Shape); ++i)
             {
                 if (point_in_disc(primitive_get_points(primitive, i), primitive_point_radius, m_MousePosition))
                 {
@@ -191,11 +191,11 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         assert(m_CurrentPoint < PRIMITIVE_MAXPOINTS);
         m_PrimitivePoints[m_CurrentPoint++] = m_MousePosition;
 
-        if (m_CurrentPoint == primitive_get_num_points(m_PrimitiveType))
+        if (m_CurrentPoint == primitive_get_num_points(m_PrimitiveShape))
         {
-            if (m_PrimitiveType == command_type::primitive_oriented_box || m_PrimitiveType == command_type::primitive_ellipse)
+            if (m_PrimitiveShape == shape_oriented_box || m_PrimitiveShape == shape_oriented_ellipse)
                 SetState(state::SET_WIDTH);
-            else if (m_PrimitiveType == command_type::primitive_pie)
+            else if (m_PrimitiveShape == shape_pie)
             {
                 m_Direction = m_PrimitivePoints[1] - m_PrimitivePoints[0];
                 vec2_normalize(&m_Direction);
@@ -207,9 +207,9 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     }
     else if (GetState() == state::SET_WIDTH && left_button_pressed)
     {
-        if (m_PrimitiveType == command_type::primitive_oriented_box)
+        if (m_PrimitiveShape == shape_oriented_box)
             SetState(state::SET_ROUNDNESS);
-        else if (m_PrimitiveType == command_type::primitive_ellipse)
+        else if (m_PrimitiveShape == shape_oriented_ellipse)
             SetState(state::CREATE_PRIMITIVE);
     }
     else if (GetState() == state::SET_ROUNDNESS && left_button_pressed)
@@ -231,15 +231,15 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     if (GetState() == state::CREATE_PRIMITIVE)
     {
         primitive new_primitive;
-        primitive_init(&new_primitive, m_PrimitiveType, op_union, unpacked_color(primitive_palette.entries[0]), m_Roundness, m_Width);
+        primitive_init(&new_primitive, m_PrimitiveShape, op_union, unpacked_color(primitive_palette.entries[0]), m_Roundness, m_Width);
 
-        if (m_PrimitiveType == command_type::primitive_ring)
+        if (m_PrimitiveShape == shape_arc)
             new_primitive.m_Thickness = m_Roundness * 2.f;
 
-        for(uint32_t i=0; i<primitive_get_num_points(m_PrimitiveType); ++i)
+        for(uint32_t i=0; i<primitive_get_num_points(m_PrimitiveShape); ++i)
             primitive_set_points(&new_primitive, i, m_PrimitivePoints[i]);
 
-        if (m_PrimitiveType == command_type::primitive_pie)
+        if (m_PrimitiveShape == shape_pie)
             new_primitive.m_Aperture = m_Aperture;
 
         primitive_update_aabb(&new_primitive);
@@ -312,12 +312,12 @@ void PrimitivesStack::Draw(Renderer& renderer)
         if (m_CurrentPoint == 1)
             renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, m_SelectedPrimitiveColor);
 
-        if (m_PrimitiveType == command_type::primitive_triangle) 
+        if (m_PrimitiveShape == shape_triangle) 
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
                 renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
         }
-        else if (m_PrimitiveType == command_type::primitive_ring)
+        else if (m_PrimitiveShape == shape_arc)
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
                 renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
@@ -328,9 +328,9 @@ void PrimitivesStack::Draw(Renderer& renderer)
     {
         renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
 
-        if (m_PrimitiveType == command_type::primitive_oriented_box)
+        if (m_PrimitiveShape == shape_oriented_box)
             renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, m_SelectedPrimitiveColor);
-        else if (m_PrimitiveType == command_type::primitive_ellipse)
+        else if (m_PrimitiveShape == shape_oriented_ellipse)
             renderer.DrawEllipseFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::SET_ROUNDNESS)
@@ -338,26 +338,26 @@ void PrimitivesStack::Draw(Renderer& renderer)
         renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
 
         // preview primitive
-        switch(m_PrimitiveType)
+        switch(m_PrimitiveShape)
         {
-        case command_type::primitive_triangle:
+        case shape_triangle:
         {
             renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 
                                         m_Roundness, m_SelectedPrimitiveColor);break;
         }
 
-        case command_type::primitive_disc:
+        case shape_disc:
         {
             renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, m_SelectedPrimitiveColor);break;
         }
 
-        case command_type::primitive_oriented_box:
+        case shape_oriented_box:
         {
             renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, m_SelectedPrimitiveColor);
             break;
         }
 
-        case command_type::primitive_ring:
+        case shape_arc:
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
             renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, m_SelectedPrimitiveColor);
@@ -476,37 +476,37 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
             if (mu_button_ex(gui_context, "disc", 0, 0))
             {
-                m_PrimitiveType = command_type::primitive_disc;
+                m_PrimitiveShape = shape_disc;
                 SetState(state::ADDING_POINTS);
             }
 
             if (mu_button_ex(gui_context, "ellipse", 0, 0))
             {
-                m_PrimitiveType = command_type::primitive_ellipse;
+                m_PrimitiveShape = shape_oriented_ellipse;
                 SetState(state::ADDING_POINTS);
             }
             
             if (mu_button_ex(gui_context, "box", 0, 0))
             {
-                m_PrimitiveType = command_type::primitive_oriented_box;
+                m_PrimitiveShape = shape_oriented_box;
                 SetState(state::ADDING_POINTS);
             }
 
             if (mu_button_ex(gui_context, "triangle", 0, 0))
             {
-                m_PrimitiveType = command_type::primitive_triangle;
+                m_PrimitiveShape = shape_triangle;
                 SetState(state::ADDING_POINTS);
             }
 
             if (mu_button_ex(gui_context, "pie", 0, 0))
             {
-                m_PrimitiveType = command_type::primitive_pie;
+                m_PrimitiveShape = shape_pie;
                 SetState(state::ADDING_POINTS);
             }
 
             if (mu_button_ex(gui_context, "arc", 0, 0))
             {
-                m_PrimitiveType = command_type::primitive_ring;
+                m_PrimitiveShape = shape_arc;
                 SetState(state::ADDING_POINTS);
             }
 

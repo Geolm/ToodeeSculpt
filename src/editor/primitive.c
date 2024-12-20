@@ -12,12 +12,12 @@ static int g_SDFOperationComboBox = 0;
 static const char* g_sdf_op_names[op_last] = {"add", "blend", "sub", "overlap"};
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_init(struct primitive* p, enum command_type type, enum sdf_operator op, color4f color, float roundness, float width)
+void primitive_init(struct primitive* p, enum primitive_shape shape, enum sdf_operator op, color4f color, float roundness, float width)
 {
     p->m_Width = width;
     p->m_Roundness = roundness;
     p->m_Thickness = 0.f;
-    p->m_Type = type;
+    p->m_Shape = shape;
     p->m_Filled = 1;
     p->m_Operator = op;
     p->m_Color = color;
@@ -31,34 +31,34 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
 
     if (aabb_test_point(&p->m_AABB, mouse_position))
     {
-        switch(p->m_Type)
+        switch(p->m_Shape)
         {
-        case primitive_triangle: 
+        case shape_triangle: 
             {
                 result = point_in_triangle(p->m_Points[0], p->m_Points[1], p->m_Points[2], mouse_position);
                 break;
             }
-        case primitive_disc:
+        case shape_disc:
             {
                 result = point_in_disc(p->m_Points[0], p->m_Roundness, mouse_position);
                 break;
             }
-        case primitive_ellipse:
+        case shape_oriented_ellipse:
             {
                 result = point_in_ellipse(p->m_Points[0], p->m_Points[1], p->m_Width, mouse_position);
                 break;
             }
-        case primitive_oriented_box:
+        case shape_oriented_box:
             {
                 result = point_in_oriented_box(p->m_Points[0], p->m_Points[1], p->m_Width, mouse_position);
                 break;
             }
-        case primitive_pie:
+        case shape_pie:
             {
                 result = point_in_pie(p->m_Points[0], p->m_Direction, p->m_Radius, p->m_Aperture, mouse_position);
                 break;
             }
-        case primitive_ring:
+        case shape_arc:
             {
                 if (p->m_Radius>0.f)
                 {
@@ -78,7 +78,7 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
 
     if (test_vertices)
     {
-        for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+        for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
             result |= point_in_disc(p->m_Points[i], primitive_point_radius, mouse_position);
     }
 
@@ -90,7 +90,7 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
 float primitive_distance_to_nearest_point(struct primitive const* p, vec2 reference)
 {
     float min_distance = FLT_MAX;
-    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
     {
         float distance = vec2_sq_distance(p->m_Points[i], reference);
         if (distance < min_distance)
@@ -102,25 +102,25 @@ float primitive_distance_to_nearest_point(struct primitive const* p, vec2 refere
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_update_aabb(struct primitive* p)
 {
-    switch(p->m_Type)
+    switch(p->m_Shape)
     {
-    case primitive_disc : p->m_AABB = aabb_from_circle(p->m_Points[0], p->m_Roundness);break;
-    case primitive_ellipse : p->m_AABB = aabb_from_obb(p->m_Points[0], p->m_Points[1], p->m_Width); break;
-    case primitive_triangle :
+    case shape_disc : p->m_AABB = aabb_from_circle(p->m_Points[0], p->m_Roundness);break;
+    case shape_oriented_ellipse : p->m_AABB = aabb_from_obb(p->m_Points[0], p->m_Points[1], p->m_Width); break;
+    case shape_triangle :
     {
         p->m_AABB = aabb_from_triangle(p->m_Points[0], p->m_Points[1], p->m_Points[2]);
         aabb_grow(&p->m_AABB, vec2_splat(p->m_Roundness));
         break;
     }
-    case primitive_oriented_box : p->m_AABB = aabb_from_rounded_obb(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Roundness); break;
-    case primitive_pie :
+    case shape_oriented_box : p->m_AABB = aabb_from_rounded_obb(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Roundness); break;
+    case shape_pie :
     {
         p->m_Direction = vec2_sub(p->m_Points[1], p->m_Points[0]);
         p->m_Radius = vec2_normalize(&p->m_Direction);
         p->m_AABB = aabb_from_circle(p->m_Points[0], p->m_Radius);
         break;
     }
-    case primitive_ring :
+    case shape_arc :
     {
         arc_from_points(p->m_Points[0], p->m_Points[1], p->m_Points[2], &p->m_Center, &p->m_Direction, &p->m_Aperture, &p->m_Radius);
         p->m_AABB = aabb_from_arc(p->m_Center, p->m_Direction, p->m_Radius, p->m_Aperture);
@@ -137,31 +137,31 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     int res = 0;
 
     mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
-    mu_label(gui_context,"type");
-    switch(p->m_Type)
+    mu_label(gui_context,"shape");
+    switch(p->m_Shape)
     {
-    case primitive_disc : 
+    case shape_disc : 
         {
             mu_text(gui_context, "disc");
             mu_label(gui_context, "radius");
             res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 1000.f, 1.f, "%3.0f", 0);
             break;
         }
-    case primitive_ellipse :
+    case shape_oriented_ellipse :
         {
             mu_text(gui_context, "ellipse");
             mu_label(gui_context, "width");
             res |= mu_slider_ex(gui_context, &p->m_Width, 0.f, 1000.f, 0.1f, "%3.2f", 0);
             break;
         }
-    case primitive_triangle : 
+    case shape_triangle : 
         {
             mu_text(gui_context, "triangle");
             mu_label(gui_context, "roundness");
             res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
             break;
         }
-    case primitive_oriented_box : 
+    case shape_oriented_box : 
         {
             mu_text(gui_context, "box");
             mu_label(gui_context, "width");
@@ -170,14 +170,14 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
             res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
             break;
         }
-    case primitive_pie :
+    case shape_pie :
         {
             mu_text(gui_context, "pie");
             mu_label(gui_context, "aperture");
             res |= mu_slider_ex(gui_context, &p->m_Aperture, 0.f, VEC2_PI, 0.01f, "%3.2f", 0);
             break;
         }
-    case primitive_ring :
+    case shape_arc :
         {
             mu_text(gui_context, "arc");
             break;
@@ -186,7 +186,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     default : break;
     }
 
-    if (p->m_Type != primitive_ring)
+    if (p->m_Shape != shape_arc)
     {
         mu_label(gui_context, "filled");
         res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
@@ -214,7 +214,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
 vec2 primitive_compute_center(struct primitive const* p)
 {
     vec2 center = {.x = 0.f, .y = 0.f};
-    uint32_t num_points = primitive_get_num_points(p->m_Type);
+    uint32_t num_points = primitive_get_num_points(p->m_Shape);
     for(uint32_t i=0; i<num_points; ++i)
         center = vec2_add(center, p->m_Points[i]);
 
@@ -228,7 +228,7 @@ int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* g
 
     *over_popup = false;
 
-    if (p->m_Type != primitive_ring)
+    if (p->m_Shape != shape_arc)
         res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
 
     if (mu_button_ex(gui_context, "op", 0, 0))
@@ -280,7 +280,7 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
             p->m_Aperture = serializer_read_float(context);
             p->m_Roundness = serializer_read_float(context);
             p->m_Thickness = serializer_read_float(context);
-            serializer_read_struct(context, p->m_Type);
+            serializer_read_struct(context, p->m_Shape);
             p->m_Filled = serializer_read_uint32_t(context);
             serializer_read_struct(context, p->m_Operator);
             serializer_read_struct(context, p->m_Color);
@@ -288,12 +288,12 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
         else if (minor >= 1)
         {
             serializer_read_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
-            serializer_read_struct(context, p->m_Type);
-            if (p->m_Type == primitive_ellipse || p->m_Type == primitive_oriented_box )
+            serializer_read_struct(context, p->m_Shape);
+            if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
                 p->m_Width = serializer_read_float(context);
-            if (p->m_Type == primitive_pie || p->m_Type == primitive_ring)
+            if (p->m_Shape == shape_pie || p->m_Shape == shape_arc)
                 p->m_Aperture = serializer_read_float(context);
-            if (p->m_Type != primitive_pie && p->m_Type != primitive_pie && p->m_Type != primitive_ring)
+            if (p->m_Shape != shape_pie && p->m_Shape != shape_arc)
                 p->m_Roundness = serializer_read_float(context);
             p->m_Thickness = serializer_read_float(context);
             p->m_Filled = serializer_read_uint8_t(context);
@@ -307,12 +307,12 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
 void primitive_serialize(struct primitive const* p, serializer_context* context)
 {
     serializer_write_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
-    serializer_write_struct(context, p->m_Type);
-    if (p->m_Type == primitive_ellipse || p->m_Type == primitive_oriented_box )
+    serializer_write_struct(context, p->m_Shape);
+    if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
         serializer_write_float(context, p->m_Width);
-    if (p->m_Type == primitive_pie || p->m_Type == primitive_ring)
+    if (p->m_Shape == shape_pie || p->m_Shape == shape_arc)
         serializer_write_float(context, p->m_Aperture);
-    if (p->m_Type != primitive_pie && p->m_Type != primitive_pie && p->m_Type != primitive_ring)
+    if (p->m_Shape != shape_pie && p->m_Shape != shape_arc)
         serializer_write_float(context, p->m_Roundness);
 
     serializer_write_float(context, p->m_Thickness);
@@ -324,7 +324,7 @@ void primitive_serialize(struct primitive const* p, serializer_context* context)
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_translate(struct primitive* p, vec2 translation)
 {
-    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         p->m_Points[i] = vec2_add(p->m_Points[i], translation);
 }
 
@@ -334,7 +334,7 @@ void primitive_rotate(struct primitive* p, float angle)
     vec2 center = primitive_compute_center(p);
     vec2 rotation = vec2_angle(angle);
 
-    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
     {
         p->m_Points[i] = vec2_sub(p->m_Points[i], center);
         p->m_Points[i] = vec2_rotate(p->m_Points[i], rotation);
@@ -350,7 +350,7 @@ void primitive_scale(struct primitive* p, float scale)
 
     vec2 center = primitive_compute_center(p);
 
-    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
     {
         vec2 to_point = vec2_sub(p->m_Points[i], center);
         p->m_Points[i] = vec2_add(vec2_scale(to_point, scale), center);
@@ -358,7 +358,7 @@ void primitive_scale(struct primitive* p, float scale)
 
     p->m_Width *= scale;
 
-    if (p->m_Type == primitive_disc)
+    if (p->m_Shape == shape_disc)
         p->m_Roundness *= scale;
 }
 
@@ -367,7 +367,7 @@ void primitive_normalize(struct primitive* p, const aabb* box)
 {
     float normalization_factor = 1.f / aabb_get_size(box).x;
 
-    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         p->m_Points[i] = aabb_get_uv(box, p->m_Points[i]);
 
     p->m_Center = aabb_get_uv(box, p->m_Center);
@@ -383,7 +383,7 @@ void primitive_expand(struct primitive* p, const aabb* box)
 {
     float expand_factor = aabb_get_size(box).x;
 
-    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         p->m_Points[i] = aabb_bilinear(box, p->m_Points[i]);
 
     p->m_Center = aabb_bilinear(box, p->m_Center);
@@ -397,9 +397,9 @@ void primitive_expand(struct primitive* p, const aabb* box)
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_color color, enum sdf_operator op)
 {
-    switch(p->m_Type)
+    switch(p->m_Shape)
     {
-    case primitive_triangle:
+    case shape_triangle:
     {
         if (p->m_Filled) 
             renderer_drawtriangle_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], roundness, color, op);
@@ -408,7 +408,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         break;
     }
 
-    case primitive_disc:
+    case shape_disc:
     {
         if (p->m_Filled)
             renderer_drawcircle_filled(renderer, p->m_Points[0], p->m_Roundness, color, op);
@@ -417,7 +417,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         break;
     }
 
-    case primitive_ellipse:
+    case shape_oriented_ellipse:
     {
         if (p->m_Filled)
             renderer_drawellipse_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, color, op);
@@ -426,7 +426,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         break;
     }
 
-    case primitive_oriented_box:
+    case shape_oriented_box:
     {
         if (p->m_Filled)
             renderer_draworientedbox_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, roundness, color, op);
@@ -435,7 +435,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         break;
     }
 
-    case primitive_pie:
+    case shape_pie:
     {
         if (p->m_Filled)
             renderer_drawpie_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Aperture, color, op);
@@ -444,7 +444,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         break;
     }
 
-    case primitive_ring:
+    case shape_arc:
     {
         renderer_drawring_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], p->m_Thickness, color, op);
         break;
@@ -466,7 +466,7 @@ void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color)
 {
     primitive_draw(p, renderer, 0.f, color, op_add);
 
-    for(uint32_t i=0; i<primitive_get_num_points(p->m_Type); ++i)
+    for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         renderer_drawcircle_filled(renderer, p->m_Points[i], primitive_point_radius, (draw_color){.packed_data = 0x7f10e010}, op_union);
 }
 
