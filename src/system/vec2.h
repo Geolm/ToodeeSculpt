@@ -69,6 +69,10 @@ static inline float vec2_normalize(vec2* v)
     *v = vec2_scale(*v, 1.f / norm);
     return norm;
 }
+static inline vec2 vec2_normalized(vec2 v)
+{
+    return vec2_scale(v, vec2_length(v));
+}
 
 #ifdef __cplusplus
 

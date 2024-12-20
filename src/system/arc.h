@@ -7,6 +7,14 @@
 extern "C" {
 #endif
 
+struct arc
+{
+    vec2 center;
+    vec2 direction;
+    float aperture;
+    float radius;
+};
+
 // compute a circle out of 3 points
 // radius is negative is the points are colinear
 void circle_from_points(vec2 p0, vec2 p1, vec2 p2, vec2* center, float* radius);

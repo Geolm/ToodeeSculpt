@@ -37,6 +37,7 @@ add_executable(ToodeeSculpt
 ./src/renderer/Renderer.cpp
 ./src/renderer/shader_reader.c
 ./src/system/arc.c
+./src/system/biarc.c
 ./src/system/color.c
 ./src/system/format.c
 ./src/system/log.c
