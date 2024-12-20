@@ -77,3 +77,8 @@ void renderer_drawring_filled(void* cpp_renderer, vec2 p0, vec2 p1, vec2 p2, flo
 {
     ((Renderer*) cpp_renderer)->DrawRingFilled(p0, p1, p2, thickness, color, op);
 }
+
+void renderer_drawarc_filled(void* cpp_renderer, vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, enum sdf_operator op)
+{
+    ((Renderer*) cpp_renderer)->DrawRingFilled(center, direction, aperture, radius, thickness, color, op);
+}

@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+// outputs the control points of the quadratic bezier curve that goes though all points (p0, p1, p2)
+void bezier_from_path(vec2 p0, vec2 p1, vec2 p2, vec2* output);
+
 // outputs two arcs from a quadratic bezier curve that goes through (p0, p1, p2)
 // can output an arc with negative radius if the points are colinear
 void biarc_from_path(vec2 p0, vec2 p1, vec2 p2, struct arc* arcs);

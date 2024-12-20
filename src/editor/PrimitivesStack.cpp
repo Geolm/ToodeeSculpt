@@ -11,7 +11,7 @@
 #include "tds.h"
 #include "export.h"
 
-const vec2 contextual_menu_size = {100.f, 190.f};
+const vec2 contextual_menu_size = {100.f, 210.f};
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -233,8 +233,10 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         primitive new_primitive;
         primitive_init(&new_primitive, m_PrimitiveShape, op_union, unpacked_color(primitive_palette.entries[0]), m_Roundness, m_Width);
 
-        if (m_PrimitiveShape == shape_arc)
+        if (m_PrimitiveShape == shape_arc || m_PrimitiveShape == shape_curve)
+        {
             new_primitive.m_Thickness = m_Roundness * 2.f;
+        }
 
         for(uint32_t i=0; i<primitive_get_num_points(m_PrimitiveShape); ++i)
             primitive_set_points(&new_primitive, i, m_PrimitivePoints[i]);
@@ -361,6 +363,21 @@ void PrimitivesStack::Draw(Renderer& renderer)
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
             renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, m_SelectedPrimitiveColor);
+            break;
+        }
+
+        case shape_curve:
+        {
+            float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
+            arc arcs[64];
+            uint32_t num_arcs;
+            biarc_tessellate(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 6, arcs, &num_arcs);
+
+            renderer.BeginCombination(1.0f);
+            for(uint32_t i=0; i<num_arcs; ++i)
+                if (arcs[i].radius>0.f)
+                    renderer.DrawRingFilled(arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, m_SelectedPrimitiveColor);
+            renderer.EndCombination();
             break;
         }
 
@@ -507,6 +524,12 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             if (mu_button_ex(gui_context, "arc", 0, 0))
             {
                 m_PrimitiveShape = shape_arc;
+                SetState(state::ADDING_POINTS);
+            }
+
+            if (mu_button_ex(gui_context, "curve", 0, 0))
+            {
+                m_PrimitiveShape = shape_curve;
                 SetState(state::ADDING_POINTS);
             }
 

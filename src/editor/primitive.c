@@ -6,6 +6,7 @@
 #include "../system/serializer.h"
 #include "../system/log.h"
 #include "../renderer/crenderer.h"
+#include "../system/format.h"
 #include "color_box.h"
 
 static int g_SDFOperationComboBox = 0;
@@ -70,6 +71,7 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
                     result = false;
                 break;
             }
+        case shape_curve : return true;
 
         default: 
             return false;
@@ -127,6 +129,15 @@ void primitive_update_aabb(struct primitive* p)
         aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
         break;
     }
+    case shape_curve :
+    {
+        vec2 c[3];
+        bezier_from_path(p->m_Points[0], p->m_Points[1], p->m_Points[2], c);
+        p->m_AABB = aabb_from_bezier(c[0], c[1], c[2]);
+        aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness));
+        biarc_tessellate(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_curve_max_tessellation, p->m_Arcs, &p->m_NumArcs);
+        break;
+    }
     default: p->m_AABB = aabb_invalid();
     }
 }
@@ -182,11 +193,17 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
             mu_text(gui_context, "arc");
             break;
         }
-
-    default : break;
+    case shape_curve:
+        {
+            mu_text(gui_context, "curve");
+            mu_label(gui_context, "num arcs");
+            mu_text(gui_context, format("%d", p->m_NumArcs));
+            break;
+        }
+    default : mu_text(gui_context, "unknown");break;
     }
 
-    if (p->m_Shape != shape_arc)
+    if (p->m_Shape != shape_arc && p->m_Shape != shape_curve)
     {
         mu_label(gui_context, "filled");
         res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
@@ -450,6 +467,14 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         break;
     }
 
+    case shape_curve:
+    {
+        for(uint32_t i=0; i<p->m_NumArcs; ++i)
+            if (p->m_Arcs[i].radius > 0.f)
+                renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op);
+        break;
+    }
+
     default: 
         break;
     }
@@ -464,7 +489,9 @@ void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color)
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color)
 {
+    renderer_begin_combination(renderer, 1.f);
     primitive_draw(p, renderer, 0.f, color, op_add);
+    renderer_end_combination(renderer);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         renderer_drawcircle_filled(renderer, p->m_Points[i], primitive_point_radius, (draw_color){.packed_data = 0x7f10e010}, op_union);

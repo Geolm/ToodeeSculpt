@@ -79,7 +79,7 @@ bool intersection_line_line(vec2 p0, vec2 d0, vec2 p1, vec2 d1, vec2* intersecti
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 // generate a bi-arcs curve from a quadratic bezier curve
 // based on https://dlacko.org/blog/2016/10/19/approximating-bezier-curves-by-biarcs/
-void biarc_generate(vec2 p0, vec2 p1, vec2 p2, struct arc* arcs)
+void biarc_from_path(vec2 p0, vec2 p1, vec2 p2, struct arc* arcs)
 {
     if (fabsf(vec2_cross(vec2_sub(p1, p0), vec2_sub(p2, p1))) < 1.e-3f)
     {

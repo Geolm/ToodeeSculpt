@@ -7,11 +7,13 @@
 #include "../shaders/common.h"
 #include "../system/serializer.h"
 #include "../system/palettes.h"
+#include "../system/biarc.h"
 
 enum {PRIMITIVE_MAXPOINTS = 3};
 
 #define primitive_point_radius (6.f)
 #define primitive_max_thickness (100.f)
+#define primitive_curve_max_tessellation (6)
 
 // almost in sync with primitive_type to not invalid old files
 enum primitive_shape
@@ -28,6 +30,7 @@ enum primitive_shape
 
 struct primitive
 {
+    struct arc m_Arcs[1<<primitive_curve_max_tessellation];
     aabb m_AABB;
     vec2 m_Points[PRIMITIVE_MAXPOINTS];
     vec2 m_Direction;
@@ -39,6 +42,7 @@ struct primitive
     float m_Radius;
     enum primitive_shape m_Shape;
     int m_Filled;
+    uint32_t m_NumArcs;
     enum sdf_operator m_Operator;
     color4f m_Color;
 };
