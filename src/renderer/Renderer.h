@@ -41,8 +41,9 @@ public:
     inline void DrawTriangleFilled(vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, sdf_operator op = op_union);
     inline void DrawPie(vec2 center, vec2 point, float aperture, float width, draw_color color, sdf_operator op = op_union);
     inline void DrawPieFilled(vec2 center, vec2 point, float aperture, draw_color color, sdf_operator op = op_union);
-    inline void DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
-    inline void DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
+    inline void DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op = op_union);
+    void DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
+    void DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
     
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
@@ -56,7 +57,7 @@ private:
     void PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawPie(vec2 center, vec2 point, float aperture, float thickness, draw_color color, sdf_operator op);
-    void PrivateDrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op, bool filled);
+    void PrivateDrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op, bool filled);
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
@@ -184,12 +185,7 @@ inline void Renderer::DrawPieFilled(vec2 center, vec2 point, float aperture, dra
     PrivateDrawPie(center, point, aperture, -1.f, color, op);
 }
 
-inline void Renderer::DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op)
+inline void Renderer::DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op)
 {
-    PrivateDrawRing(p0, p1, p2, thickness, color, op, true);
-}
-
-inline void Renderer::DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op)
-{
-    PrivateDrawRing(p0, p1, p2, thickness, color, op, false);
+    PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, true);
 }

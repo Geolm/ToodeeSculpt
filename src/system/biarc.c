@@ -1,6 +1,5 @@
 #include "biarc.h"
 
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 // based on κ-Curves: Interpolation at Local Maximum Curvature
 float compute_t(vec2 p0, vec2 p1, vec2 p2)
@@ -42,12 +41,12 @@ void bezier_from_path(vec2 p0, vec2 p1, vec2 p2, vec2* output)
     float t_sq = t * t;
 
     vec2 ctrl_pt = vec2_sub(p1, vec2_scale(p0, om_t_sq));
-    ctrl_pt = vec2_sub(p1, vec2_scale(p2, t_sq));
-    ctrl_pt = vec2_div(p1, vec2_splat((2.f * om_t * t))); 
+    ctrl_pt = vec2_sub(ctrl_pt, vec2_scale(p2, t_sq));
+    ctrl_pt = vec2_div(ctrl_pt, vec2_splat((2.f * om_t * t)));
 
     output[0] = p0;
     output[1] = ctrl_pt;
-    output[2] = p1;
+    output[2] = p2;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -88,25 +87,25 @@ bool biarc_generate(vec2 p0, vec2 p1, vec2 p2, struct arc* arcs)
     vec2 ctrl_pts[3];
     bezier_from_path(p0, p1, p2, ctrl_pts);
 
-    vec2 incenter = triangle_incenter(p0, p1, p2);
-    vec2 tangent = vec2_sub(p1, p0);
-    vec2 middle = vec2_scale(vec2_add(p0, incenter), .5f);
+    vec2 incenter = triangle_incenter(ctrl_pts[0], ctrl_pts[1], ctrl_pts[2]);
+    vec2 tangent = vec2_sub(ctrl_pts[1], ctrl_pts[0]);
+    vec2 middle = vec2_scale(vec2_add(ctrl_pts[0], incenter), .5f);
 
-    if (!intersection_line_line(p0, vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, p0)), &arcs[0].center))
+    if (!intersection_line_line(ctrl_pts[0], vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, ctrl_pts[0])), &arcs[0].center))
         return false;
     
-    arcs[0].direction = vec2_sub(middle, arcs[0].center);
-    arcs[0].radius = vec2_normalize(&arcs[0].direction);
+    arcs[0].direction = vec2_normalized(vec2_sub(middle, arcs[0].center)); 
+    arcs[0].radius = vec2_distance(arcs[0].center, ctrl_pts[0]);
     arcs[0].aperture = acosf(vec2_dot(arcs[0].direction, vec2_normalized(vec2_sub(incenter, arcs[0].center))));
 
-    tangent = vec2_sub(p2, p1);
-    middle = vec2_scale(vec2_add(p2, incenter), .5f);
+    tangent = vec2_sub(ctrl_pts[2], ctrl_pts[1]);
+    middle = vec2_scale(vec2_add(ctrl_pts[2], incenter), .5f);
 
-    if (!intersection_line_line(p2, vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, p2)), &arcs[1].center))
+    if (!intersection_line_line(ctrl_pts[2], vec2_skew(tangent), middle, vec2_skew(vec2_sub(incenter, ctrl_pts[2])), &arcs[1].center))
         return false;
 
-    arcs[1].direction = vec2_sub(middle, arcs[1].center);
-    arcs[1].radius = vec2_normalize(&arcs[1].direction);
+    arcs[1].direction = vec2_normalized(vec2_sub(middle, arcs[1].center));
+    arcs[1].radius = vec2_distance(arcs[1].center, ctrl_pts[2]);
     arcs[1].aperture = acosf(vec2_dot(arcs[1].direction, vec2_normalized(vec2_sub(incenter, arcs[1].center))));
 
     return true;

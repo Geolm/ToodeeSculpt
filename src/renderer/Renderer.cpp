@@ -748,7 +748,7 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op, bool filled)
+void Renderer::DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op)
 {
     vec2 center, direction;
     float aperture, radius;
@@ -761,6 +761,29 @@ void Renderer::PrivateDrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_
         return;
     }
 
+    PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, true);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op)
+{
+    vec2 center, direction;
+    float aperture, radius;
+    arc_from_points(p0, p1, p2, &center, &direction, &aperture, &radius);
+
+    // colinear points
+    if (radius<0.f)
+    {
+        PrivateDrawOrientedBox(p0, p2, thickness, 0.f, -1.f, color, op);
+        return;
+    }
+
+    PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, false);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op, bool filled)
+{
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness, 0.f);
 

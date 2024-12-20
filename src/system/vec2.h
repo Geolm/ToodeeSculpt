@@ -21,6 +21,7 @@ typedef struct {float x, y;} vec2;
 
 //-----------------------------------------------------------------------------
 static inline vec2 vec2_splat(float value) {return (vec2) {value, value};}
+static inline vec2 vec2_set(float x, float y) {return (vec2) {x, y};}
 static inline vec2 vec2_zero(void) {return (vec2) {0.f, 0.f};}
 static inline vec2 vec2_angle(float angle) {return (vec2) {cosf(angle), sinf(angle)};}
 static inline vec2 vec2_add(vec2 a, vec2 b) {return (vec2) {a.x + b.x, a.y + b.y};}
@@ -71,7 +72,7 @@ static inline float vec2_normalize(vec2* v)
 }
 static inline vec2 vec2_normalized(vec2 v)
 {
-    return vec2_scale(v, vec2_length(v));
+    return vec2_scale(v, 1.f / vec2_length(v));
 }
 
 #ifdef __cplusplus
