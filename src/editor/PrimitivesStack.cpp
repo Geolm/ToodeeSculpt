@@ -85,10 +85,12 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
     else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
     {
         *m_pGrabbedPoint = m_MousePosition;
+        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
     }
     else if (GetState() == state::MOVING_PRIMITIVE)
     {
         primitive_translate(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), m_MousePosition - m_Reference);
+        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
         m_Reference = m_MousePosition;
     }
     else if (GetState() == state::ROTATING_PRIMITIVE)
@@ -96,6 +98,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
         primitive* selected = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         *selected = m_CopiedPrimitive;
         primitive_rotate(selected, vec2_atan2(m_MousePosition - m_Reference));
+        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
     }
     else if (GetState() == state::SCALING_PRIMITIVE)
     {
@@ -109,6 +112,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
             scale = float_max(1.f + (scale / (aabb_get_size(&m_EditionZone).x * 0.1f)), 0.1f);
 
         primitive_scale(selected, scale);
+        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
     }
 }
 
