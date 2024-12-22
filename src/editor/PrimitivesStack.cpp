@@ -324,6 +324,11 @@ void PrimitivesStack::Draw(Renderer& renderer)
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
                 renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
         }
+        else if (m_PrimitiveShape == shape_curve)
+        {
+            if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
+                primitive_draw_curve(&renderer, m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
+        }
         renderer.DrawCircleFilled(m_MousePosition, primitive_point_radius, m_PointColor);
     }
     else if (GetState() == state::SET_WIDTH)
@@ -369,15 +374,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         case shape_curve:
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
-            arc arcs[64];
-            uint32_t num_arcs;
-            biarc_tessellate(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 6, arcs, &num_arcs);
-
-            renderer.BeginCombination(1.0f);
-            for(uint32_t i=0; i<num_arcs; ++i)
-                if (arcs[i].radius>0.f)
-                    renderer.DrawRingFilled(arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, m_SelectedPrimitiveColor);
-            renderer.EndCombination();
+            primitive_draw_curve(&renderer, m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, m_SelectedPrimitiveColor);
             break;
         }
 

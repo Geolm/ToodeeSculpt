@@ -73,6 +73,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color);
 void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha);
 void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color);
+void primitive_draw_curve(void * renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color);
 
 
 #ifdef __cplusplus

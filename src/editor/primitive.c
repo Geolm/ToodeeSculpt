@@ -7,6 +7,7 @@
 #include "../system/log.h"
 #include "../renderer/crenderer.h"
 #include "../system/format.h"
+#include "../system/biarc.h"
 #include "color_box.h"
 
 static int g_SDFOperationComboBox = 0;
@@ -516,4 +517,21 @@ void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha)
 {
     draw_color color = draw_color_from_float(p->m_Color.red, p->m_Color.green, p->m_Color.blue, alpha);
     primitive_draw(p, renderer, p->m_Roundness, color, p->m_Operator);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void primitive_draw_curve(void * renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color)
+{
+    struct arc arcs[64];
+    uint32_t num_arcs;
+    biarc_tessellate(p0, p1, p2, 6, arcs, &num_arcs);
+
+    renderer_begin_combination(renderer, 1.f);
+    for(uint32_t i=0; i<num_arcs; ++i)
+        if (arcs[i].radius>0.f)
+            renderer_drawarc_filled(renderer, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, color, op_add);
+        else
+            renderer_draworientedbox_filled(renderer, arcs[i].center, arcs[i].direction, thickness, 0.f, color, op_add);
+
+    renderer_end_combination(renderer);
 }
