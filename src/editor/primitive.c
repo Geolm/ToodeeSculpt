@@ -135,7 +135,7 @@ void primitive_update_aabb(struct primitive* p)
         vec2 c[3];
         bezier_from_path(p->m_Points[0], p->m_Points[1], p->m_Points[2], c);
         p->m_AABB = aabb_from_bezier(c[0], c[1], c[2]);
-        aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness));
+        aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
         biarc_tessellate(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_curve_max_tessellation, p->m_Arcs, &p->m_NumArcs);
         break;
     }
@@ -470,7 +470,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_arc:
     {
-        renderer_drawring_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], p->m_Thickness, color, op);
+        renderer_drawarc_filled(renderer, p->m_Center, p->m_Direction, p->m_Aperture, p->m_Radius, p->m_Thickness, color, op);
         break;
     }
 
