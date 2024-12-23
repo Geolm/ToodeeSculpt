@@ -136,8 +136,8 @@ void biarc_recursive(vec2 c0, vec2 c1, vec2 c2, uint32_t max_subdivision, float 
     vec2 split = vec2_add(vec2_add(vec2_scale(c0, .25f), vec2_scale(c1, .5f)), vec2_scale(c2, .25f));
     vec2 split_tangent = vec2_sub(c2, c0);
 
-    // the relative epsilon take in account the distance between c0 and c2, this two advantages:
-    //   - avoid replacing arc by line in the heart of the curve
+    // the relative epsilon take in account the distance between c0 and c2, this has two advantages:
+    //   - avoid replacing arc by line in the heart of the curve when segment are short
     //   - if the curve is elongated, it switches the long almost straigh chunk by a line to avoid "impossible" arc to be rasterize
     if (fabsf(vec2_cross(vec2_sub(c0, split), vec2_sub(c2, split))) < relative_epsilon(c0, c2, 1.e-1f))
     {

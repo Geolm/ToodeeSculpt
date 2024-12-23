@@ -136,7 +136,7 @@ void primitive_update_aabb(struct primitive* p)
         bezier_from_path(p->m_Points[0], p->m_Points[1], p->m_Points[2], c);
         p->m_AABB = aabb_from_bezier(c[0], c[1], c[2]);
         aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
-        biarc_tessellate(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_curve_max_tessellation, 2.f, p->m_Arcs, &p->m_NumArcs);
+        biarc_tessellate(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_curve_max_tessellation, 1.f, p->m_Arcs, &p->m_NumArcs);
         break;
     }
     default: p->m_AABB = aabb_invalid();
@@ -479,20 +479,15 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         if (vec2_colinear(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_colinear_threshold))
         {
             renderer_draworientedbox_filled(renderer, p->m_Points[0], p->m_Points[2], p->m_Thickness, 0.f, color, op_add);
-            renderer_draworientedbox_filled(renderer, p->m_Points[1], p->m_Points[2], p->m_Thickness, 0.f, color, op_add);
         }
         else
         {
             for(uint32_t i=0; i<p->m_NumArcs; ++i)
             {
                 if (p->m_Arcs[i].radius > 0.f)
-                {
                     renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op_add);
-                }
                 else
-                {
                     renderer_draworientedbox_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, 0.f, color, op_add);
-                }
             }
         }
         break;
@@ -532,14 +527,13 @@ void primitive_draw_curve(void * renderer, vec2 p0, vec2 p1, vec2 p2, float thic
 {
     if (vec2_colinear(p0, p1, p2, primitive_colinear_threshold))
     {
-        renderer_draworientedbox_filled(renderer, p0, p1, thickness, 0.f, color, op_add);
-        renderer_draworientedbox_filled(renderer, p1, p2, thickness, 0.f, color, op_add);
+        renderer_draworientedbox_filled(renderer, p0, p2, thickness, 0.f, color, op_add);
     }
     else
     {
         struct arc arcs[1<<primitive_curve_max_tessellation];
         uint32_t num_arcs;
-        biarc_tessellate(p0, p1, p2, primitive_curve_max_tessellation, 2.f, arcs, &num_arcs);
+        biarc_tessellate(p0, p1, p2, primitive_curve_max_tessellation, 1.f, arcs, &num_arcs);
 
         renderer_begin_combination(renderer, 1.f);
         for(uint32_t i=0; i<num_arcs; ++i)
