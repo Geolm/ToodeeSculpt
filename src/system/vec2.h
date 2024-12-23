@@ -87,6 +87,14 @@ static inline vec2 vec2_normalized(vec2 v)
     return vec2_scale(v, 1.f / vec2_length(v));
 }
 
+static inline bool vec2_colinear(vec2 a, vec2 b, vec2 c, float epsilon)
+{
+    float area = a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
+    float max_value = float_max(vec2_max3(a, b, c).x, vec2_max3(a, b, c).y);
+    epsilon *= max_value;
+    return fabsf(area) < epsilon;
+}
+
 #ifdef __cplusplus
 
 static inline void operator+= (vec2& a, vec2 b) {a = vec2_add(a, b);}
