@@ -89,7 +89,7 @@ static inline vec2 vec2_normalized(vec2 v)
 
 static inline bool vec2_colinear(vec2 a, vec2 b, vec2 c, float epsilon)
 {
-    float area = a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
+    float area = vec2_cross(vec2_sub(b, a), vec2_sub(c, b));
     float max_value = float_max(vec2_max3(a, b, c).x, vec2_max3(a, b, c).y);
     epsilon *= max_value;
     return fabsf(area) < epsilon;
