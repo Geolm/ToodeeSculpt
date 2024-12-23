@@ -22,9 +22,11 @@ void biarc_from_bezier(vec2 c0, vec2 c1, vec2 c2, struct arc* arcs);
 
 // "tessellate" a quadratic bezier curve that goes through (p0, p1, p2) with multiple arcs
 // 
-//      [arcs] the array should be enough to hold the "worst case" which is (1<<max_subdivision)
-//             the arcs with minor radius are invalid (colinear points or other errors)
-void biarc_tessellate(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, struct arc* arcs, uint32_t *num_arcs);
+//      [arcs]          the array should be enough to hold the "worst case" which is (1<<max_subdivision)
+//                      the arcs with minor radius are invalid (colinear points or other errors)
+//
+//      [max_error]     the threshold in units (pixels or whatever) that will trigger a subdivision if the arc is away for the real curve
+void biarc_tessellate(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, float max_error, struct arc* arcs, uint32_t *num_arcs);
 
 #ifdef __cplusplus
 }
