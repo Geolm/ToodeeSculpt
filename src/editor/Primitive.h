@@ -13,7 +13,7 @@ enum {PRIMITIVE_MAXPOINTS = 3};
 
 #define primitive_point_radius (6.f)
 #define primitive_max_thickness (100.f)
-#define primitive_curve_max_tessellation (4)
+#define primitive_curve_max_tessellation (6)
 
 // almost in sync with primitive_type to not invalid old files
 enum primitive_shape

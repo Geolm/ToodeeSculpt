@@ -24,7 +24,7 @@ void biarc_from_bezier(vec2 c0, vec2 c1, vec2 c2, struct arc* arcs);
 // 
 //      [arcs] the array should be enough to hold the "worst case" which is (1<<max_subdivision)
 //             the arcs with minor radius are invalid (colinear points or other errors)
-void biarc_tessellate(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, float error_max, struct arc* arcs, uint32_t *num_arcs);
+void biarc_tessellate(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, struct arc* arcs, uint32_t *num_arcs);
 
 #ifdef __cplusplus
 }
