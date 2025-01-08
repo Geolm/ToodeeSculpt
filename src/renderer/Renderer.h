@@ -58,6 +58,7 @@ private:
     void PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawPie(vec2 center, vec2 point, float aperture, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op, bool filled);
+    void PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, draw_color color, sdf_operator op);
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();

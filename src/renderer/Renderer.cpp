@@ -809,7 +809,38 @@ void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, floa
             write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture), thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);
+            return;
+        }
+        m_Commands.RemoveLast();
+    }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
+}
 
+//----------------------------------------------------------------------------------------------------------------------------
+void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, draw_color color, sdf_operator op)
+{
+    draw_command* cmd = m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = pack_type(primitive_ring, primitive_uneven_capsule);
+
+        float* data = m_DrawData.NewMultiple(6);
+        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            canvas_to_screen(m_CanvasScale, p0, p1);
+            canvas_to_screen(m_CanvasScale, radius0, radius1);
+
+            aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
+            aabb_grow(&bb, vec2_splat(m_AAWidth + m_SmoothValue));
+
+            write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(m_CombinationAABB, aabox);
             return;
         }
         m_Commands.RemoveLast();

@@ -11,7 +11,7 @@
 #include "tds.h"
 #include "export.h"
 
-const vec2 contextual_menu_size = {100.f, 210.f};
+const vec2 contextual_menu_size = {100.f, 235.f};
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -531,6 +531,12 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             if (mu_button_ex(gui_context, "curve", 0, 0))
             {
                 m_PrimitiveShape = shape_curve;
+                SetState(state::ADDING_POINTS);
+            }
+
+            if (mu_button_ex(gui_context, "capsule", 0, 0))
+            {
+                m_PrimitiveShape = shape_uneven_capsule;
                 SetState(state::ADDING_POINTS);
             }
 

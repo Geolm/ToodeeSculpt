@@ -125,6 +125,14 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
 
                 break;
             }
+
+            case primitive_uneven_capsule :
+            {
+                // TODO : proper culling
+                to_be_added = true;
+                break;
+            }
+
             case combination_begin:
             {
                 smooth_border = 0.f;

@@ -35,12 +35,13 @@ enum command_type
     primitive_ellipse = 5,
     primitive_pie = 6,
     primitive_ring = 7,
+    primitive_uneven_capsule = 8,
     
     combination_begin = 32,
     combination_end = 33
 };
 
-#define COMMAND_TYPE_MASK   (0x3f)
+#define COMMAND_TYPE_MASK   (0x7f)
 #define PRIMITIVE_FILLED    (0x80)
 
 

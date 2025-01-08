@@ -26,7 +26,8 @@ enum primitive_shape
     shape_triangle = 4,
     shape_pie = 6,
     shape_arc = 7,
-    shape_curve = 8
+    shape_curve,
+    shape_uneven_capsule
 };
 
 struct primitive
