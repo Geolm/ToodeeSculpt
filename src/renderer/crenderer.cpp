@@ -82,3 +82,8 @@ void renderer_drawarc_filled(void* cpp_renderer, vec2 center, vec2 direction, fl
 {
     ((Renderer*) cpp_renderer)->DrawRingFilled(center, direction, aperture, radius, thickness, color, op);
 }
+
+void renderer_drawunevencapsule_filled(void* cpp_renderer, vec2 p0, vec2 p1, float r0, float r1, draw_color color, enum sdf_operator op)
+{
+    ((Renderer*) cpp_renderer)->DrawUnevenCapsuleFilled(p0, p1, r0, r1, color, op);
+}

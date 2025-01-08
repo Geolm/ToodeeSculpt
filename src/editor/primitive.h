@@ -90,6 +90,7 @@ static inline uint32_t primitive_get_num_points(enum primitive_shape shape)
     case shape_disc: return 1;
     case shape_oriented_ellipse:
     case shape_pie:
+    case shape_uneven_capsule:
     case shape_oriented_box: return 2;
     case shape_arc:
     case shape_curve:

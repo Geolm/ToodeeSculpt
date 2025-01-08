@@ -42,6 +42,7 @@ public:
     inline void DrawPie(vec2 center, vec2 point, float aperture, float width, draw_color color, sdf_operator op = op_union);
     inline void DrawPieFilled(vec2 center, vec2 point, float aperture, draw_color color, sdf_operator op = op_union);
     inline void DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op = op_union);
+    inline void DrawUnevenCapsuleFilled(vec2 p0, vec2 p1, float radius0, float radius1, draw_color color, sdf_operator op = op_union);
     void DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
     void DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
     
@@ -58,7 +59,7 @@ private:
     void PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawPie(vec2 center, vec2 point, float aperture, float thickness, draw_color color, sdf_operator op);
     void PrivateDrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op, bool filled);
-    void PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, draw_color color, sdf_operator op);
+    void PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, draw_color color, sdf_operator op);
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
@@ -189,4 +190,9 @@ inline void Renderer::DrawPieFilled(vec2 center, vec2 point, float aperture, dra
 inline void Renderer::DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op)
 {
     PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, true);
+}
+
+inline void Renderer::DrawUnevenCapsuleFilled(vec2 p0, vec2 p1, float radius0, float radius1, draw_color color, sdf_operator op)
+{
+    PrivateDrawUnevenCapsule(p0, p1, radius0, radius1, -1.f, color, op);
 }

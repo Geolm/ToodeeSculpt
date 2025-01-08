@@ -139,6 +139,11 @@ void primitive_update_aabb(struct primitive* p)
         biarc_tessellate(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_curve_max_tessellation, 1.f, p->m_Arcs, &p->m_NumArcs);
         break;
     }
+    case shape_uneven_capsule :
+    {
+        p->m_AABB = aabb_from_capsule(p->m_Points[0], p->m_Points[1], float_max(p->m_Roundness, p->m_Radius));
+        break;
+    }
     default: p->m_AABB = aabb_invalid();
     }
 }
@@ -199,6 +204,15 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
             mu_text(gui_context, "curve");
             mu_label(gui_context, "num arcs");
             mu_text(gui_context, format("%d", p->m_NumArcs));
+            break;
+        }
+    case shape_uneven_capsule:
+        {
+            mu_text(gui_context, "uneven capsule");
+            mu_label(gui_context, "radius 1");
+            res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 1000.f, 1.f, "%3.0f", 0);
+            mu_label(gui_context, "radius 2");
+            res |= mu_slider_ex(gui_context, &p->m_Radius, 0.f, 1000.f, 1.f, "%3.0f", 0);
             break;
         }
     default : mu_text(gui_context, "unknown");break;
@@ -490,6 +504,12 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
                     renderer_draworientedbox_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, 0.f, color, op_add);
             }
         }
+        break;
+    }
+
+    case shape_uneven_capsule:
+    {
+        renderer_drawunevencapsule_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, color, op);
         break;
     }
 

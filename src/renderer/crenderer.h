@@ -28,6 +28,7 @@ void renderer_drawpie_filled(void* cpp_renderer,vec2 center, vec2 point, float a
 void renderer_drawring(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op);
 void renderer_drawring_filled(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op);
 void renderer_drawarc_filled(void* cpp_renderer, vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, enum sdf_operator op);
+void renderer_drawunevencapsule_filled(void* cpp_renderer, vec2 p0, vec2 p1, float r0, float r1, draw_color color, enum sdf_operator op);
 
 #ifdef __cplusplus
 }

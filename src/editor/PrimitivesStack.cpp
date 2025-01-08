@@ -238,9 +238,10 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         primitive_init(&new_primitive, m_PrimitiveShape, op_union, unpacked_color(primitive_palette.entries[0]), m_Roundness, m_Width);
 
         if (m_PrimitiveShape == shape_arc || m_PrimitiveShape == shape_curve)
-        {
             new_primitive.m_Thickness = m_Roundness * 2.f;
-        }
+
+        if (m_PrimitiveShape == shape_uneven_capsule)
+            new_primitive.m_Radius = m_Roundness;
 
         for(uint32_t i=0; i<primitive_get_num_points(m_PrimitiveShape); ++i)
             primitive_set_points(&new_primitive, i, m_PrimitivePoints[i]);
