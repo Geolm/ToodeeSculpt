@@ -259,39 +259,36 @@ bool intersection_aabb_arc(aabb box, float2 center, float2 direction, float2 ape
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-float distance_squared_to_segment(float2 p, float2 a, float2 b)
+bool intersection_box_unevencapsule(aabb box, float2 p0, float2 p1, float radius0, float radius1)
 {
-    float2 ab = b - a;
-    float2 ap = p - a;
-
-    float t = saturate(dot(ap, ab) / dot(ab, ab)); 
-    float2 closest_point = a + t * ab;
-
-    return distance_squared(p, closest_point);
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------
-bool intersection_aabb_unevencapsule(aabb box, float2 p0, float2 p1, float radius0, float radius1)
-{
-    if ((p0.x >= box.min.x && p0.x <= box.max.x &&
-         p0.y >= box.min.y && p0.y <= box.max.y) ||
-        (p1.x >= box.min.x && p1.x <= box.max.x &&
-         p1.y >= box.min.y && p1.y <= box.max.y))
-    {
+    if (intersection_aabb_disc(box, p0, radius0))
         return true;
-    }
 
-    float2 clamped_point = clamp(p0, box.min, box.max);
+    if (intersection_aabb_disc(box, p1, radius1))
+        return true;
 
-    // Calculate the interpolated radius along the capsule's axis
-    float2 ab = p1 - p0;
-    float t = saturate(dot(clamped_point - p0, ab) / dot(ab, ab));
-    float interpolated_radius = mix(radius0, radius1, t);
+    float2 direction = normalize(p1 - p0);
+    float2 normal = skew(direction);
 
-    float distanceSquared = distance_squared_to_segment(clamped_point, p0, p1);
+    float2 v[4];
+    v[0] = p0 + normal * radius0;
+    v[1] = p0 - normal * radius0;
+    v[2] = p1 - normal * radius1;
+    v[3] = p1 + normal * radius1;
 
-    // Check if the distance is less than the interpolated radius squared
-    return distance_squared_to_segment(clamped_point, p0, p1) <= square(interpolated_radius);
+    if (v[0].x > box.max.x && v[1].x > box.max.x && v[2].x > box.max.x && v[3].x > box.max.x)
+        return false;
+
+    if (v[0].x < box.min.x && v[1].x < box.min.x && v[2].x < box.min.x && v[3].x < box.min.x)
+        return false;
+
+    if (v[0].y < box.min.y && v[1].y < box.min.y && v[2].y < box.min.y && v[3].y < box.min.y)
+        return false;
+
+    if (v[0].y > box.max.y && v[1].y > box.max.y && v[2].y > box.max.y && v[3].y > box.max.y)
+        return false;
+
+    return true;
 }
 
 

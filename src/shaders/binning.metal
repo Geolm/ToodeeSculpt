@@ -132,7 +132,9 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p1 = float2(data[2], data[3]);
                 float radius0 = data[4];
                 float radius1 = data[5];
-                to_be_added = intersection_aabb_unevencapsule(tile_enlarge_aabb, p0, p1, radius0, radius1);
+
+                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[6]));
+                to_be_added = intersection_box_unevencapsule(tile_smooth, p0, p1, radius0, radius1);
                 break;
             }
 
