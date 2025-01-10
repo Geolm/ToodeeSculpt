@@ -73,6 +73,11 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
                 break;
             }
         case shape_curve : return true;
+        case shape_uneven_capsule :
+            {
+                result = point_in_uneven_capsule(p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, mouse_position);
+                break;
+            }
 
         default: 
             return false;

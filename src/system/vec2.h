@@ -16,6 +16,7 @@ static inline float float_clamp(float f, float a, float b) {if (f<a) return a; i
 static inline float float_square(float f) {return f*f;}
 static inline float float_min(float a, float b) {return (a<b) ? a : b;}
 static inline float float_max(float a, float b) {return (a>b) ? a : b;}
+static inline float float_lerp(float a, float b, float t) {return (a * (1.f - t)) + (b * t);}
 
 typedef struct {float x, y;} vec2;
 

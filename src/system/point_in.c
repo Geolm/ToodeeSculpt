@@ -94,4 +94,14 @@ bool point_in_arc(vec2 center, vec2 direction, float aperture, float radius, flo
     return false;
 }
 
+//-----------------------------------------------------------------------------
+bool point_in_uneven_capsule(vec2 p0, vec2 p1, float radius0, float radius1, vec2 point)
+{
+    vec2 pa = vec2_sub(point, p0);
+    vec2 ba = vec2_sub(p1, p0);
+    float h = float_clamp(vec2_dot(pa,ba)/vec2_dot(ba,ba), 0.f, 1.f);
+    float interpolated_radius = float_lerp(radius0, radius1, h);
+    return vec2_sq_length(vec2_sub(pa, vec2_scale(ba, h))) < float_square(interpolated_radius);
+}
+
 
