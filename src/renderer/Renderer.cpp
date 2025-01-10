@@ -819,6 +819,21 @@ void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, floa
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, draw_color color, sdf_operator op)
 {
+    float delta = vec2_distance(p0, p1);
+
+    if (radius0>radius1 && radius0 > radius1 + delta)
+    {
+        PrivateDrawDisc(p0, radius0, -1.f, color, op);
+        return;
+    }
+
+    if (radius1>radius0 && radius1 > radius0 + delta)
+    {
+        PrivateDrawDisc(p1, radius1, -1.f, color, op);
+        return;
+    }
+
+
     bool filled = thickness < 0.f;
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -829,7 +844,7 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
         cmd->op = op;
         cmd->type = pack_type(primitive_uneven_capsule, filled);
 
-        float* data = m_DrawData.NewMultiple(6);
+        float* data = m_DrawData.NewMultiple(filled ? 7 : 6);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
