@@ -133,6 +133,12 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float radius0 = data[4];
                 float radius1 = data[5];
 
+                // change the smallest radius to accomodate "non-standard" shape due to the tangent continous correctness of the sdf
+                if (radius0>radius1)    
+                    radius1 += (radius0 - radius1) * .5f;
+                else
+                    radius0 += (radius1 - radius0) * .5f;
+
                 aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[6]));
                 to_be_added = intersection_box_unevencapsule(tile_smooth, p0, p1, radius0, radius1);
                 break;

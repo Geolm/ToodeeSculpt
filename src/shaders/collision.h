@@ -13,9 +13,17 @@ aabb aabb_grow(aabb box, float2 amount)
     return (aabb) {.min = box.min - amount, .max = box.max + amount};
 }
 
-float2 aabb_get_extents(aabb box)
+float2 aabb_get_extents(aabb box) {return box.max - box.min;}
+float2 aabb_get_center(aabb box) {return (box.min + box.max) * .5f;}
+aabb aabb_scale(aabb box, float scale)
 {
-    return box.max - box.min;
+    float2 half_extents = aabb_get_extents(box) * .5f;
+    float2 center = aabb_get_center(box);
+
+    aabb output;
+    output.min = center - half_extents * scale;
+    output.max = center + half_extents * scale;
+    return output;
 }
 
 float2 skew(float2 v) {return float2(-v.y, v.x);}
@@ -287,6 +295,16 @@ bool intersection_box_unevencapsule(aabb box, float2 p0, float2 p1, float radius
 
     if (v[0].y > box.max.y && v[1].y > box.max.y && v[2].y > box.max.y && v[3].y > box.max.y)
         return false;
+
+    for(uint32_t i=0; i<4; ++i)
+    {
+        float3 edge = edge_init(v[i], v[(i+1)%4]);
+        float4 vertices_distance = float4(edge_distance(edge, box.min), edge_distance(edge, float2(box.min.x, box.max.y)),
+                                          edge_distance(edge, float2(box.max.x, box.min.y)), edge_distance(edge, box.max));
+
+        if (all(vertices_distance < 0.f))
+            return false;
+    }
 
     return true;
 }
