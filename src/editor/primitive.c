@@ -215,9 +215,9 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
         {
             mu_text(gui_context, "uneven capsule");
             mu_label(gui_context, "radius 1");
-            res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 1000.f, 1.f, "%3.0f", 0);
+            res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 400.f, 1.f, "%3.0f", 0);
             mu_label(gui_context, "radius 2");
-            res |= mu_slider_ex(gui_context, &p->m_Radius, 0.f, 1000.f, 1.f, "%3.0f", 0);
+            res |= mu_slider_ex(gui_context, &p->m_Radius, 0.f, 400.f, 1.f, "%3.0f", 0);
             break;
         }
     default : mu_text(gui_context, "unknown");break;
@@ -332,12 +332,16 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
         {
             serializer_read_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
             serializer_read_struct(context, p->m_Shape);
+
             if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
                 p->m_Width = serializer_read_float(context);
             if (p->m_Shape == shape_pie || p->m_Shape == shape_arc)
                 p->m_Aperture = serializer_read_float(context);
             if (p->m_Shape != shape_pie && p->m_Shape != shape_arc)
                 p->m_Roundness = serializer_read_float(context);
+            if (p->m_Shape == shape_uneven_capsule)
+                p->m_Radius = serializer_read_float(context);
+
             p->m_Thickness = serializer_read_float(context);
             p->m_Filled = serializer_read_uint8_t(context);
             serializer_read_struct(context, p->m_Operator);
@@ -351,12 +355,15 @@ void primitive_serialize(struct primitive const* p, serializer_context* context)
 {
     serializer_write_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
     serializer_write_struct(context, p->m_Shape);
+    
     if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
         serializer_write_float(context, p->m_Width);
     if (p->m_Shape == shape_pie || p->m_Shape == shape_arc)
         serializer_write_float(context, p->m_Aperture);
     if (p->m_Shape != shape_pie && p->m_Shape != shape_arc)
         serializer_write_float(context, p->m_Roundness);
+    if (p->m_Shape == shape_uneven_capsule)
+        serializer_write_float(context, p->m_Radius);
 
     serializer_write_float(context, p->m_Thickness);
     serializer_write_uint8_t(context, (uint8_t)p->m_Filled);

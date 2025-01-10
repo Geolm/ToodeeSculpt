@@ -1,4 +1,3 @@
-float2 skew(float2 v) {return float2(-v.y, v.x);}
 float cross2(float2 a, float2 b ) {return a.x*b.y - a.y*b.x;}
 
 //-----------------------------------------------------------------------------

@@ -26,8 +26,6 @@ aabb aabb_scale(aabb box, float scale)
     return output;
 }
 
-float2 skew(float2 v) {return float2(-v.y, v.x);}
-
 template <class T> T square(T value) {return value*value;}
 
 // ---------------------------------------------------------------------------------------------------------------------------

@@ -167,6 +167,10 @@ typedef struct output_command_buffer
     command_buffer cmd_buffer;
 } output_command_buffer;
 
+#ifdef __METAL_VERSION__
+float2 skew(float2 v) {return float2(-v.y, v.x);}
+#endif
+
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
 #ifndef __METAL_VERSION__

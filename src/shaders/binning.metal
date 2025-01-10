@@ -1,6 +1,7 @@
 #include <metal_stdlib>
 #include "common.h"
 #include "collision.h"
+#include "sdf.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
@@ -133,14 +134,13 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float radius0 = data[4];
                 float radius1 = data[5];
 
-                // change the smallest radius to accomodate "non-standard" shape due to the tangent continous correctness of the sdf
-                if (radius0>radius1)    
-                    radius1 += (radius0 - radius1) * .5f;
-                else
-                    radius0 += (radius1 - radius0) * .5f;
-
                 aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[6]));
-                to_be_added = intersection_box_unevencapsule(tile_smooth, p0, p1, radius0, radius1);
+
+                // use sdf because the shape is not a "standard" uneven capsule
+                // it preserves the tangent but it's hard to compute the bounding convex object to test against AAABB
+                // so we use the bounding sphere of the tile to test instead
+                to_be_added = sd_uneven_capsule(tile_center, p0, p1, radius0, radius1) < length(aabb_get_extents(tile_smooth) * .5f);
+
                 break;
             }
 

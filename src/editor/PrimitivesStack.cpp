@@ -355,12 +355,14 @@ void PrimitivesStack::Draw(Renderer& renderer)
         case shape_triangle:
         {
             renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 
-                                        m_Roundness, m_SelectedPrimitiveColor);break;
+                                        m_Roundness, m_SelectedPrimitiveColor);
+            break;
         }
 
         case shape_disc:
         {
-            renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, m_SelectedPrimitiveColor);break;
+            renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, m_SelectedPrimitiveColor);
+            break;
         }
 
         case shape_oriented_box:
@@ -380,6 +382,12 @@ void PrimitivesStack::Draw(Renderer& renderer)
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
             primitive_draw_curve(&renderer, m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, m_SelectedPrimitiveColor);
+            break;
+        }
+
+        case shape_uneven_capsule:
+        {
+            renderer.DrawUnevenCapsuleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Roundness, m_Roundness, m_SelectedPrimitiveColor);
             break;
         }
 
