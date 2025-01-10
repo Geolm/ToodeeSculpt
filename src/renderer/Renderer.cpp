@@ -823,18 +823,19 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
 
     if (radius0>radius1 && radius0 > radius1 + delta)
     {
-        PrivateDrawDisc(p0, radius0, -1.f, color, op);
+        PrivateDrawDisc(p0, radius0, thickness, color, op);
         return;
     }
 
     if (radius1>radius0 && radius1 > radius0 + delta)
     {
-        PrivateDrawDisc(p1, radius1, -1.f, color, op);
+        PrivateDrawDisc(p1, radius1, thickness, color, op);
         return;
     }
 
 
     bool filled = thickness < 0.f;
+    thickness = float_max(thickness * .5f, 0.f);
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -844,7 +845,7 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
         cmd->op = op;
         cmd->type = pack_type(primitive_uneven_capsule, filled);
 
-        float* data = m_DrawData.NewMultiple(filled ? 7 : 6);
+        float* data = m_DrawData.NewMultiple(filled ? 6 : 7);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
@@ -852,9 +853,13 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
             canvas_to_screen(m_CanvasScale, radius0, radius1);
 
             aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
-            aabb_grow(&bb, vec2_splat(m_AAWidth + m_SmoothValue));
+            aabb_grow(&bb, vec2_splat(m_AAWidth + m_SmoothValue + thickness));
 
-            write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1);
+            if (filled)
+                write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1);
+            else
+                write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1, thickness);
+
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(m_CombinationAABB, aabox);
             return;

@@ -355,7 +355,7 @@ void primitive_serialize(struct primitive const* p, serializer_context* context)
 {
     serializer_write_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
     serializer_write_struct(context, p->m_Shape);
-    
+
     if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
         serializer_write_float(context, p->m_Width);
     if (p->m_Shape == shape_pie || p->m_Shape == shape_arc)
@@ -521,7 +521,11 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_uneven_capsule:
     {
-        renderer_drawunevencapsule_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, color, op);
+        if (p->m_Filled)
+            renderer_drawunevencapsule_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, color, op);
+        else
+            renderer_drawunevencapsule(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, p->m_Thickness, color, op);
+
         break;
     }
 

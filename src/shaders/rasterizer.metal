@@ -182,6 +182,8 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float radius1 = data[5];
 
                     distance = sd_uneven_capsule(in.pos.xy, p0, p1, radius0, radius1);
+                    if (!filled)
+                        distance = abs(distance) - data[6];
                     break;
                 }
                 default: break;
