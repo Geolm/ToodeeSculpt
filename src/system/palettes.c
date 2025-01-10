@@ -54,7 +54,6 @@ bool palette_load_from_hex(const char* filename, struct palette* output)
     if (output->num_entries == 0)
     {
         log_debug("unable to read palette");
-        free(output);
         fclose(f);
         return false;
     }
