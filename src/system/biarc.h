@@ -28,6 +28,9 @@ void biarc_from_bezier(vec2 c0, vec2 c1, vec2 c2, struct arc* arcs);
 //      [max_error]     the threshold in units (pixels or whatever) that will trigger a subdivision if the arc is away for the real curve
 void biarc_tessellate(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, float max_error, struct arc* arcs, uint32_t *num_arcs);
 
+
+void biarc_from_points_tangents(vec2 p0, vec2 p1, float theta0, float theta1, struct arc* arcs);
+
 #ifdef __cplusplus
 }
 #endif
