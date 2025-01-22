@@ -210,17 +210,14 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
     float theta_j = (2.f * omega) - ((theta0 + theta1) * .5f);
     float delta_theta0 = (theta_j - theta0) * .5f;
     float delta_theta1 = (theta_j - theta1) * .5f;
-
-    float l0 = 1.f / (t * sinc(delta_theta0));
-    float l1 = 1.f / (t * sinc(delta_theta1));
     float k0 = 2.f * t * sinf(delta_theta0);
     float k1 = -2.f * t * sinf(delta_theta1);
-    
+
     vec2 junction = vec2_add(p0, vec2_set(cosf((theta_j + theta0) * .5f ) / t, sinf((theta_j + theta0) * .5f ) / t));
     vec2 n0 = vec2_skew(vec2_angle(theta0));
     vec2 n1 = vec2_skew(vec2_angle(theta1));
 
-    // // generate arcs
+    // generate arcs
     arcs[0].center = vec2_add(p0, vec2_scale(n0, 1.f / k0));
     arcs[0].radius = fabsf(1.f / k0);
     arcs[1].center = vec2_add(p1, vec2_scale(n1, 1.f / k1));
@@ -231,10 +228,20 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
 
     arcs[0].direction = vec2_normalized(vec2_add(center_p, center_junction));
     arcs[0].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[0].direction));
+    if (float_sign(vec2_dot(arcs[0].direction, vec2_angle(theta0))) < 0.f)
+    {
+        arcs[0].direction = vec2_scale(arcs[0].direction, -1.f);
+        arcs[0].aperture = VEC2_PI - arcs[0].aperture;
+    }
 
     center_p = vec2_sub(p1, arcs[1].center);
     center_junction = vec2_sub(junction, arcs[1].center);
 
-    arcs[1].direction = vec2_scale(vec2_normalized(vec2_add(center_p, center_junction)), -1.f);
+    arcs[1].direction = vec2_normalized(vec2_add(center_p, center_junction));
     arcs[1].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[1].direction));
+    if (float_sign(vec2_dot(arcs[1].direction, vec2_angle(theta1))) > 0.f)
+    {
+        arcs[1].direction = vec2_scale(arcs[1].direction, -1.f);
+        arcs[1].aperture = VEC2_PI - arcs[1].aperture;
+    }
 }
