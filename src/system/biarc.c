@@ -214,8 +214,10 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
     float k1 = -2.f * t * sinf(delta_theta1);
 
     vec2 junction = vec2_add(p0, vec2_set(cosf((theta_j + theta0) * .5f ) / t, sinf((theta_j + theta0) * .5f ) / t));
-    vec2 n0 = vec2_skew(vec2_angle(theta0));
-    vec2 n1 = vec2_skew(vec2_angle(theta1));
+    vec2 t0 = vec2_angle(theta0);
+    vec2 t1 = vec2_angle(theta1);
+    vec2 n0 = vec2_skew(t0);
+    vec2 n1 = vec2_skew(t1);
 
     // generate arcs
     arcs[0].center = vec2_add(p0, vec2_scale(n0, 1.f / k0));
@@ -228,7 +230,7 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
 
     arcs[0].direction = vec2_normalized(vec2_add(center_p, center_junction));
     arcs[0].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[0].direction));
-    if (float_sign(vec2_dot(arcs[0].direction, vec2_angle(theta0))) < 0.f)
+    if (float_sign(vec2_dot(arcs[0].direction, t0)) < 0.f)
     {
         arcs[0].direction = vec2_scale(arcs[0].direction, -1.f);
         arcs[0].aperture = VEC2_PI - arcs[0].aperture;
@@ -239,9 +241,52 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
 
     arcs[1].direction = vec2_normalized(vec2_add(center_p, center_junction));
     arcs[1].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[1].direction));
-    if (float_sign(vec2_dot(arcs[1].direction, vec2_angle(theta1))) > 0.f)
+    if (float_sign(vec2_dot(arcs[1].direction, t1)) > 0.f)
     {
         arcs[1].direction = vec2_scale(arcs[1].direction, -1.f);
         arcs[1].aperture = VEC2_PI - arcs[1].aperture;
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------
+float initial_tangent_guess(const vec2* points, uint32_t num_points, uint32_t index)
+{
+    if (index<num_points && num_points>2)
+    {
+        // start of the curve
+        if (index == 0)
+            return vec2_atan2(vec2_sub(points[1], points[0]));
+        
+        // general case
+        if (index + 1 < num_points)
+        {
+            vec2 delta0 = vec2_sub(points[index], points[index-1]);
+            vec2 delta1 = vec2_sub(points[index+1], points[index]);
+            float angle0 = vec2_atan2(delta0);
+            float angle1 = vec2_atan2(delta1);
+            float d0 = vec2_length(delta0);
+            float d1 = vec2_length(delta1);
+            return (angle0/d0 + angle1/d1) / (1.f/d0 + 1./d1);
+        }
+
+        // end of curve
+        return vec2_atan2(vec2_sub(points[index], points[index-1]));
+    }
+    return 0.f;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t biarc_spline(vec2 const* points, uint32_t num_points, struct arc* arcs)
+{
+    if (num_points<3 || num_points>BIARC_SPLINE_MAX_POINT)
+        return;
+
+    float angle[BIARC_SPLINE_MAX_POINT];
+    for(uint32_t i=0; i<num_points; ++i)
+        angle[i] = initial_tangent_guess(points, num_points, i);
+
+    for(uint32_t i=0; i<num_points-1; ++i)
+        biarc_from_points_tangents(points[i], points[i+1], angle[i], angle[i+1], &arcs[i*2]);
+    
+    return (num_points-1)*2;
 }

@@ -141,7 +141,7 @@ void primitive_update_aabb(struct primitive* p)
         bezier_from_path(p->m_Points[0], p->m_Points[1], p->m_Points[2], c);
         p->m_AABB = aabb_from_bezier(c[0], c[1], c[2]);
         aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
-        biarc_tessellate(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_curve_max_tessellation, 1.f, p->m_Arcs, &p->m_NumArcs);
+        p->m_NumArcs = biarc_spline((vec2[]) {p->m_Points[0], p->m_Points[1], p->m_Points[2]}, 3, p->m_Arcs);
         break;
     }
     case shape_uneven_capsule :
@@ -569,7 +569,7 @@ void primitive_draw_curve(void * renderer, vec2 p0, vec2 p1, vec2 p2, float thic
     {
         struct arc arcs[1<<primitive_curve_max_tessellation];
         uint32_t num_arcs;
-        biarc_tessellate(p0, p1, p2, primitive_curve_max_tessellation, 1.f, arcs, &num_arcs);
+        num_arcs = biarc_spline((vec2[]) {p0, p1, p2}, 3, arcs);
 
         renderer_begin_combination(renderer, 1.f);
         for(uint32_t i=0; i<num_arcs; ++i)
