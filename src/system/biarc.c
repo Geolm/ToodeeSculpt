@@ -179,35 +179,62 @@ void biarc_tessellate(vec2 p0, vec2 p1, vec2 p2, uint32_t max_subdivision, float
     biarc_recursive(c[0], c[1], c[2], max_subdivision, max_error, arcs, num_arcs, 1);
 }
 
+//----------------------------------------------------------------------------------------------------------------------------------------------------------
+static inline float range(float theta)
+{
+    while (theta>VEC2_PI)
+        theta -= VEC2_TAU;
+    while (theta<-VEC2_PI)
+        theta += VEC2_TAU;
+    return theta;
+}
+
+static inline float sinc(float x) 
+{
+    if (fabsf(x) < 0.002f)
+        return 1.f + (float_square(x) / 6.f) * (1.f - (float_square(x) / 20.f));
+    return sinf(x) / x;
+}
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
-void biarc_from_points_tangents(vec2 p0, vec2 p1, float theta0, float theta1, struct arc* arcs)
+// based on Interpolating Splines of Biarcs from a Sequence of Planar Points
+void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, struct arc* arcs)
 {
-    // compute the distance and angle between points
     vec2 direction = vec2_sub(p1, p0);
     float d = vec2_length(direction);
     float omega = vec2_atan2(direction);
 
-    // compute the junction angle
-    float theta_j = 2.f * omega - (theta0 + theta1) * .5f;
+    float theta0 = omega + range(angle0 - omega);
+    float theta1 = omega + range(angle1 - omega);
+    float t = 2.f * cosf((theta1 - theta0) / 4.f) / d;
+    float theta_j = (2.f * omega) - ((theta0 + theta1) * .5f);
+    float delta_theta0 = (theta_j - theta0) * .5f;
+    float delta_theta1 = (theta_j - theta1) * .5f;
 
-    // compute curvatures
-    float kappa0 = (2.0f * sinf((theta_j - theta0) * 0.5f)) / (d * sinf((theta_j - theta0) * 0.5f) / (theta_j - theta0));
-    float kappa1 = -(2.0f * sinf((theta1 - theta_j) * 0.5f)) / (d * sinf((theta1 - theta_j) * 0.5f) / (theta1 - theta_j));
-    float one_over_kappa0 = 1.0f / kappa0;
-    float one_over_kappa1 = 1.0f / kappa1;
+    float l0 = 1.f / (t * sinc(delta_theta0));
+    float l1 = 1.f / (t * sinc(delta_theta1));
+    float k0 = 2.f * t * sinf(delta_theta0);
+    float k1 = -2.f * t * sinf(delta_theta1);
+    
+    vec2 junction = vec2_add(p0, vec2_set(cosf((theta_j + theta0) * .5f ) / t, sinf((theta_j + theta0) * .5f ) / t));
+    vec2 n0 = vec2_skew(vec2_angle(theta0));
+    vec2 n1 = vec2_skew(vec2_angle(theta1));
 
-    // compute arc lengths
-    float len0 = 2.0f * sinf((theta_j - theta0) * 0.5f) * one_over_kappa0;
-    float len1 = 2.0f * sinf((theta1 - theta_j) * 0.5f) * one_over_kappa1;
+    // // generate arcs
+    arcs[0].center = vec2_add(p0, vec2_scale(n0, 1.f / k0));
+    arcs[0].radius = fabsf(1.f / k0);
+    arcs[1].center = vec2_add(p1, vec2_scale(n1, 1.f / k1));
+    arcs[1].radius = fabsf(1.f / k1);
 
-    // compute junction point
-    vec2 delta0 = vec2_scale((vec2) {sinf(theta0), -cosf(theta0)}, one_over_kappa0);
-    vec2 junction = vec2_add(p0, vec2_mul(vec2_set(sin((theta0 + kappa0 * len0 * 0.5)), cos((theta0 + kappa0 * len0 * 0.5))), delta0));
+    vec2 center_p = vec2_sub(p0, arcs[0].center);
+    vec2 center_junction = vec2_sub(junction, arcs[0].center);
 
-    // generate arcs
-    arcs[0].center = vec2_add(p0, vec2_scale(vec2_set(sinf(theta0), -cosf(theta0)), one_over_kappa0));
-    arcs[1].center = vec2_add(p1, vec2_scale(vec2_set(sinf(theta1), -cosf(theta1)), one_over_kappa1));
-    arcs[0].radius = fabsf(one_over_kappa0);
-    arcs[1].radius = fabsf(one_over_kappa1);
+    arcs[0].direction = vec2_normalized(vec2_add(center_p, center_junction));
+    arcs[0].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[0].direction));
+
+    center_p = vec2_sub(p1, arcs[1].center);
+    center_junction = vec2_sub(junction, arcs[1].center);
+
+    arcs[1].direction = vec2_scale(vec2_normalized(vec2_add(center_p, center_junction)), -1.f);
+    arcs[1].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[1].direction));
 }
