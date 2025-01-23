@@ -332,7 +332,9 @@ void PrimitivesStack::Draw(Renderer& renderer)
         else if (m_PrimitiveShape == shape_curve)
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
-                primitive_draw_curve(&renderer, m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
+                primitive_draw_curve(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition}, 3, 0.f, m_SelectedPrimitiveColor);
+            else if (m_CurrentPoint == 3 || (m_CurrentPoint == 4 && vec2_similar(m_PrimitivePoints[2], m_PrimitivePoints[3], 0.001f)))
+                primitive_draw_curve(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_MousePosition}, 4, 0.f, m_SelectedPrimitiveColor);
         }
         renderer.DrawCircleFilled(m_MousePosition, primitive_point_radius, m_PointColor);
     }
@@ -381,7 +383,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         case shape_curve:
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
-            primitive_draw_curve(&renderer, m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, m_SelectedPrimitiveColor);
+            primitive_draw_curve(&renderer, m_PrimitivePoints, primitive_get_num_points(m_PrimitiveShape), thickness, m_SelectedPrimitiveColor);
             break;
         }
 

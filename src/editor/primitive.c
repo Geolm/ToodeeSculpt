@@ -137,7 +137,7 @@ void primitive_update_aabb(struct primitive* p)
     }
     case shape_curve :
     {
-        p->m_NumArcs = biarc_spline((vec2[]) {p->m_Points[0], p->m_Points[1], p->m_Points[2]}, 3, p->m_Arcs);
+        p->m_NumArcs = biarc_spline(p->m_Points, primitive_get_num_points(p->m_Shape), p->m_Arcs);
         p->m_AABB = aabb_invalid();
 
         for(uint32_t i=0; i<p->m_NumArcs; ++i)
@@ -569,36 +569,18 @@ void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_curve(void * renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color)
+void primitive_draw_curve(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color)
 {
-    if (vec2_colinear(p0, p1, p2, primitive_colinear_threshold))
-    {
-        renderer_draworientedbox_filled(renderer, p0, p2, thickness, 0.f, color, op_add);
-    }
-    else
-    {
-        struct arc arcs[1<<primitive_curve_max_tessellation];
-        uint32_t num_arcs;
-        num_arcs = biarc_spline((vec2[]) {p0, p1, p2}, 3, arcs);
+    struct arc arcs[primitive_max_arcs];
+    uint32_t num_arcs;
+    num_arcs = biarc_spline(points, num_points, arcs);
 
-        renderer_begin_combination(renderer, 1.f);
-        for(uint32_t i=0; i<num_arcs; ++i)
-            if (arcs[i].radius>0.f)
-                renderer_drawarc_filled(renderer, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, color, op_add);
-            else
-                renderer_draworientedbox_filled(renderer, arcs[i].center, arcs[i].direction, thickness, 0.f, color, op_add);
+    renderer_begin_combination(renderer, 1.f);
+    for(uint32_t i=0; i<num_arcs; ++i)
+        if (arcs[i].radius>0.f)
+            renderer_drawarc_filled(renderer, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, color, op_add);
+        else
+            renderer_draworientedbox_filled(renderer, arcs[i].center, arcs[i].direction, thickness, 0.f, color, op_add);
 
-        renderer_end_combination(renderer);
-
-        draw_color tangent_color = (draw_color){.packed_data = na16_blue};
-
-        float angle = initial_tangent_guess((vec2[]) {p0, p1, p2}, 3, 0);
-        renderer_draworientedbox_filled(renderer, p0, vec2_add(p0, vec2_scale(vec2_angle(angle), 50.f)), 4.f, 0.f, tangent_color, op_add);
-
-        angle = initial_tangent_guess((vec2[]) {p0, p1, p2}, 3, 1);
-        renderer_draworientedbox_filled(renderer, p1, vec2_add(p1, vec2_scale(vec2_angle(angle), 50.f)), 4.f, 0.f, tangent_color, op_add);
-
-        angle = initial_tangent_guess((vec2[]) {p0, p1, p2}, 3, 2);
-        renderer_draworientedbox_filled(renderer, p2, vec2_add(p2, vec2_scale(vec2_angle(angle), 50.f)), 4.f, 0.f, tangent_color, op_add);
-    }
+    renderer_end_combination(renderer);
 }

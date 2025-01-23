@@ -9,12 +9,12 @@
 #include "../system/palettes.h"
 #include "../system/biarc.h"
 
-enum {PRIMITIVE_MAXPOINTS = 3};
+enum {PRIMITIVE_MAXPOINTS = 4};
 
 #define primitive_point_radius (6.f)
 #define primitive_max_thickness (100.f)
-#define primitive_curve_max_tessellation (6)
 #define primitive_colinear_threshold (0.2f)
+#define primitive_max_arcs ((PRIMITIVE_MAXPOINTS-1)*2)
 
 // almost in sync with primitive_type to not invalid old files
 enum primitive_shape
@@ -32,7 +32,7 @@ enum primitive_shape
 
 struct primitive
 {
-    struct arc m_Arcs[1<<primitive_curve_max_tessellation];
+    struct arc m_Arcs[primitive_max_arcs];
     aabb m_AABB;
     vec2 m_Points[PRIMITIVE_MAXPOINTS];
     vec2 m_Direction;
@@ -75,7 +75,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color);
 void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha);
 void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color);
-void primitive_draw_curve(void * renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color);
+void primitive_draw_curve(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color);
 
 
 #ifdef __cplusplus
@@ -93,8 +93,8 @@ static inline uint32_t primitive_get_num_points(enum primitive_shape shape)
     case shape_uneven_capsule:
     case shape_oriented_box: return 2;
     case shape_arc:
-    case shape_curve:
     case shape_triangle: return 3;
+    case shape_curve: return 4;
     default: return 0;
     }
 }
