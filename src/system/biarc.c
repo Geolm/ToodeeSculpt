@@ -222,12 +222,8 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
     arcs[0].radius = fabsf(1.f / k0);
     arcs[1].radius = fabsf(1.f / k1);
 
-    log_debug("arcs[0].radius = %f", arcs[0].radius);
-    log_debug("arcs[1].radius = %f", arcs[1].radius);
-
-    float threshold = vec2_distance(p0, p1) * 100.f;
-
     // generate arcs, if the radius is very big it's probable more a straight line than an arc
+    float threshold = vec2_distance(p0, p1) * 100.f;
     if (arcs[0].radius > threshold)
     {
         arcs[0].center = p0;
