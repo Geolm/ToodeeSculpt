@@ -265,20 +265,22 @@ float initial_tangent_guess(const vec2* points, uint32_t num_points, uint32_t in
 {
     if (index<num_points && num_points>2)
     {
+        vec2 tangent;
+
         // start of the curve
         if (index == 0)
-            return vec2_atan2(vec2_sub(points[1], points[0]));
-        
-        // general case
-        if (index + 1 < num_points)
+            tangent = vec2_sub(points[1], points[0]);
+        else if (index + 1 < num_points)
         {
+            // general case
             vec2 delta0 = vec2_sub(points[index], points[index-1]);
             vec2 delta1 = vec2_sub(points[index+1], points[index]);
-            return vec2_atan2(vec2_add(delta0, delta1));
+            tangent = vec2_add(delta0, delta1);
         }
+        else // end of curve
+            tangent = vec2_sub(points[index], points[index-1]);
 
-        // end of curve
-        return vec2_atan2(vec2_sub(points[index], points[index-1]));
+        return vec2_atan2(tangent);
     }
     return 0.f;
 }
