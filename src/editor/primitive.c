@@ -320,7 +320,7 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
     {
         if (minor == 0)
         {
-            serializer_read_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
+            serializer_read_blob(context, p->m_Points, sizeof(vec2) * 3);
             p->m_Width = serializer_read_float(context);
             p->m_Aperture = serializer_read_float(context);
             p->m_Roundness = serializer_read_float(context);
@@ -332,8 +332,16 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
         }
         else if (minor >= 1)
         {
-            serializer_read_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
-            serializer_read_struct(context, p->m_Shape);
+            if (minor<3)
+            {
+                serializer_read_blob(context, p->m_Points, sizeof(vec2) * 3);
+                serializer_read_struct(context, p->m_Shape);
+            }
+            else
+            {
+                serializer_read_struct(context, p->m_Shape);
+                serializer_read_blob(context, p->m_Points, sizeof(vec2) * primitive_get_num_points(p->m_Shape));
+            }
 
             if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
                 p->m_Width = serializer_read_float(context);
@@ -355,8 +363,8 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_serialize(struct primitive const* p, serializer_context* context)
 {
-    serializer_write_blob(context, p->m_Points, sizeof(vec2) * PRIMITIVE_MAXPOINTS);
     serializer_write_struct(context, p->m_Shape);
+    serializer_write_blob(context, p->m_Points, sizeof(vec2) * primitive_get_num_points(p->m_Shape));
 
     if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
         serializer_write_float(context, p->m_Width);
