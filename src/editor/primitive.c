@@ -137,11 +137,13 @@ void primitive_update_aabb(struct primitive* p)
     }
     case shape_curve :
     {
-        vec2 c[3];
-        bezier_from_path(p->m_Points[0], p->m_Points[1], p->m_Points[2], c);
-        p->m_AABB = aabb_from_bezier(c[0], c[1], c[2]);
-        aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
         p->m_NumArcs = biarc_spline((vec2[]) {p->m_Points[0], p->m_Points[1], p->m_Points[2]}, 3, p->m_Arcs);
+        p->m_AABB = aabb_invalid();
+
+        for(uint32_t i=0; i<p->m_NumArcs; ++i)
+            p->m_AABB = aabb_merge(p->m_AABB, aabb_from_arc(p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].radius, p->m_Arcs[i].aperture));
+
+        aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
         break;
     }
     case shape_uneven_capsule :
@@ -579,5 +581,16 @@ void primitive_draw_curve(void * renderer, vec2 p0, vec2 p1, vec2 p2, float thic
                 renderer_draworientedbox_filled(renderer, arcs[i].center, arcs[i].direction, thickness, 0.f, color, op_add);
 
         renderer_end_combination(renderer);
+
+        draw_color tangent_color = (draw_color){.packed_data = na16_blue};
+
+        float angle = initial_tangent_guess((vec2[]) {p0, p1, p2}, 3, 0);
+        renderer_draworientedbox_filled(renderer, p0, vec2_add(p0, vec2_scale(vec2_angle(angle), 50.f)), 4.f, 0.f, tangent_color, op_add);
+
+        angle = initial_tangent_guess((vec2[]) {p0, p1, p2}, 3, 1);
+        renderer_draworientedbox_filled(renderer, p1, vec2_add(p1, vec2_scale(vec2_angle(angle), 50.f)), 4.f, 0.f, tangent_color, op_add);
+
+        angle = initial_tangent_guess((vec2[]) {p0, p1, p2}, 3, 2);
+        renderer_draworientedbox_filled(renderer, p2, vec2_add(p2, vec2_scale(vec2_angle(angle), 50.f)), 4.f, 0.f, tangent_color, op_add);
     }
 }

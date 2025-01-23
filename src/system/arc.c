@@ -58,23 +58,32 @@ void arc_from_points(vec2 p0, vec2 p1, vec2 p2, vec2* center, vec2* direction, f
 aabb aabb_from_arc(vec2 center, vec2 direction, float radius, float aperture)
 {
     aabb box = aabb_invalid();
-    float cos_aperture = cosf(aperture);
 
-    if (vec2_dot(direction, (vec2){1.f, 0.f}) > cos_aperture)
-        aabb_encompass(&box, vec2_add(center, (vec2){radius, 0.f}));
+    // radius negative = it's a line
+    if (radius<0.f)
+    {
+        aabb_encompass(&box, center);
+        aabb_encompass(&box, direction);
+    }
+    else
+    {
+        float cos_aperture = cosf(aperture);
+        if (vec2_dot(direction, (vec2){1.f, 0.f}) > cos_aperture)
+            aabb_encompass(&box, vec2_add(center, (vec2){radius, 0.f}));
 
-    if (vec2_dot(direction, (vec2){0.f, 1.f}) > cos_aperture)
-        aabb_encompass(&box, vec2_add(center, (vec2){0.f, radius}));
+        if (vec2_dot(direction, (vec2){0.f, 1.f}) > cos_aperture)
+            aabb_encompass(&box, vec2_add(center, (vec2){0.f, radius}));
 
-    if (vec2_dot(direction, (vec2){-1.f, 0.f}) > cos_aperture)
-        aabb_encompass(&box, vec2_add(center, (vec2){-radius, 0.f}));
+        if (vec2_dot(direction, (vec2){-1.f, 0.f}) > cos_aperture)
+            aabb_encompass(&box, vec2_add(center, (vec2){-radius, 0.f}));
 
-    if (vec2_dot(direction, (vec2){0.f, -1.f}) > cos_aperture)
-        aabb_encompass(&box, vec2_add(center, (vec2){0.f, -radius}));
-    
-    direction = vec2_scale(direction, radius);
-    aabb_encompass(&box, vec2_add(center, vec2_rotate(direction, vec2_angle(aperture))));
-    aabb_encompass(&box, vec2_add(center, vec2_rotate(direction, vec2_angle(-aperture))));
+        if (vec2_dot(direction, (vec2){0.f, -1.f}) > cos_aperture)
+            aabb_encompass(&box, vec2_add(center, (vec2){0.f, -radius}));
+        
+        direction = vec2_scale(direction, radius);
+        aabb_encompass(&box, vec2_add(center, vec2_rotate(direction, vec2_angle(aperture))));
+        aabb_encompass(&box, vec2_add(center, vec2_rotate(direction, vec2_angle(-aperture))));
+    }
     return box;
 }
 

@@ -43,6 +43,9 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
 //  returns the number of arcs generated
 uint32_t biarc_spline(vec2 const* points, uint32_t num_points, struct arc* arcs);
 
+// returns the guess tangent for the point at [index], tangent is simply based on neighbors points and distance
+float initial_tangent_guess(const vec2* points, uint32_t num_points, uint32_t index);
+
 #ifdef __cplusplus
 }
 #endif

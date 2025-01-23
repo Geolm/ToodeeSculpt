@@ -219,32 +219,44 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
     vec2 n0 = vec2_skew(t0);
     vec2 n1 = vec2_skew(t1);
 
-    // generate arcs
-    arcs[0].center = vec2_add(p0, vec2_scale(n0, 1.f / k0));
-    arcs[0].radius = fabsf(1.f / k0);
-    arcs[1].center = vec2_add(p1, vec2_scale(n1, 1.f / k1));
-    arcs[1].radius = fabsf(1.f / k1);
-
-    vec2 center_p = vec2_sub(p0, arcs[0].center);
-    vec2 center_junction = vec2_sub(junction, arcs[0].center);
-
-    arcs[0].direction = vec2_normalized(vec2_add(center_p, center_junction));
-    arcs[0].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[0].direction));
-    if (float_sign(vec2_dot(arcs[0].direction, t0)) < 0.f)
+    if (vec2_colinear(p0, junction, p1, 0.05f))
     {
-        arcs[0].direction = vec2_scale(arcs[0].direction, -1.f);
-        arcs[0].aperture = VEC2_PI - arcs[0].aperture;
+        arcs[0].center = p0;
+        arcs[0].direction = junction;
+        arcs[0].radius = -1.f;
+        arcs[1].center = p1;
+        arcs[1].direction = junction;
+        arcs[1].radius = -1.f;
     }
-
-    center_p = vec2_sub(p1, arcs[1].center);
-    center_junction = vec2_sub(junction, arcs[1].center);
-
-    arcs[1].direction = vec2_normalized(vec2_add(center_p, center_junction));
-    arcs[1].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[1].direction));
-    if (float_sign(vec2_dot(arcs[1].direction, t1)) > 0.f)
+    else
     {
-        arcs[1].direction = vec2_scale(arcs[1].direction, -1.f);
-        arcs[1].aperture = VEC2_PI - arcs[1].aperture;
+        // generate arcs
+        arcs[0].center = vec2_add(p0, vec2_scale(n0, 1.f / k0));
+        arcs[0].radius = fabsf(1.f / k0);
+        arcs[1].center = vec2_add(p1, vec2_scale(n1, 1.f / k1));
+        arcs[1].radius = fabsf(1.f / k1);
+
+        vec2 center_p = vec2_sub(p0, arcs[0].center);
+        vec2 center_junction = vec2_sub(junction, arcs[0].center);
+
+        arcs[0].direction = vec2_normalized(vec2_add(center_p, center_junction));
+        arcs[0].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[0].direction));
+        if (float_sign(vec2_dot(arcs[0].direction, t0)) < 0.f)
+        {
+            arcs[0].direction = vec2_scale(arcs[0].direction, -1.f);
+            arcs[0].aperture = VEC2_PI - arcs[0].aperture;
+        }
+
+        center_p = vec2_sub(p1, arcs[1].center);
+        center_junction = vec2_sub(junction, arcs[1].center);
+
+        arcs[1].direction = vec2_normalized(vec2_add(center_p, center_junction));
+        arcs[1].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[1].direction));
+        if (float_sign(vec2_dot(arcs[1].direction, t1)) > 0.f)
+        {
+            arcs[1].direction = vec2_scale(arcs[1].direction, -1.f);
+            arcs[1].aperture = VEC2_PI - arcs[1].aperture;
+        }
     }
 }
 
@@ -262,11 +274,7 @@ float initial_tangent_guess(const vec2* points, uint32_t num_points, uint32_t in
         {
             vec2 delta0 = vec2_sub(points[index], points[index-1]);
             vec2 delta1 = vec2_sub(points[index+1], points[index]);
-            float angle0 = vec2_atan2(delta0);
-            float angle1 = vec2_atan2(delta1);
-            float d0 = vec2_length(delta0);
-            float d1 = vec2_length(delta1);
-            return (angle0/d0 + angle1/d1) / (1.f/d0 + 1./d1);
+            return vec2_atan2(vec2_add(delta0, delta1));
         }
 
         // end of curve
@@ -279,7 +287,7 @@ float initial_tangent_guess(const vec2* points, uint32_t num_points, uint32_t in
 uint32_t biarc_spline(vec2 const* points, uint32_t num_points, struct arc* arcs)
 {
     if (num_points<3 || num_points>BIARC_SPLINE_MAX_POINT)
-        return;
+        return 0;
 
     float angle[BIARC_SPLINE_MAX_POINT];
     for(uint32_t i=0; i<num_points; ++i)
