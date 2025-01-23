@@ -219,23 +219,24 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
     vec2 n0 = vec2_skew(t0);
     vec2 n1 = vec2_skew(t1);
 
-    if (vec2_colinear(p0, junction, p1, 0.05f))
+    arcs[0].radius = fabsf(1.f / k0);
+    arcs[1].radius = fabsf(1.f / k1);
+
+    log_debug("arcs[0].radius = %f", arcs[0].radius);
+    log_debug("arcs[1].radius = %f", arcs[1].radius);
+
+    float threshold = vec2_distance(p0, p1) * 100.f;
+
+    // generate arcs, if the radius is very big it's probable more a straight line than an arc
+    if (arcs[0].radius > threshold)
     {
         arcs[0].center = p0;
         arcs[0].direction = junction;
         arcs[0].radius = -1.f;
-        arcs[1].center = p1;
-        arcs[1].direction = junction;
-        arcs[1].radius = -1.f;
     }
     else
     {
-        // generate arcs
         arcs[0].center = vec2_add(p0, vec2_scale(n0, 1.f / k0));
-        arcs[0].radius = fabsf(1.f / k0);
-        arcs[1].center = vec2_add(p1, vec2_scale(n1, 1.f / k1));
-        arcs[1].radius = fabsf(1.f / k1);
-
         vec2 center_p = vec2_sub(p0, arcs[0].center);
         vec2 center_junction = vec2_sub(junction, arcs[0].center);
 
@@ -246,10 +247,19 @@ void biarc_from_points_tangents(vec2 p0, vec2 p1, float angle0, float angle1, st
             arcs[0].direction = vec2_scale(arcs[0].direction, -1.f);
             arcs[0].aperture = VEC2_PI - arcs[0].aperture;
         }
+    }
 
-        center_p = vec2_sub(p1, arcs[1].center);
-        center_junction = vec2_sub(junction, arcs[1].center);
-
+    if (arcs[1].radius > threshold)
+    {
+        arcs[1].center = p1;
+        arcs[1].direction = junction;
+        arcs[1].radius = -1.f;
+    }
+    else
+    {
+        arcs[1].center = vec2_add(p1, vec2_scale(n1, 1.f / k1));
+        vec2 center_p = vec2_sub(p1, arcs[1].center);
+        vec2 center_junction = vec2_sub(junction, arcs[1].center);
         arcs[1].direction = vec2_normalized(vec2_add(center_p, center_junction));
         arcs[1].aperture = acosf(vec2_dot(vec2_normalized(center_p), arcs[1].direction));
         if (float_sign(vec2_dot(arcs[1].direction, t1)) > 0.f)

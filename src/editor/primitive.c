@@ -512,19 +512,12 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_curve:
     {
-        if (vec2_colinear(p->m_Points[0], p->m_Points[1], p->m_Points[2], primitive_colinear_threshold))
+        for(uint32_t i=0; i<p->m_NumArcs; ++i)
         {
-            renderer_draworientedbox_filled(renderer, p->m_Points[0], p->m_Points[2], p->m_Thickness, 0.f, color, op_add);
-        }
-        else
-        {
-            for(uint32_t i=0; i<p->m_NumArcs; ++i)
-            {
-                if (p->m_Arcs[i].radius > 0.f)
-                    renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op_add);
-                else
-                    renderer_draworientedbox_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, 0.f, color, op_add);
-            }
+            if (p->m_Arcs[i].radius > 0.f)
+                renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op_add);
+            else
+                renderer_draworientedbox_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, 0.f, color, op_add);
         }
         break;
     }
