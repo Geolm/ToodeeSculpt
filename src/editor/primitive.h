@@ -26,7 +26,7 @@ enum primitive_shape
     shape_triangle = 4,
     shape_pie = 6,
     shape_arc = 7,
-    shape_curve,
+    shape_spline,
     shape_uneven_capsule
 };
 
@@ -75,7 +75,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color);
 void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha);
 void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color);
-void primitive_draw_curve(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color);
+void primitive_draw_spline(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color);
 
 
 #ifdef __cplusplus
@@ -94,7 +94,7 @@ static inline uint32_t primitive_get_num_points(enum primitive_shape shape)
     case shape_oriented_box: return 2;
     case shape_arc:
     case shape_triangle: return 3;
-    case shape_curve: return 4;
+    case shape_spline: return 4;
     default: return 0;
     }
 }

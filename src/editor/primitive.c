@@ -72,7 +72,7 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
                     result = false;
                 break;
             }
-        case shape_curve : return true;
+        case shape_spline : return true;
         case shape_uneven_capsule :
             {
                 result = point_in_uneven_capsule(p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, mouse_position);
@@ -135,7 +135,7 @@ void primitive_update_aabb(struct primitive* p)
         aabb_grow(&p->m_AABB, vec2_splat(p->m_Thickness * .5f));
         break;
     }
-    case shape_curve :
+    case shape_spline :
     {
         p->m_NumArcs = biarc_spline(p->m_Points, primitive_get_num_points(p->m_Shape), p->m_Arcs);
         p->m_AABB = aabb_invalid();
@@ -206,9 +206,9 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
             mu_text(gui_context, "arc");
             break;
         }
-    case shape_curve:
+    case shape_spline:
         {
-            mu_text(gui_context, "curve");
+            mu_text(gui_context, "spline");
             mu_label(gui_context, "num arcs");
             mu_text(gui_context, format("%d", p->m_NumArcs));
             break;
@@ -225,7 +225,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     default : mu_text(gui_context, "unknown");break;
     }
 
-    if (p->m_Shape != shape_arc && p->m_Shape != shape_curve)
+    if (p->m_Shape != shape_arc && p->m_Shape != shape_spline)
     {
         mu_label(gui_context, "filled");
         res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
@@ -234,7 +234,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     mu_label(gui_context, "thickness");
     res |= mu_slider_ex(gui_context, &p->m_Thickness, 0.f, primitive_max_thickness, 0.1f, "%3.2f", 0);
 
-    if (p->m_Shape != shape_curve)
+    if (p->m_Shape != shape_spline)
     {
         _Static_assert(sizeof(p->m_Operator) == sizeof(int), "operator");
         mu_label(gui_context, "operation");
@@ -273,7 +273,7 @@ int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* g
     if (p->m_Shape != shape_arc)
         res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
 
-    if (p->m_Shape != shape_curve)
+    if (p->m_Shape != shape_spline)
     {
         if (mu_button_ex(gui_context, "op", 0, 0))
         mu_open_popup(gui_context, "operation");
@@ -510,7 +510,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         break;
     }
 
-    case shape_curve:
+    case shape_spline:
     {
         for(uint32_t i=0; i<p->m_NumArcs; ++i)
         {
@@ -562,7 +562,7 @@ void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_curve(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color)
+void primitive_draw_spline(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color)
 {
     struct arc arcs[primitive_max_arcs];
     uint32_t num_arcs;

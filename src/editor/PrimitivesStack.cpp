@@ -237,7 +237,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
         primitive new_primitive;
         primitive_init(&new_primitive, m_PrimitiveShape, op_union, unpacked_color(primitive_palette.entries[0]), m_Roundness, m_Width);
 
-        if (m_PrimitiveShape == shape_arc || m_PrimitiveShape == shape_curve)
+        if (m_PrimitiveShape == shape_arc || m_PrimitiveShape == shape_spline)
             new_primitive.m_Thickness = m_Roundness * 2.f;
 
         if (m_PrimitiveShape == shape_uneven_capsule)
@@ -329,12 +329,12 @@ void PrimitivesStack::Draw(Renderer& renderer)
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
                 renderer.DrawRingFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
         }
-        else if (m_PrimitiveShape == shape_curve)
+        else if (m_PrimitiveShape == shape_spline)
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
-                primitive_draw_curve(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition}, 3, 0.f, m_SelectedPrimitiveColor);
+                primitive_draw_spline(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition}, 3, 0.f, m_SelectedPrimitiveColor);
             else if (m_CurrentPoint == 3 || (m_CurrentPoint == 4 && vec2_similar(m_PrimitivePoints[2], m_PrimitivePoints[3], 0.001f)))
-                primitive_draw_curve(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_MousePosition}, 4, 0.f, m_SelectedPrimitiveColor);
+                primitive_draw_spline(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_MousePosition}, 4, 0.f, m_SelectedPrimitiveColor);
         }
         renderer.DrawCircleFilled(m_MousePosition, primitive_point_radius, m_PointColor);
     }
@@ -380,10 +380,10 @@ void PrimitivesStack::Draw(Renderer& renderer)
             break;
         }
 
-        case shape_curve:
+        case shape_spline:
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
-            primitive_draw_curve(&renderer, m_PrimitivePoints, primitive_get_num_points(m_PrimitiveShape), thickness, m_SelectedPrimitiveColor);
+            primitive_draw_spline(&renderer, m_PrimitivePoints, primitive_get_num_points(m_PrimitiveShape), thickness, m_SelectedPrimitiveColor);
             break;
         }
 
@@ -539,9 +539,9 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 SetState(state::ADDING_POINTS);
             }
 
-            if (mu_button_ex(gui_context, "curve", 0, 0))
+            if (mu_button_ex(gui_context, "spline", 0, 0))
             {
-                m_PrimitiveShape = shape_curve;
+                m_PrimitiveShape = shape_spline;
                 SetState(state::ADDING_POINTS);
             }
 
