@@ -24,6 +24,7 @@ void primitive_init(struct primitive* p, enum primitive_shape shape, enum sdf_op
     p->m_Operator = op;
     p->m_Color = color;
     p->m_AABB = aabb_invalid();
+    p->m_NumArcs = 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -430,8 +431,13 @@ void primitive_normalize(struct primitive* p, const aabb* box)
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         p->m_Points[i] = aabb_get_uv(box, p->m_Points[i]);
 
-    p->m_Center = aabb_get_uv(box, p->m_Center);
+    for(uint32_t i=0; i<p->m_NumArcs; ++i)
+    {
+        p->m_Arcs[i].center = aabb_get_uv(box, p->m_Arcs[i].center);
+        p->m_Arcs[i].radius *= normalization_factor; 
+    }
 
+    p->m_Center = aabb_get_uv(box, p->m_Center);
     p->m_Roundness *= normalization_factor;
     p->m_Thickness *= normalization_factor;
     p->m_Width *= normalization_factor;
@@ -446,8 +452,13 @@ void primitive_expand(struct primitive* p, const aabb* box)
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         p->m_Points[i] = aabb_bilinear(box, p->m_Points[i]);
 
-    p->m_Center = aabb_bilinear(box, p->m_Center);
+    for(uint32_t i=0; i<p->m_NumArcs; ++i)
+    {
+        p->m_Arcs[i].center = aabb_bilinear(box,  p->m_Arcs[i].center);
+        p->m_Arcs[i].radius *= expand_factor; 
+    }
 
+    p->m_Center = aabb_bilinear(box, p->m_Center);
     p->m_Roundness *= expand_factor;
     p->m_Thickness *= expand_factor;
     p->m_Width *= expand_factor;
