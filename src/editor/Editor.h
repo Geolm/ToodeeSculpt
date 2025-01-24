@@ -11,7 +11,7 @@ struct undo_context;
 class Editor
 {
 public:
-    void Init(aabb zone, const char* folder_path);
+    void Init(void* window, aabb zone, const char* folder_path);
     void OnKeyEvent(int key, int scancode, int action, int mods);
     void OnMouseMove(vec2 pos);
     void OnMouseButton(int button, int action, int mods);
@@ -48,6 +48,7 @@ private:
     vec2 m_PopupCoord;
     vec2 m_PopupHalfSize;
     struct undo_context* m_pUndoContext;
+    void* m_Window;
 
     // menubar
     MenuBarState m_MenuBarState;

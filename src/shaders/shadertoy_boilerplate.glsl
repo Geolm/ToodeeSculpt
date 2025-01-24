@@ -215,25 +215,3 @@ vec4 map(vec2 p)
     vec2 blend = vec2(0.0);
     vec3 color = vec3(0.0);
     float pixel_size = length(dFdx(p) + dFdy(p));
-
-
-    return vec4(color, d);
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Pixel shader
-//----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    vec2 p = fragCoord/iResolution.y;
-
-    p.y = 1.0 - p.y;
-
-    vec4 color_distance = map(p);
-
-    vec3 col = mix( vec3(0.0), vec3(color_distance.rgb), 1.0-smoothstep(0.0,length(dFdx(p) + dFdy(p)), color_distance.a) );
-
-    fragColor = vec4(col,1.0);
-}

@@ -12,7 +12,7 @@
 #define UNUSED_VARIABLE(a) (void)(a)
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::Init(aabb zone, const char* folder_path)
+void Editor::Init(void* window, aabb zone, const char* folder_path)
 {
     m_ExternalZone = m_Zone = zone;
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));
@@ -30,6 +30,7 @@ void Editor::Init(aabb zone, const char* folder_path)
     m_AABBDebug = false;
     m_LogLevel = 0;
     m_LogLevelCombo = 0;
+    m_Window = window;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -178,7 +179,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button_ex(gui_context, "Export", 0, 0))
                 {
-                    m_PrimitivesStack.Export();
+                    m_PrimitivesStack.Export(m_Window);
                     m_MenuBarState = MenuBar_None;
                 }
                 mu_end_window(gui_context);

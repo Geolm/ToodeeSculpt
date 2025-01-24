@@ -30,7 +30,7 @@ public:
     void Paste();
     void DeleteSelected();
     void New();
-    void Export();
+    void Export(void* window);
     void Terminate();
 
     void DuplicateSelected();

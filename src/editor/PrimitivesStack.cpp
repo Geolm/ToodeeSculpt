@@ -12,6 +12,7 @@
 #include "export.h"
 
 const vec2 contextual_menu_size = {100.f, 235.f};
+const size_t clipboard_buffer_size = (1<<18);
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -722,16 +723,27 @@ void PrimitivesStack::DeleteSelected()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Export()
+void PrimitivesStack::Export(void* window)
 {
-    float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
-    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
-    {
-        primitive p = *cc_get(&m_Primitives, i);
+    char* clipboard_buffer = (char*) malloc(clipboard_buffer_size);
+    size_t remaining_size = clipboard_buffer_size;
 
-        primitive_normalize(&p, &m_EditionZone);
-        primitive_export_shadertoy(&p, i, normalized_smooth_blend);
-    }
+    char* buffer = copy_boiler_plate(clipboard_buffer, &remaining_size);
+
+    // float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
+    // for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    // {
+    //     primitive p = *cc_get(&m_Primitives, i);
+
+    //     primitive_normalize(&p, &m_EditionZone);
+    //     primitive_export_shadertoy(&p, i, normalized_smooth_blend);
+    // }
+
+    finish_shadertoy(&buffer, &remaining_size);
+
+    glfwSetClipboardString((GLFWwindow*) window, clipboard_buffer);
+
+    free(clipboard_buffer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

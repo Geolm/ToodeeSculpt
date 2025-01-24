@@ -1,11 +1,41 @@
 #include "export.h"
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "primitive.h"
 #include "../system/arc.h"
 #include "../system/log.h"
+#include "../shaders/shadertoy_boilerplate.h"
 
+//----------------------------------------------------------------------------------------------------------------------------
+char* copy_boiler_plate(char* clipboard_buffer, size_t* remaining_size)
+{
+    const char* boiler_plate = shadertoy_boilerplate_shader;
+    while (*boiler_plate != 0 && remaining_size > 0)
+    {
+        *(clipboard_buffer++) = *(boiler_plate++);
+        *remaining_size -= 1;
+    }
+    return clipboard_buffer;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void print_clipboard(char** clipboard_buffer, size_t* remaining_size, const char* string, ...)
+{
+    va_list args;
+    va_start(args, string);
+    int num_char_written = vsnprintf(*clipboard_buffer, *remaining_size, string, args);
+    va_end(args);
+
+    if (num_char_written > 0)
+    {
+        *clipboard_buffer += num_char_written;
+        *remaining_size -= num_char_written;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void primitive_export_shadertoy(struct primitive * const p, uint32_t index, float smooth_value)
 {
     if (p->m_Shape == shape_spline)
@@ -84,4 +114,17 @@ void primitive_export_shadertoy(struct primitive * const p, uint32_t index, floa
         case op_subtraction : printf("\td = smooth_substraction(d, d%d, 0.0);\n", index);break;
         default:break;
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void finish_shadertoy(char** clipboard_buffer, size_t* remaining_size)
+{
+    print_clipboard(clipboard_buffer, remaining_size, "\n\treturn vec4(color, d);\n}\n\n");
+    print_clipboard(clipboard_buffer, remaining_size, "//--------------\n// Pixel shader\n//--------------\n");
+    print_clipboard(clipboard_buffer, remaining_size, "void mainImage( out vec4 fragColor, in vec2 fragCoord)\n");
+    print_clipboard(clipboard_buffer, remaining_size, "{\n\tvec2 p = fragCoord/iResolution.y;\n");
+    print_clipboard(clipboard_buffer, remaining_size, "\tp.y = 1.0 - p.y;\n");
+    print_clipboard(clipboard_buffer, remaining_size, "\tvec4 color_distance = map(p);\n");
+    print_clipboard(clipboard_buffer, remaining_size, "\tvec3 col = mix(vec3(1.0), vec3(color_distance.rgb), 1.0-smoothstep(0.0,length(dFdx(p) + dFdy(p)), color_distance.a));\n");
+    print_clipboard(clipboard_buffer, remaining_size, "\tfragColor = vec4(col,1.0);\n}\n");
 }
