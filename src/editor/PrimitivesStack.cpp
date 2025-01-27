@@ -730,14 +730,14 @@ void PrimitivesStack::Export(void* window)
 
     char* buffer = copy_boiler_plate(clipboard_buffer, &remaining_size);
 
-    // float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
-    // for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
-    // {
-    //     primitive p = *cc_get(&m_Primitives, i);
+    float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
+    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    {
+        primitive p = *cc_get(&m_Primitives, i);
 
-    //     primitive_normalize(&p, &m_EditionZone);
-    //     primitive_export_shadertoy(&p, i, normalized_smooth_blend);
-    // }
+        primitive_normalize(&p, &m_EditionZone);
+        primitive_export_shadertoy(&buffer, &remaining_size, &p, i, normalized_smooth_blend);
+    }
 
     finish_shadertoy(&buffer, &remaining_size);
 
