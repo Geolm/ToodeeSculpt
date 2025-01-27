@@ -2,7 +2,7 @@
 #define __EXPORT_H__
 
 #include <stdint.h>
-#include <stddef.h>
+#include "../system/format.h"
 
 struct primitive;
 
@@ -10,9 +10,9 @@ struct primitive;
 extern "C" {
 #endif
 
-char* copy_boiler_plate(char* clipboard_buffer, size_t* remaining_size);
-void primitive_export_shadertoy(char** clipboard_buffer, size_t* remaining_size, struct primitive * const p, uint32_t index, float smooth_value);
-void finish_shadertoy(char** clipboard_buffer, size_t* remaining_size);
+void copy_boiler_plate(struct string_buffer* b);
+void primitive_export_shadertoy(struct string_buffer* b, struct primitive * const p, uint32_t index, float smooth_value);
+void finish_shadertoy(struct string_buffer* b);
 
 
 #ifdef __cplusplus
