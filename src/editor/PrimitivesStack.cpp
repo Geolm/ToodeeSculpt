@@ -726,8 +726,8 @@ void PrimitivesStack::DeleteSelected()
 void PrimitivesStack::Export(void* window)
 {
     struct string_buffer clipboard = string_buffer_init(clipboard_buffer_size);
-    
-    copy_boiler_plate(&clipboard);
+
+    shadertoy_start(&clipboard);
 
     float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
@@ -735,10 +735,10 @@ void PrimitivesStack::Export(void* window)
         primitive p = *cc_get(&m_Primitives, i);
 
         primitive_normalize(&p, &m_EditionZone);
-        primitive_export_shadertoy(&clipboard, &p, i, normalized_smooth_blend);
+        shadertoy_export_primitive(&clipboard, &p, i, normalized_smooth_blend);
     }
 
-    finish_shadertoy(&clipboard);
+    shadertoy_finalize(&clipboard);
     glfwSetClipboardString((GLFWwindow*) window, clipboard.buffer);
 
     string_buffer_terminate(&clipboard);
