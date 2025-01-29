@@ -27,8 +27,8 @@ private:
     MTL::Device* m_Device {nullptr};
     Renderer m_Renderer;
     GLFWwindow* m_Window;
-    uint32_t m_ViewportHeight;
-    uint32_t m_ViewportWidth;
+    uint32_t m_WindowHeight;
+    uint32_t m_WindowWidth;
     float m_ScaleX, m_ScaleY;
     mu_Context* m_pGuiContext {nullptr};
     vec2 m_MousePos;

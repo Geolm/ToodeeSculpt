@@ -42,6 +42,7 @@ add_executable(ToodeeSculpt
 ./src/system/format.c
 ./src/system/log.c
 ./src/system/microui.c
+./src/system/ortho.c
 ./src/system/palettes.c
 ./src/system/point_in.c
 ./src/system/sokol_time.c

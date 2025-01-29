@@ -39,11 +39,11 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     int width, height;
     glfwGetFramebufferSize(m_Window, &width, &height);
 
-    m_ViewportHeight = (uint32_t) height;
-    m_ViewportWidth = (uint32_t) width;
+    m_WindowHeight = (uint32_t) height;
+    m_WindowWidth = (uint32_t) width;
     m_LogSize = 1024;
 
-    m_Renderer.Init(m_Device, m_ViewportWidth, m_ViewportHeight);
+    m_Renderer.Init(m_Device, m_WindowWidth, m_WindowHeight);
     InitGui();
 
     glfwSetWindowUserPointer(window, this);
@@ -263,9 +263,9 @@ void App::OnKeyEvent(int key, int scancode, int action, int mods)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnWindowResize(int width, int height)
 {
-    m_ViewportWidth = (uint32_t) width;
-    m_ViewportHeight = (uint32_t) height;
-    m_Renderer.Resize(m_ViewportWidth, m_ViewportHeight);
+    m_WindowWidth = (uint32_t) width;
+    m_WindowHeight = (uint32_t) height;
+    m_Renderer.Resize(m_WindowWidth, m_WindowHeight);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
