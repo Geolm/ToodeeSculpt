@@ -1,7 +1,7 @@
 #include "ortho.h"
 
 
-//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------
 void ortho_set_viewport(struct view_proj* output, vec2 window_size, vec2 viewport_size)
 {
     float window_ratio = window_size.x / window_size.y;
@@ -34,12 +34,19 @@ void ortho_set_viewport(struct view_proj* output, vec2 window_size, vec2 viewpor
     output->window_size = window_size;
 }
 
-//-----------------------------------------------------------------------------
-vec2 ortho_transform(struct view_proj const* vp, vec2 camera_pos, float scale, vec2 world_space)
+//-----------------------------------------------------------------------------------------------------------------------------
+vec2 ortho_transform_point(struct view_proj const* vp, vec2 camera_pos, float scale, vec2 world_space)
 {
     vec2 view_space = vec2_scale(vec2_sub(world_space, camera_pos), scale);
     vec2 clip_space = vec2_add(vec2_mul(view_space, vp->projection_scale), vp->projection_translation);
     vec2 screen_space = vec2_mul(vec2_add(clip_space, vec2_splat(1.f)), vec2_scale(vp->window_size, .5f));
     return screen_space;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
+float ortho_get_radius_scale(struct view_proj const* vp, float camera_scale)
+{
+    vec2 ortho_scale = vec2_mul(vp->projection_scale, vec2_scale(vp->window_size, .5f));
+    return camera_scale * float_max(ortho_scale.x, ortho_scale.y);
 }
 

@@ -6,6 +6,7 @@
 #include "../system/PushArray.h"
 #include "../system/log.h"
 #include "../system/aabb.h"
+#include "../system/ortho.h"
 #include "font9x16.h"
 
 struct mu_Context;
@@ -24,9 +25,9 @@ public:
     void Terminate();
 
     inline void SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
-    inline void ResetCanvas() {m_CanvasScale = 1.f;}
     inline void SetCulllingDebug(bool b) {m_CullingDebug = b;}
-    void SetCanvas(float width, float height);
+    inline void SetViewport(float width, float height);
+    inline void SetCamera(vec2 position, float scale);
 
     void BeginCombination(float smooth_value);
     void EndCombination();
@@ -103,16 +104,18 @@ private:
     uint32_t m_FrameIndex {0};
     uint32_t m_ClipsCount {0};
     clip_rect m_Clips[MAX_CLIPS];
-    uint32_t m_ViewportWidth;
-    uint32_t m_ViewportHeight;
+    uint32_t m_WindowWidth;
+    uint32_t m_WindowHeight;
     uint32_t m_NumTilesWidth;
     uint32_t m_NumTilesHeight;
     uint32_t m_NumDrawCommands;
     float m_AAWidth {1.41421356237f};
     float m_FontScale {1.f};
-    float m_CanvasScale {1.f};
     float m_SmoothValue {0.f};
     bool m_CullingDebug {false};
+    struct view_proj m_ViewProj;
+    float m_CameraScale {1.f};
+    vec2 m_CameraPosition {.x = 0.f, .y = 0.f};
     quantized_aabb* m_CombinationAABB {nullptr};
 
     // stats
@@ -135,6 +138,19 @@ inline void Renderer::SetClipRect(uint16_t min_x, uint16_t min_y, uint16_t max_x
         m_Clips[m_ClipsCount++] = (clip_rect) {.min_x = min_x, .min_y = min_y, .max_x = max_x, .max_y = max_y};
     else
         log_error("too many clip rectangle! maximum is %d", MAX_CLIPS);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::SetViewport(float width, float height)
+{
+    ortho_set_viewport(&m_ViewProj, vec2_set(m_WindowWidth, m_WindowHeight), vec2_set(width, height));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+inline void Renderer::SetCamera(vec2 position, float scale)
+{
+    m_CameraPosition = position;
+    m_CameraScale = scale;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

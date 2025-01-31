@@ -69,8 +69,8 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
 void Renderer::Resize(uint32_t width, uint32_t height)
 {
     log_info("resizing the viewport to %dx%d", width, height);
-    m_ViewportWidth = width;
-    m_ViewportHeight = height;
+    m_WindowWidth = width;
+    m_WindowHeight = height;
     m_NumTilesWidth = (width + TILE_SIZE - 1) / TILE_SIZE;
     m_NumTilesHeight = (height + TILE_SIZE - 1) / TILE_SIZE;
 
@@ -238,8 +238,9 @@ void Renderer::BeginFrame()
     m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * MAX_COMMANDS);
     m_CommandsAABB.Set(m_CommandsAABBBuffer.Map(m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
     m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
-    SetClipRect(0, 0, (uint16_t) m_ViewportWidth, (uint16_t) m_ViewportHeight);
-    ResetCanvas();
+    SetClipRect(0, 0, (uint16_t) m_WindowWidth, (uint16_t) m_WindowHeight);
+    SetViewport((float)m_WindowWidth, (float)m_WindowHeight);
+    SetCamera(vec2_zero(), 1.f);
     m_CombinationAABB = nullptr;
 }
 
@@ -284,7 +285,7 @@ void Renderer::BinCommands()
     args->num_commands = m_NumDrawCommands;
     args->num_tile_height = m_NumTilesHeight;
     args->num_tile_width = m_NumTilesWidth;
-    args->screen_div = (float2) {.x = 1.f / (float)m_ViewportWidth, .y = 1.f / (float) m_ViewportHeight};
+    args->screen_div = (float2) {.x = 1.f / (float)m_WindowWidth, .y = 1.f / (float) m_WindowHeight};
     args->font_scale = m_FontScale;
     args->font_size = (float2) {FONT_WIDTH, FONT_HEIGHT};
     args->culling_debug = m_CullingDebug;
@@ -430,13 +431,13 @@ void write_float(float* buffer, float value, Args ... args)
 }
 
 template<typename T>
-void canvas_to_screen(float scale, T& var){var *= scale;}
+void distance_screen_space(float scale, T& var){var *= scale;}
 
 template<typename T, typename... Args>
-void canvas_to_screen(float scale, T& var, Args & ... args)
+void distance_screen_space(float scale, T& var, Args & ... args)
 {
     var *= scale;
-    canvas_to_screen(scale, args...);
+    distance_screen_space(scale, args...);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -477,13 +478,6 @@ static inline quantized_aabb invalid_aabb()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::SetCanvas(float width, float height)
-{
-    assert(width >= FLT_EPSILON && height >= FLT_EPSILON);
-    m_CanvasScale = max((float) m_ViewportWidth / width, (float) m_ViewportHeight / height);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
 void Renderer::BeginCombination(float smooth_value)
 {
     assert(m_CombinationAABB == nullptr);
@@ -501,7 +495,7 @@ void Renderer::BeginCombination(float smooth_value)
         
         if (m_CombinationAABB != nullptr && k != nullptr)
         {
-            smooth_value *= m_CanvasScale;
+            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), smooth_value);
             *k = smooth_value;
             m_SmoothValue = smooth_value;
 
@@ -561,7 +555,9 @@ void Renderer::PrivateDrawDisc(vec2 center, float radius, float thickness, draw_
         quantized_aabb* aabb = m_CommandsAABB.NewElement();
         if (data != nullptr && aabb != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, center.x, center.y, radius, thickness);
+            center = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, center);
+            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), radius, thickness);
+
             float max_radius = radius + m_AAWidth + m_SmoothValue;
             if (filled)
                 write_float(data, center.x, center.y, radius);
@@ -603,7 +599,11 @@ void Renderer::PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float round
         if (data != nullptr && aabox != nullptr)
         {
             float roundness_thickness = filled ? roundness : thickness;
-            canvas_to_screen(m_CanvasScale, p0.x, p0.y, p1.x, p1.y, width, roundness_thickness);
+
+            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
+            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
+            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), width, roundness_thickness);
+
             aabb bb = aabb_from_rounded_obb(p0, p1, width, roundness_thickness + m_AAWidth + m_SmoothValue);
             write_float(data, p0.x, p0.y, p1.x, p1.y, width, roundness_thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
@@ -640,9 +640,11 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
             quantized_aabb* aabox = m_CommandsAABB.NewElement();
             if (data != nullptr && aabox != nullptr)
             {
-                canvas_to_screen(m_CanvasScale, p0.x, p0.y, p1.x, p1.y, width, thickness);
-                aabb bb = aabb_from_rounded_obb(p0, p1, width, m_AAWidth + m_SmoothValue + thickness);
+                p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
+                p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
+                distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), width, thickness);
 
+                aabb bb = aabb_from_rounded_obb(p0, p1, width, m_AAWidth + m_SmoothValue + thickness);
                 if (filled)
                     write_float(data, p0.x, p0.y, p1.x, p1.y, width);
                 else
@@ -681,10 +683,12 @@ void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, f
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, p0, p1, p2);
+            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
+            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
+            p2 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p2);
             
             float roundness_thickness = filled ? roundness : thickness;
-            roundness_thickness *= m_CanvasScale;
+            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), roundness_thickness);
 
             aabb bb = aabb_from_triangle(p0, p1, p2);
             aabb_grow(&bb, vec2_splat(roundness_thickness + m_AAWidth + m_SmoothValue));
@@ -724,8 +728,9 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, center, point);
-            canvas_to_screen(m_CanvasScale, thickness);
+            center = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, center);
+            point = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, point);
+            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale),  thickness);
 
             vec2 direction = point - center;
             float radius = vec2_normalize(&direction);
@@ -800,8 +805,8 @@ void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, floa
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, center);
-            canvas_to_screen(m_CanvasScale, radius, thickness);
+            center = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, center);
+            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), radius, thickness);
 
             aabb bb = aabb_from_circle(center, radius);
             aabb_grow(&bb, vec2_splat(thickness + m_AAWidth + m_SmoothValue));
@@ -849,8 +854,9 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, p0, p1);
-            canvas_to_screen(m_CanvasScale, radius0, radius1);
+            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
+            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
+            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), radius0, radius1);
 
             aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
             aabb_grow(&bb, vec2_splat(m_AAWidth + m_SmoothValue + thickness));
@@ -875,6 +881,9 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
     if (x0>x1) swap(x0, x1);
     if (y0>y1) swap(y0, y1);
 
+    vec2 p0 = vec2_set(x0, y0);
+    vec2 p1 = vec2_set(x1, y1);
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -888,9 +897,10 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            canvas_to_screen(m_CanvasScale, x0, y0, x1, y1);
-            write_float(data, x0, y0, x1, y1);
-            write_aabb(aabox, x0, y0, x1, y1);
+            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
+            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
+            write_float(data, p0.x, p0.y, p1.x, p1.y);
+            write_aabb(aabox, p0.x, p0.y, p1.x, p1.y);
             merge_aabb(m_CombinationAABB, aabox);
             return;
         }
@@ -932,12 +942,12 @@ void Renderer::DrawChar(float x, float y, char c, draw_color color)
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawText(float x, float y, const char* text, draw_color color)
 {
-    canvas_to_screen(m_CanvasScale, x, y);
+    vec2 p = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, vec2_set(x, y));
     const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
     for(const char *c = text; *c != 0; c++)
     {
-        DrawChar(x, y, *c, color);
-        x += font_spacing;
+        DrawChar(p.x, p.y, *c, color);
+        p.x += font_spacing;
     }
 }
 

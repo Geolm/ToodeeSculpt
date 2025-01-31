@@ -138,7 +138,8 @@ void App::InitGui()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::DrawGui()
 {
-    m_Renderer.ResetCanvas();
+    m_Renderer.SetViewport(m_WindowWidth, m_WindowHeight);
+    m_Renderer.SetCamera(vec2_zero(), 1.f);
     m_Renderer.SetClipRect(0, 0, UINT16_MAX, UINT16_MAX);
 
     mu_Command *cmd = NULL;
@@ -164,7 +165,7 @@ void App::DrawGui()
         case MU_COMMAND_CLIP : 
         {
             m_Renderer.SetClipRect((uint16_t)cmd->rect.rect.x, (uint16_t)cmd->rect.rect.y,
-                                    (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
+                                   (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
             break;
         }
         case MU_COMMAND_ICON :
@@ -181,7 +182,6 @@ void App::DrawGui()
 
             break;
         }
-
         }
     }
 }
