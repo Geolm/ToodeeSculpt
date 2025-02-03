@@ -1,7 +1,5 @@
 #include "biarc.h"
 
-#include "log.h"
-
 static inline float relative_epsilon(vec2 a, vec2 b, float epsilon) {return vec2_distance(a, b) * epsilon;}
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
