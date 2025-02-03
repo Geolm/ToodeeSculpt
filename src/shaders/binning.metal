@@ -4,6 +4,9 @@
 #include "sdf.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------
+// for each tile of the screen, we traverse the list of commands and if the command has an impact on the tile we add the
+// command to the linked list of the tile
+// ---------------------------------------------------------------------------------------------------------------------------
 kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 device tiles_data& output [[buffer(1)]],
                 device counters& counter [[buffer(2)]],
