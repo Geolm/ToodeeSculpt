@@ -16,7 +16,7 @@ static inline float float_clamp(float f, float a, float b) {if (f<a) return a; i
 static inline float float_square(float f) {return f*f;}
 static inline float float_min(float a, float b) {return (a<b) ? a : b;}
 static inline float float_max(float a, float b) {return (a>b) ? a : b;}
-static inline float float_lerp(float a, float b, float t) {return (a * (1.f - t)) + (b * t);}
+static inline float float_lerp(float a, float b, float t) {return fmaf(a , (1.f - t), (b * t));}
 
 typedef struct {float x, y;} vec2;
 
@@ -31,7 +31,7 @@ static inline vec2 vec2_scale(vec2 a, float f) {return (vec2) {a.x * f, a.y * f}
 static inline vec2 vec2_skew(vec2 v) {return (vec2) {-v.y, v.x};}
 static inline vec2 vec2_mul(vec2 a, vec2 b) {return (vec2){a.x * b.x, a.y * b.y};}
 static inline vec2 vec2_div(vec2 a, vec2 b) {return (vec2){a.x / b.x, a.y / b.y};}
-static inline float vec2_dot(vec2 a, vec2 b) {return a.x * b.x + a.y * b.y;}
+static inline float vec2_dot(vec2 a, vec2 b) {return fmaf(a.x, b.x, a.y * b.y);}
 static inline float vec2_sq_length(vec2 v) {return vec2_dot(v, v);}
 static inline float vec2_length(vec2 v) {return sqrtf(vec2_sq_length(v));}
 static inline float vec2_sq_distance(vec2 a, vec2 b) {return vec2_sq_length(vec2_sub(b, a));}
@@ -53,18 +53,29 @@ static inline bool vec2_all_less(vec2 a, vec2 b) {return (a.x < b.x && a.y < b.y
 static inline bool vec2_any_less(vec2 a, vec2 b) {return (a.x < b.x || a.y < b.y);}
 static inline bool vec2_all_greater(vec2 a, vec2 b) {return (a.x > b.x && a.y > b.y);}
 static inline bool vec2_any_greater(vec2 a, vec2 b) {return (a.x > b.x || a.y > b.y);}
-static inline vec2 vec2_lerp(vec2 a, vec2 b, float t) {return vec2_add(vec2_scale(a, 1.f - t), vec2_scale(b, t));}
-static inline float vec2_cross(vec2 a, vec2 b) {return a.x * b.y - a.y * b.x;}
+static inline float vec2_cross(vec2 a, vec2 b) {return fmaf(a.x, b.y, - a.y * b.x);}
 static inline vec2 vec2_sign(vec2 a) {return (vec2) {float_sign(a.x), float_sign(a.y)};}
 static inline vec2 vec2_pow(vec2 a, vec2 b) {return (vec2) {powf(a.x, b.x), powf(a.y, b.y)};}
 static inline float vec2_atan2(vec2 v) {return atan2f(v.y, v.x);}
 static inline void vec2_swap(vec2* a, vec2* b) {vec2 tmp = *a; *a = *b; *b = tmp;}
-static inline vec2 vec2_rotate(vec2 point, vec2 rotation) {return (vec2) {point.x * rotation.x - point.y * rotation.y, point.y * rotation.x + point.x * rotation.y};}
+static inline vec2 vec2_rotate(vec2 point, vec2 rotation) {return (vec2) {fmaf(point.x, rotation.x, point.y * rotation.y), fmaf(point.y, rotation.x, point.x * rotation.y)};}
 static inline vec2 vec2_floor(vec2 a) {return (vec2) {floorf(a.x), floorf(a.y)};}
+static inline vec2 vec2_lerp(vec2 a, vec2 b, float t) 
+{
+    float one_minus_t = 1.f - t;
+    return (vec2) {.x = fmaf(a.x , one_minus_t, b.x * t), .y = fmaf(a.y , one_minus_t, b.y * t)};
+}
 static inline vec2 vec2_quadratic_bezier(vec2 p0, vec2 p1, vec2 p2, float t) 
 {
     float omt = 1.f-t;
-    return vec2_add(vec2_add(vec2_scale(p0, omt * omt), vec2_scale(p1, 2.f * omt * t)), vec2_scale(p2, t * t));
+    float c0 = omt * omt;
+    float c1 = 2.f * omt * t;
+    float c2 = t * t;
+    return (vec2)
+    {
+        .x = fmaf(p0.x, c0, fmaf(p1.x, c1, p2.x * c2)),
+        .y = fmaf(p0.y, c0, fmaf(p1.y, c1, p2.y * c2))
+    };
 }
 
 static inline vec2 vec2_quadratic_bezier_tangent(vec2 p0, vec2 p1, vec2 p2, float t)
@@ -108,8 +119,6 @@ static inline vec2 operator- (vec2 a, vec2 b) {return vec2_sub(a, b);}
 static inline vec2 operator* (vec2 a, vec2 b) {return vec2_mul(a, b);}
 static inline vec2 operator* (vec2 a, float scale) {return vec2_scale(a, scale);}
 static inline bool operator!= (vec2 a, vec2 b) {return !vec2_equal(a, b);}
-
-
 
 #endif // __cplusplus
 
