@@ -549,7 +549,7 @@ void Renderer::PrivateDrawDisc(vec2 center, float radius, float thickness, draw_
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_disc, filled);
+        cmd->type = pack_type(primitive_disc, filled ? fill_solid : fill_outline);
 
         float* data = m_DrawData.NewMultiple(filled ? 3 : 4);
         quantized_aabb* aabb = m_CommandsAABB.NewElement();
@@ -592,7 +592,7 @@ void Renderer::PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float round
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_oriented_box, filled);
+        cmd->type = pack_type(primitive_oriented_box, filled ? fill_solid : fill_outline);
 
         float* data = m_DrawData.NewMultiple(6);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -634,7 +634,7 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
             cmd->color = color;
             cmd->data_index = m_DrawData.GetNumElements();
             cmd->op = op;
-            cmd->type = pack_type(primitive_ellipse, filled);
+            cmd->type = pack_type(primitive_ellipse, filled ? fill_solid : fill_outline);
 
             float* data = m_DrawData.NewMultiple(filled ? 5 : 6);
             quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -677,7 +677,7 @@ void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, f
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_triangle, filled);
+        cmd->type = pack_type(primitive_triangle, filled ? fill_solid : fill_outline);
 
         float* data = m_DrawData.NewMultiple(7);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -722,7 +722,7 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_pie, filled);
+        cmd->type = pack_type(primitive_pie, filled ? fill_solid : fill_outline);
 
         float* data = m_DrawData.NewMultiple(filled ? 7 : 8);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -799,7 +799,7 @@ void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, floa
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_ring, filled);
+        cmd->type = pack_type(primitive_ring, filled ? fill_solid : fill_outline);
 
         float* data = m_DrawData.NewMultiple(8);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -848,7 +848,7 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_uneven_capsule, filled);
+        cmd->type = pack_type(primitive_uneven_capsule, filled ? fill_solid : fill_outline);
 
         float* data = m_DrawData.NewMultiple(filled ? 6 : 7);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();

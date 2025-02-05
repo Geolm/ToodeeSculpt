@@ -41,8 +41,16 @@ enum command_type
     combination_end = 33
 };
 
-#define COMMAND_TYPE_MASK   (0x7f)
-#define PRIMITIVE_FILLED    (0x80)
+enum primitive_fillmode
+{
+    fill_solid = 0,
+    fill_outline = 1,
+    fill_solid_outline = 2
+};
+
+#define COMMAND_TYPE_MASK   (0x3f)
+#define PRIMITIVE_FILLMODE_MASK (0xC0)
+#define PRIMITIVE_FILLMODE_SHIFT (6)
 
 
 enum sdf_operator
@@ -97,16 +105,16 @@ typedef struct draw_command
     uint32_t data_index;
 } draw_command;
 
-static inline uint8_t pack_type(enum command_type type,  bool filled)
+static inline uint8_t pack_type(enum command_type type,  enum primitive_fillmode fillmode)
 {
-    uint8_t result = filled ? PRIMITIVE_FILLED : 0;
+    uint8_t result = ((uint8_t)fillmode) << PRIMITIVE_FILLMODE_SHIFT;
     result |= (uint8_t)(type&COMMAND_TYPE_MASK); 
     return result;
 }
 
 static inline bool primitive_is_filled(uint8_t type)
 {
-    return (type&PRIMITIVE_FILLED);
+    return (type>>PRIMITIVE_FILLMODE_SHIFT) == fill_solid;
 }
 
 static inline enum command_type primitive_get_type(uint8_t type)
