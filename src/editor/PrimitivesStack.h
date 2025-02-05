@@ -68,6 +68,8 @@ private:
     cc_vec(primitive) m_Primitives;
     float m_SmoothBlend;
     float m_AlphaValue;
+    uint32_t m_SelectedPrimitiveIndex;
+    float m_OutlineWidth;
 
     // ui
     aabb m_EditionZone;
@@ -100,9 +102,6 @@ private:
     primitive_shape m_PrimitiveShape;
 
     // primitive selection
-    uint32_t m_SelectedPrimitiveIndex;
-    uint32_t m_MultipleSelectionHash;
-    uint32_t m_MultipleSelectionIndex;
     cc_vec(uint32_t) m_MultipleSelection;
 
     struct undo_context* m_pUndoContext;

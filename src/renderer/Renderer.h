@@ -28,6 +28,7 @@ public:
     inline void SetCulllingDebug(bool b) {m_CullingDebug = b;}
     inline void SetViewport(float width, float height);
     inline void SetCamera(vec2 position, float scale);
+    inline void SetOutlineWidth(float value) {m_OutlineWidth = value;}
 
     void BeginCombination(float smooth_value);
     void EndCombination();
@@ -110,6 +111,7 @@ private:
     float m_AAWidth {1.41421356237f};
     float m_FontScale {1.f};
     float m_SmoothValue {0.f};
+    float m_OutlineWidth {0.f};
     bool m_CullingDebug {false};
     struct view_proj m_ViewProj;
     float m_CameraScale {1.f};

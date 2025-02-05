@@ -166,6 +166,8 @@ typedef struct draw_cmd_arguments
     float2 screen_div;
     float2 font_size;
     float font_scale;
+    draw_color outline_color;
+    float outline_width;
     bool culling_debug;
 } draw_cmd_arguments;
 

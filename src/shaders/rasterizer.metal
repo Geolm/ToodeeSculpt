@@ -201,13 +201,13 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 {
                     color = unpack_unorm4x8_to_half(cmd.color.packed_data);
 
-                    float outline_full = -10.f;
+                    float outline_full = -input.outline_width;
                     float outline_start = outline_full - input.aa_width;
 
                     if (fillmode == fill_outline && distance >= outline_start)
                     {
                         if (distance > outline_full && distance < 0.f)
-                            color.rgb = half3(0.f);
+                            color.rgb = unpack_unorm4x8_to_half(input.outline_color.packed_data).rgb;
 
                         color.rgb *= smoothstep(outline_full, outline_start, distance); 
                     }

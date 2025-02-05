@@ -31,6 +31,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_PointColor = draw_color(0x10e010, 128);
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
+    m_OutlineWidth = 2.f;
     palette_default(&primitive_palette);
     New();
 }
@@ -48,8 +49,6 @@ void PrimitivesStack::New()
     SetSelectedPrimitive(INVALID_INDEX);
     primitive_set_invalid(&m_CopiedPrimitive);
     m_pGrabbedPoint = nullptr;
-    m_MultipleSelectionHash = 0;
-    m_MultipleSelectionIndex = 0;
     cc_clear(&m_Primitives);
     cc_clear(&m_MultipleSelection);
     UndoSnapshot();
@@ -301,6 +300,7 @@ bool PrimitivesStack::SelectPrimitive()
 void PrimitivesStack::Draw(Renderer& renderer)
 {
     // drawing *the* primitives
+    renderer.SetOutlineWidth(m_OutlineWidth);
     renderer.BeginCombination(m_SmoothBlend);
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
     {
@@ -462,13 +462,15 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
 {
     int res = 0;
     int window_options = MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE;
-    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 300, 400, 100), window_options))
+    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 200, 400, 200), window_options))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_label(gui_context,"smoothness");
         res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
         mu_label(gui_context, "alpha");
         res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
+        mu_label(gui_context, "outline width");
+        res |= mu_slider_ex(gui_context, &m_OutlineWidth, 0.f, 20.f, 0.1f, "%2.2f", 0);
         mu_end_window(gui_context);
     }
 
@@ -614,8 +616,9 @@ void PrimitivesStack::Serialize(serializer_context* context, bool normalization)
     serializer_write_float(context, m_AlphaValue);
     serializer_write_float(context, m_SmoothBlend);
     serializer_write_uint32_t(context, m_SelectedPrimitiveIndex);
+    serializer_write_float(context, m_OutlineWidth);
+
     serializer_write_size_t(context, cc_size(&m_Primitives));
-    
      for(uint32_t i=0; i<array_size; ++i)
      {
         primitive p = *cc_get(&m_Primitives, i);
@@ -632,6 +635,10 @@ void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, u
     m_AlphaValue = serializer_read_float(context);
     m_SmoothBlend = serializer_read_float(context);
     m_SelectedPrimitiveIndex = serializer_read_uint32_t(context);
+
+    if (minor>=5)
+        m_OutlineWidth = serializer_read_float(context);
+
     size_t array_size = serializer_read_size_t(context);
     cc_resize(&m_Primitives, array_size);
 

@@ -288,6 +288,8 @@ void Renderer::BinCommands()
     args->screen_div = (float2) {.x = 1.f / (float)m_WindowWidth, .y = 1.f / (float) m_WindowHeight};
     args->font_scale = m_FontScale;
     args->font_size = (float2) {FONT_WIDTH, FONT_HEIGHT};
+    args->outline_width = m_OutlineWidth;
+    args->outline_color = draw_color(0xff000000);
     args->culling_debug = m_CullingDebug;
     m_DrawCommandsArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
 
