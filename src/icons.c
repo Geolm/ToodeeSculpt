@@ -19,9 +19,9 @@ void DrawIcon(void* renderer, aabb box, enum icon_type icon, draw_color primaray
             aabb_scale(&safe_box, .5f);
             renderer_begin_combination(renderer, 1.f);
             renderer_drawdisc(renderer, center, max_radius * .8f, -1.f, fill_solid, primaray_color, op_union);
-            renderer_draworientedbox_filled(renderer, safe_box.min, safe_box.max, max_radius * .1f, 0.f, secondary_color, op_union);
-            renderer_draworientedbox_filled(renderer, aabb_get_vertex(&safe_box, aabb_bottom_left), aabb_get_vertex(&safe_box, aabb_top_right),
-                                     max_radius * .1f, 0.f, secondary_color, op_union);
+            renderer_draworientedbox(renderer, safe_box.min, safe_box.max, max_radius * .1f, 0.f, 0.f, fill_solid, secondary_color, op_union);
+            renderer_draworientedbox(renderer, aabb_get_vertex(&safe_box, aabb_bottom_left), aabb_get_vertex(&safe_box, aabb_top_right),
+                                     max_radius * .1f, 0.f, 0.f, fill_solid, secondary_color, op_union);
             renderer_end_combination(renderer);
             break;
         }
@@ -47,8 +47,8 @@ void DrawIcon(void* renderer, aabb box, enum icon_type icon, draw_color primaray
             vec2 b = vec2_add(center, vec2_scale((vec2){-0.2f,  0.5f}, max_radius));
             vec2 c = vec2_add(center, vec2_scale((vec2){-0.65f, 0.0f}, max_radius));
             renderer_begin_combination(renderer, 1.f);
-            renderer_draworientedbox(renderer, a, b, 0.f, max_radius * .1f, primaray_color, op_union);
-            renderer_draworientedbox(renderer, b, c, 0.f, max_radius * .1f, primaray_color, op_union);
+            renderer_draworientedbox(renderer, a, b, 0.f, max_radius * .1f, 0.f, fill_solid, primaray_color, op_union);
+            renderer_draworientedbox(renderer, b, c, 0.f, max_radius * .1f, 0.f, fill_solid, primaray_color, op_union);
             renderer_end_combination(renderer);
             break;
         }

@@ -511,10 +511,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_oriented_box:
     {
-        if (p->m_Fillmode == fill_solid)
-            renderer_draworientedbox_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, roundness, color, op);
-        else
-            renderer_draworientedbox(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, color, op);
+        renderer_draworientedbox(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, roundness, p->m_Fillmode, color, op);
         break;
     }
 
@@ -540,7 +537,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
             if (p->m_Arcs[i].radius > 0.f)
                 renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op_add);
             else
-                renderer_draworientedbox_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, 0.f, color, op_add);
+                renderer_drawline(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, color, op_add);
         }
         break;
     }
@@ -596,7 +593,7 @@ void primitive_draw_spline(void * renderer, const vec2* points, uint32_t num_poi
         if (arcs[i].radius>0.f)
             renderer_drawarc_filled(renderer, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, color, op_add);
         else
-            renderer_draworientedbox_filled(renderer, arcs[i].center, arcs[i].direction, thickness, 0.f, color, op_add);
+            renderer_drawline(renderer, arcs[i].center, arcs[i].direction, thickness, color, op_add);
 
     renderer_end_combination(renderer);
 }

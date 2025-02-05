@@ -318,7 +318,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
 
         // preview primitive
         if (m_CurrentPoint == 1)
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, m_SelectedPrimitiveColor);
+            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, -1.f, fill_solid, m_SelectedPrimitiveColor);
 
         if (m_PrimitiveShape == shape_triangle) 
         {
@@ -344,7 +344,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         renderer.DrawDisc(m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor);
 
         if (m_PrimitiveShape == shape_oriented_box)
-            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, m_SelectedPrimitiveColor);
+            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor);
         else if (m_PrimitiveShape == shape_oriented_ellipse)
             renderer.DrawEllipseFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_SelectedPrimitiveColor);
     }
@@ -370,7 +370,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
 
         case shape_oriented_box:
         {
-            renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, m_SelectedPrimitiveColor);
+            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor);
             break;
         }
 

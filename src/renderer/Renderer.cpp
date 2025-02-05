@@ -542,9 +542,7 @@ void Renderer::EndCombination()
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::DrawDisc(vec2 center, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
-    if (fillmode == fill_hollow)
-        thickness *= .5f;
-
+    thickness *= .5f;
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -581,13 +579,12 @@ void Renderer::DrawDisc(vec2 center, float radius, float thickness, primitive_fi
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
     if (vec2_similar(p0, p1, small_float))
         return;
 
     thickness *= .5f;
-    bool filled = thickness < 0.f;
 
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -596,13 +593,13 @@ void Renderer::PrivateDrawOrientedBox(vec2 p0, vec2 p1, float width, float round
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_oriented_box, filled ? fill_solid : fill_outline);
+        cmd->type = pack_type(primitive_oriented_box, fillmode);
 
         float* data = m_DrawData.NewMultiple(6);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            float roundness_thickness = filled ? roundness : thickness;
+            float roundness_thickness = (fillmode == fill_hollow) ? roundness : thickness;
 
             p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
             p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
@@ -626,7 +623,7 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
         return;
 
     if (width <= small_float)
-        PrivateDrawOrientedBox(p0, p1, 0.f, 0.f, -1.f, color, op);
+        DrawOrientedBox(p0, p1, 0.f, 0.f, -1.f, fill_solid, color, op);
     else
     {
         bool filled = thickness < 0.f;
@@ -766,7 +763,7 @@ void Renderer::DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_c
     // colinear points
     if (radius<0.f)
     {
-        PrivateDrawOrientedBox(p0, p2, thickness, 0.f, -1.f, color, op);
+        DrawOrientedBox(p0, p2, thickness, 0.f, -1.f, fill_solid, color, op);
         return;
     }
 
@@ -783,7 +780,7 @@ void Renderer::DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color c
     // colinear points
     if (radius<0.f)
     {
-        PrivateDrawOrientedBox(p0, p2, thickness, 0.f, -1.f, color, op);
+        DrawOrientedBox(p0, p2, thickness, 0.f, -1.f, fill_solid, color, op);
         return;
     }
 
