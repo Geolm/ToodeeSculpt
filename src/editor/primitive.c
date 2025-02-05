@@ -11,7 +11,9 @@
 #include "color_box.h"
 
 static int g_SDFOperationComboBox = 0;
+static int g_SDFFillmodeComboBox = 0;
 static const char* g_sdf_op_names[op_last] = {"add", "blend", "sub", "overlap"};
+static const char* g_sdf_fillmode_names[fill_last] = {"solid", "outline", "hollow"};
 
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_init(struct primitive* p, enum primitive_shape shape, enum sdf_operator op, color4f color, float roundness, float width)
@@ -20,7 +22,7 @@ void primitive_init(struct primitive* p, enum primitive_shape shape, enum sdf_op
     p->m_Roundness = roundness;
     p->m_Thickness = 0.f;
     p->m_Shape = shape;
-    p->m_Filled = 1;
+    p->m_Fillmode = fill_solid;
     p->m_Operator = op;
     p->m_Color = color;
     p->m_AABB = aabb_invalid();
@@ -228,8 +230,9 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
 
     if (p->m_Shape != shape_arc && p->m_Shape != shape_spline)
     {
-        mu_label(gui_context, "filled");
-        res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
+        _Static_assert(sizeof(p->m_Fillmode) == sizeof(int), "fillmode enum must have a int size");
+        mu_label(gui_context, "fillmode");
+        res |= mu_combo_box(gui_context, &g_SDFFillmodeComboBox, (int*)&p->m_Fillmode, fill_last, g_sdf_fillmode_names);
     }
 
     mu_label(gui_context, "thickness");
@@ -237,7 +240,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
 
     if (p->m_Shape != shape_spline)
     {
-        _Static_assert(sizeof(p->m_Operator) == sizeof(int), "operator");
+        _Static_assert(sizeof(p->m_Operator) == sizeof(int), "operator enum must have a int size");
         mu_label(gui_context, "operation");
         res |= mu_combo_box(gui_context, &g_SDFOperationComboBox, (int*)&p->m_Operator, op_last, g_sdf_op_names);
     }
@@ -271,8 +274,8 @@ int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* g
 
     *over_popup = false;
 
-    if (p->m_Shape != shape_arc)
-        res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
+    // if (p->m_Shape != shape_arc)
+    //     res |= mu_checkbox(gui_context, "filled", &p->m_Filled);
 
     if (p->m_Shape != shape_spline)
     {
@@ -327,7 +330,8 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
             p->m_Roundness = serializer_read_float(context);
             p->m_Thickness = serializer_read_float(context);
             serializer_read_struct(context, p->m_Shape);
-            p->m_Filled = serializer_read_uint32_t(context);
+            bool filled = serializer_read_uint8_t(context);
+            p->m_Fillmode = filled ? fill_solid : fill_solid;
             serializer_read_struct(context, p->m_Operator);
             serializer_read_struct(context, p->m_Color);
         }
@@ -354,9 +358,20 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
                 p->m_Radius = serializer_read_float(context);
 
             p->m_Thickness = serializer_read_float(context);
-            p->m_Filled = serializer_read_uint8_t(context);
-            serializer_read_struct(context, p->m_Operator);
-            serializer_read_struct(context, p->m_Color);
+
+            if (minor < 4)
+            {
+                bool filled = serializer_read_uint8_t(context);
+                p->m_Fillmode = filled ? fill_solid : fill_solid;
+                serializer_read_struct(context, p->m_Operator);
+                serializer_read_struct(context, p->m_Color);
+            }
+            else
+            {
+                serializer_read_struct(context, p->m_Fillmode);
+                serializer_read_struct(context, p->m_Operator);
+                serializer_read_struct(context, p->m_Color);
+            }
         }
     }
 }
@@ -377,7 +392,7 @@ void primitive_serialize(struct primitive const* p, serializer_context* context)
         serializer_write_float(context, p->m_Radius);
 
     serializer_write_float(context, p->m_Thickness);
-    serializer_write_uint8_t(context, (uint8_t)p->m_Filled);
+    serializer_write_struct(context, p->m_Fillmode);
     serializer_write_struct(context, p->m_Operator);
     serializer_write_struct(context, p->m_Color);
 }
@@ -472,7 +487,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
     {
     case shape_triangle:
     {
-        if (p->m_Filled) 
+        if (p->m_Fillmode == fill_solid) 
             renderer_drawtriangle_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], roundness, color, op);
         else
             renderer_drawtriangle(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], p->m_Thickness, color, op);
@@ -481,16 +496,13 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_disc:
     {
-        if (p->m_Filled)
-            renderer_drawcircle_filled(renderer, p->m_Points[0], p->m_Roundness, color, op);
-        else
-            renderer_drawcircle(renderer, p->m_Points[0], p->m_Roundness,p-> m_Thickness, color, op);
+        renderer_drawdisc(renderer, p->m_Points[0], p->m_Roundness, p-> m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
     case shape_oriented_ellipse:
     {
-        if (p->m_Filled)
+        if (p->m_Fillmode == fill_solid)
             renderer_drawellipse_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, color, op);
         else
             renderer_drawellipse(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, color, op);
@@ -499,7 +511,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_oriented_box:
     {
-        if (p->m_Filled)
+        if (p->m_Fillmode == fill_solid)
             renderer_draworientedbox_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, roundness, color, op);
         else
             renderer_draworientedbox(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, color, op);
@@ -508,7 +520,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_pie:
     {
-        if (p->m_Filled)
+        if (p->m_Fillmode == fill_solid)
             renderer_drawpie_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Aperture, color, op);
         else
             renderer_drawpie(renderer, p->m_Points[0], p->m_Points[1], p->m_Aperture, p->m_Thickness, color, op);
@@ -535,7 +547,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_uneven_capsule:
     {
-        if (p->m_Filled)
+        if (p->m_Fillmode == fill_solid)
             renderer_drawunevencapsule_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, color, op);
         else
             renderer_drawunevencapsule(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, p->m_Thickness, color, op);
@@ -562,7 +574,7 @@ void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color)
     renderer_end_combination(renderer);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
-        renderer_drawcircle_filled(renderer, p->m_Points[i], primitive_point_radius, (draw_color){.packed_data = 0x7f10e010}, op_union);
+        renderer_drawdisc(renderer, p->m_Points[i], primitive_point_radius, -1.f, fill_solid, (draw_color){.packed_data = 0x7f10e010}, op_union);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

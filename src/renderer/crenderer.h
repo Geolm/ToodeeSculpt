@@ -15,8 +15,7 @@ extern "C" {
 void renderer_begin_combination(void* cpp_renderer, float smooth_value);
 void renderer_end_combination(void* cpp_renderer);
 void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color);
-void renderer_drawcircle(void* cpp_renderer, vec2 center, float radius, float thickness, draw_color color, enum sdf_operator op);
-void renderer_drawcircle_filled(void* cpp_renderer, vec2 center, float radius, draw_color color, enum sdf_operator op);
+void renderer_drawdisc(void* cpp_renderer, vec2 center, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draworientedbox(void* cpp_renderer, vec2 p0, vec2 p1, float width, float thickness, draw_color color, enum sdf_operator op);
 void renderer_draworientedbox_filled(void* cpp_renderer, vec2 p0, vec2 p1, float width, float roundness, draw_color color, enum sdf_operator op);
 void renderer_drawellipse(void* cpp_renderer,vec2 p0, vec2 p1, float width, float thickness, draw_color color, enum sdf_operator op);

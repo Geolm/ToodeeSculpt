@@ -84,7 +84,8 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
             }
             else
             {
-                const bool filled = primitive_is_filled(cmd.type);
+                const primitive_fillmode fillmode =  primitive_get_fillmode(cmd.type);
+
                 switch(primitive_get_type(cmd.type))
                 {
                 case primitive_disc :
@@ -92,7 +93,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 center = float2(data[0], data[1]);
                     float radius = data[2];
                     distance = sd_disc(in.pos.xy, center, radius);
-                    if (!filled)
+                    if (fillmode == fill_hollow)
                         distance = abs(distance) - data[3];
                     break;
                 }
@@ -101,7 +102,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 p0 = float2(data[0], data[1]);
                     float2 p1 = float2(data[2], data[3]);
                     distance = sd_oriented_box(in.pos.xy, p0, p1, data[4]);
-                    if (!filled)
+                    if (fillmode == fill_hollow)
                         distance = abs(distance);
                     distance -= data[5];
                     break;
@@ -111,7 +112,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 p0 = float2(data[0], data[1]);
                     float2 p1 = float2(data[2], data[3]);
                     distance = sd_oriented_ellipse(in.pos.xy, p0, p1, data[4]);
-                    if (!filled)
+                    if (fillmode == fill_hollow)
                         distance = abs(distance) - data[5];
                     break;
                 }
@@ -143,7 +144,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 p2 = float2(data[4], data[5]);
                     distance = sd_triangle(in.pos.xy, p0, p1, p2);
                     
-                    if (!filled)
+                    if (fillmode == fill_hollow)
                         distance = abs(distance);
                         
                     distance -= data[6];
@@ -157,7 +158,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float2 aperture = float2(data[5], data[6]);
 
                     distance = sd_oriented_pie(in.pos.xy, center, direction, aperture, radius);
-                    if (!filled)
+                    if (fillmode == fill_hollow)
                         distance = abs(distance) - data[7];
                     break;
                 }
@@ -170,7 +171,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float thickness = data[7];
 
                     distance = sd_oriented_ring(in.pos.xy, center, direction, aperture, radius, thickness);
-                    if (!filled)
+                    if (fillmode == fill_hollow)
                         distance = abs(distance) - data[7];
                     break;
                 }
@@ -182,7 +183,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     float radius1 = data[5];
 
                     distance = sd_uneven_capsule(in.pos.xy, p0, p1, radius0, radius1);
-                    if (!filled)
+                    if (fillmode == fill_hollow)
                         distance = abs(distance) - data[6];
                     break;
                 }
@@ -199,6 +200,17 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 else
                 {
                     color = unpack_unorm4x8_to_half(cmd.color.packed_data);
+
+                    float outline_full = -10.f;
+                    float outline_start = outline_full - input.aa_width;
+
+                    if (fillmode == fill_outline && distance >= outline_start)
+                    {
+                        if (distance > outline_full && distance < 0.f)
+                            color.rgb = half3(0.f);
+
+                        color.rgb *= smoothstep(outline_full, outline_start, distance); 
+                    }
                 }
 
                 // blend distance / color and skip writing output

@@ -18,14 +18,9 @@ void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color)
     ((Renderer*) cpp_renderer)->DrawBox(box, color);
 }
 
-void renderer_drawcircle(void* cpp_renderer, vec2 center, float radius, float thickness, draw_color color, enum sdf_operator op)
+void renderer_drawdisc(void* cpp_renderer, vec2 center, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
-    ((Renderer*) cpp_renderer)->DrawCircle(center, radius, thickness, color, op);
-}
-
-void renderer_drawcircle_filled(void* cpp_renderer, vec2 center, float radius, draw_color color, enum sdf_operator op)
-{
-    ((Renderer*) cpp_renderer)->DrawCircleFilled(center, radius, color, op);
+    ((Renderer*) cpp_renderer)->DrawDisc(center, radius, thickness, fillmode, color, op);
 }
 
 void renderer_draworientedbox(void* cpp_renderer, vec2 p0, vec2 p1, float width, float thickness, draw_color color, enum sdf_operator op)

@@ -43,9 +43,9 @@ struct primitive
     float m_Thickness;
     float m_Radius;
     enum primitive_shape m_Shape;
-    int m_Filled;
     uint32_t m_NumArcs;
     enum sdf_operator m_Operator;
+    enum primitive_fillmode m_Fillmode;
     color4f m_Color;
 };
 

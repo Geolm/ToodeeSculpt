@@ -538,10 +538,11 @@ void Renderer::EndCombination()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawDisc(vec2 center, float radius, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawDisc(vec2 center, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
-    thickness *= .5f;
-    bool filled = thickness < 0.f;
+    if (fillmode == fill_hollow)
+        thickness *= .5f;
+
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
@@ -549,9 +550,9 @@ void Renderer::PrivateDrawDisc(vec2 center, float radius, float thickness, draw_
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_disc, filled ? fill_solid : fill_outline);
+        cmd->type = pack_type(primitive_disc, fillmode);
 
-        float* data = m_DrawData.NewMultiple(filled ? 3 : 4);
+        float* data = m_DrawData.NewMultiple((fillmode == fill_hollow) ? 4 : 3);
         quantized_aabb* aabb = m_CommandsAABB.NewElement();
         if (data != nullptr && aabb != nullptr)
         {
@@ -559,14 +560,15 @@ void Renderer::PrivateDrawDisc(vec2 center, float radius, float thickness, draw_
             distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), radius, thickness);
 
             float max_radius = radius + m_AAWidth + m_SmoothValue;
-            if (filled)
-                write_float(data, center.x, center.y, radius);
-            else
+
+            if (fillmode == fill_hollow)
             {
                 max_radius += thickness;
                 write_float(data, center.x, center.y, radius, thickness);
             }
-            
+            else
+                write_float(data, center.x, center.y, radius);
+
             write_aabb(aabb, center.x - max_radius, center.y - max_radius, center.x + max_radius, center.y + max_radius);
             merge_aabb(m_CombinationAABB, aabb);
             return;
@@ -824,22 +826,21 @@ void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, floa
 //----------------------------------------------------------------------------------------------------------------------------
 void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, draw_color color, sdf_operator op)
 {
+    bool filled = thickness < 0.f;
     float delta = vec2_distance(p0, p1);
 
     if (radius0>radius1 && radius0 > radius1 + delta)
     {
-        PrivateDrawDisc(p0, radius0, thickness, color, op);
+        DrawDisc(p0, radius0, thickness, filled ? fill_solid : fill_hollow, color, op);
         return;
     }
 
     if (radius1>radius0 && radius1 > radius0 + delta)
     {
-        PrivateDrawDisc(p1, radius1, thickness, color, op);
+        DrawDisc(p1, radius1, thickness, filled ? fill_solid : fill_hollow, color, op);
         return;
     }
 
-
-    bool filled = thickness < 0.f;
     thickness = float_max(thickness * .5f, 0.f);
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)

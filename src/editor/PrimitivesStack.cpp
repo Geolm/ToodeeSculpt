@@ -314,7 +314,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     if (GetState() == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawCircleFilled(m_PrimitivePoints[i], primitive_point_radius, m_PointColor);
+            renderer.DrawDisc(m_PrimitivePoints[i], primitive_point_radius, -1.f, fill_solid, m_PointColor);
 
         // preview primitive
         if (m_CurrentPoint == 1)
@@ -337,11 +337,11 @@ void PrimitivesStack::Draw(Renderer& renderer)
             else if (m_CurrentPoint == 3 || (m_CurrentPoint == 4 && vec2_similar(m_PrimitivePoints[2], m_PrimitivePoints[3], 0.001f)))
                 primitive_draw_spline(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_MousePosition}, 4, 0.f, m_SelectedPrimitiveColor);
         }
-        renderer.DrawCircleFilled(m_MousePosition, primitive_point_radius, m_PointColor);
+        renderer.DrawDisc(m_MousePosition, primitive_point_radius, -1.f, fill_solid, m_PointColor);
     }
     else if (GetState() == state::SET_WIDTH)
     {
-        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
+        renderer.DrawDisc(m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor);
 
         if (m_PrimitiveShape == shape_oriented_box)
             renderer.DrawOrientedBoxFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, m_SelectedPrimitiveColor);
@@ -350,7 +350,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
-        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
+        renderer.DrawDisc(m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor);
 
         // preview primitive
         switch(m_PrimitiveShape)
@@ -364,7 +364,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
 
         case shape_disc:
         {
-            renderer.DrawCircleFilled(m_PrimitivePoints[0], m_Roundness, m_SelectedPrimitiveColor);
+            renderer.DrawDisc(m_PrimitivePoints[0], m_Roundness, -1.f, fill_solid, m_SelectedPrimitiveColor);
             break;
         }
 
@@ -431,7 +431,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     }
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
-        renderer.DrawCircleFilled(m_Reference, primitive_point_radius, m_PointColor);
+        renderer.DrawDisc(m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor);
         primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), &renderer, m_SelectedPrimitiveColor);
     }
 

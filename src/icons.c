@@ -18,7 +18,7 @@ void DrawIcon(void* renderer, aabb box, enum icon_type icon, draw_color primaray
             aabb safe_box = box;
             aabb_scale(&safe_box, .5f);
             renderer_begin_combination(renderer, 1.f);
-            renderer_drawcircle_filled(renderer, center, max_radius * .8f, primaray_color, op_union);
+            renderer_drawdisc(renderer, center, max_radius * .8f, -1.f, fill_solid, primaray_color, op_union);
             renderer_draworientedbox_filled(renderer, safe_box.min, safe_box.max, max_radius * .1f, 0.f, secondary_color, op_union);
             renderer_draworientedbox_filled(renderer, aabb_get_vertex(&safe_box, aabb_bottom_left), aabb_get_vertex(&safe_box, aabb_top_right),
                                      max_radius * .1f, 0.f, secondary_color, op_union);

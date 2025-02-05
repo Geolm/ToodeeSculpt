@@ -45,7 +45,8 @@ enum primitive_fillmode
 {
     fill_solid = 0,
     fill_outline = 1,
-    fill_solid_outline = 2
+    fill_hollow = 2,
+    fill_last = 3
 };
 
 #define COMMAND_TYPE_MASK   (0x3f)
@@ -120,6 +121,11 @@ static inline bool primitive_is_filled(uint8_t type)
 static inline enum command_type primitive_get_type(uint8_t type)
 {
     return (enum command_type)(type&COMMAND_TYPE_MASK);
+}
+
+static inline enum primitive_fillmode primitive_get_fillmode(uint8_t type)
+{
+    return (enum primitive_fillmode)(type>>PRIMITIVE_FILLMODE_SHIFT);
 }
 
 typedef struct tile_node

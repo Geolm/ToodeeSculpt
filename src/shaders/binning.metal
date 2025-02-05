@@ -43,6 +43,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
             continue;
 
         const bool filled = primitive_is_filled(input.commands[i].type);
+        const primitive_fillmode fillmode =  primitive_get_fillmode(input.commands[i].type);
         bool to_be_added = false;
         constant float* data = &input.draw_data[data_index];
         switch(primitive_get_type(input.commands[i].type))
@@ -104,15 +105,15 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];
 
-                if (filled)
-                {
-                    radius += input.aa_width + smooth_border;
-                    to_be_added = intersection_aabb_disc(tile_aabb, center, radius);
-                }
-                else
+                if (fillmode == fill_hollow)
                 {
                     float half_width = data[3] + input.aa_width + smooth_border;
                     to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
+                }
+                else
+                {
+                    radius += input.aa_width + smooth_border;
+                    to_be_added = intersection_aabb_disc(tile_aabb, center, radius);
                 }
                 break;
             }
