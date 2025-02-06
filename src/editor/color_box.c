@@ -44,6 +44,13 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
         }
 
         int res_hsv = 0;
+        if (mu_mouse_over(gui_context, r) && gui_context->mouse_pressed&MU_MOUSE_LEFT)
+        {
+            context->hsv.hue = ((float)gui_context->mouse_pos.x - (float)r.x) / (float) r.w;
+            context->hsv.hue *= 360.f;
+            res_hsv |= MU_RES_CHANGE;
+        }
+
         mu_label(gui_context, "hue");
         res_hsv |= mu_slider_ex(gui_context, &context->hsv.hue, 0.f, 360.f, 1.f, "%1.0f", 0);
 
