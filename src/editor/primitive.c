@@ -503,10 +503,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_oriented_ellipse:
     {
-        if (p->m_Fillmode == fill_solid)
-            renderer_drawellipse_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, color, op);
-        else
-            renderer_drawellipse(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, color, op);
+        renderer_drawellipse(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 

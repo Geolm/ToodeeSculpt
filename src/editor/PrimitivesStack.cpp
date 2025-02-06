@@ -346,7 +346,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         if (m_PrimitiveShape == shape_oriented_box)
             renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor);
         else if (m_PrimitiveShape == shape_oriented_ellipse)
-            renderer.DrawEllipseFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_SelectedPrimitiveColor);
+            renderer.DrawEllipse(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, fill_solid, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
@@ -640,6 +640,8 @@ void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, u
         m_OutlineWidth = serializer_read_float(context);
 
     size_t array_size = serializer_read_size_t(context);
+    log_debug("%d primitives found", array_size);
+
     cc_resize(&m_Primitives, array_size);
 
     for(uint32_t i=0; i<array_size; ++i)

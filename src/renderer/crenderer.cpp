@@ -34,14 +34,9 @@ void renderer_drawline(void* cpp_renderer, vec2 p0, vec2 p1, float width, draw_c
     ((Renderer*) cpp_renderer)->DrawOrientedBox(p0, p1, width, 0.f, 0.f, fill_solid, color, op);
 }
 
-void renderer_drawellipse(void* cpp_renderer, vec2 p0, vec2 p1, float width, float thickness, draw_color color, enum sdf_operator op)
+void renderer_drawellipse(void* cpp_renderer,vec2 p0, vec2 p1, float width, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
-    ((Renderer*) cpp_renderer)->DrawEllipse(p0, p1, width, thickness, color, op);
-}
-
-void renderer_drawellipse_filled(void* cpp_renderer, vec2 p0, vec2 p1, float width, draw_color color, enum sdf_operator op)
-{
-    ((Renderer*) cpp_renderer)->DrawEllipseFilled(p0, p1, width, color, op);
+    ((Renderer*) cpp_renderer)->DrawEllipse(p0, p1, width, thickness, fillmode, color, op);
 }
 
 void renderer_drawtriangle(void* cpp_renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op)

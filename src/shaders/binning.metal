@@ -42,8 +42,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         if (any(tile_pos>ushort2(clip.max_x, clip.max_y)) || any((tile_pos + TILE_SIZE)<ushort2(clip.min_x, clip.min_y)))
             continue;
 
-        const bool filled = primitive_is_filled(input.commands[i].type);
-        const primitive_fillmode fillmode =  primitive_get_fillmode(input.commands[i].type);
+        const bool is_hollow = (primitive_get_fillmode(input.commands[i].type) == fill_hollow);
         bool to_be_added = false;
         constant float* data = &input.draw_data[data_index];
         switch(primitive_get_type(input.commands[i].type))
@@ -56,7 +55,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[5] + smooth_border);
                 to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, width);
 
-                if (to_be_added && fillmode == fill_hollow && is_aabb_inside_obb(p0, p1, width, tile_rounded))
+                if (to_be_added && is_hollow && is_aabb_inside_obb(p0, p1, width, tile_rounded))
                     to_be_added = false;
                 break;
             }
@@ -65,10 +64,10 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 p0 = float2(data[0], data[1]);
                 float2 p1 = float2(data[2], data[3]);
                 float width = data[4];
-                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[5]));
+                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (is_hollow ? data[5] : 0.f));
                 to_be_added = intersection_ellipse_circle(p0, p1, width, tile_center, length(aabb_get_extents(tile_smooth) * .5f));
 
-                if (to_be_added && !filled && is_aabb_inside_ellipse(p0, p1, width, tile_smooth))
+                if (to_be_added && is_hollow && is_aabb_inside_ellipse(p0, p1, width, tile_smooth))
                     to_be_added = false;
                 break;
             }
@@ -91,10 +90,10 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 direction = float2(data[3], data[4]);
                 float2 aperture = float2(data[5], data[6]);
 
-                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[7]));
+                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (is_hollow ? data[7] : 0.f));
                 to_be_added = intersection_aabb_pie(tile_smooth, center, direction, aperture, radius);
 
-                if (to_be_added && !filled && is_aabb_inside_pie(center, direction, aperture, radius, tile_smooth))
+                if (to_be_added && is_hollow && is_aabb_inside_pie(center, direction, aperture, radius, tile_smooth))
                     to_be_added = false;
 
                 break;
@@ -105,7 +104,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float2 center = float2(data[0], data[1]);
                 float radius = data[2];
 
-                if (fillmode == fill_hollow)
+                if (is_hollow)
                 {
                     float half_width = data[3] + input.aa_width + smooth_border;
                     to_be_added = intersection_aabb_circle(tile_aabb, center, radius, half_width);
@@ -125,7 +124,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6] + smooth_border);
                 to_be_added = intersection_aabb_triangle(tile_rounded, p0, p1, p2);
 
-                if (to_be_added && !filled && is_aabb_inside_triangle(p0, p1, p2, tile_rounded))
+                if (to_be_added && is_hollow && is_aabb_inside_triangle(p0, p1, p2, tile_rounded))
                     to_be_added = false;
 
                 break;
@@ -138,7 +137,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float radius0 = data[4];
                 float radius1 = data[5];
 
-                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (filled ? 0.f : data[6]));
+                aabb tile_smooth = aabb_grow(tile_enlarge_aabb, smooth_border + (is_hollow ? data[6] : 0.f));
 
                 // use sdf because the shape is not a "standard" uneven capsule
                 // it preserves the tangent but it's hard to compute the bounding convex object to test against AAABB

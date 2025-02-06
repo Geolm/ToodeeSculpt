@@ -617,7 +617,7 @@ void Renderer::DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, f
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawEllipse(vec2 p0, vec2 p1, float width, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
     if (vec2_similar(p0, p1, small_float))
         return;
@@ -626,7 +626,6 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
         DrawOrientedBox(p0, p1, 0.f, 0.f, -1.f, fill_solid, color, op);
     else
     {
-        bool filled = thickness < 0.f;
         thickness = float_max(thickness * .5f, 0.f);
         draw_command* cmd = m_Commands.NewElement();
         if (cmd != nullptr)
@@ -635,9 +634,9 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
             cmd->color = color;
             cmd->data_index = m_DrawData.GetNumElements();
             cmd->op = op;
-            cmd->type = pack_type(primitive_ellipse, filled ? fill_solid : fill_outline);
+            cmd->type = pack_type(primitive_ellipse, fillmode);
 
-            float* data = m_DrawData.NewMultiple(filled ? 5 : 6);
+            float* data = m_DrawData.NewMultiple((fillmode == fill_hollow) ? 6 : 5);
             quantized_aabb* aabox = m_CommandsAABB.NewElement();
             if (data != nullptr && aabox != nullptr)
             {
@@ -646,10 +645,10 @@ void Renderer::PrivateDrawEllipse(vec2 p0, vec2 p1, float width, float thickness
                 distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), width, thickness);
 
                 aabb bb = aabb_from_rounded_obb(p0, p1, width, m_AAWidth + m_SmoothValue + thickness);
-                if (filled)
-                    write_float(data, p0.x, p0.y, p1.x, p1.y, width);
-                else
+                if (fillmode == fill_hollow)
                     write_float(data, p0.x, p0.y, p1.x, p1.y, width, thickness);
+                else
+                    write_float(data, p0.x, p0.y, p1.x, p1.y, width);
 
                 write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
                 merge_aabb(m_CombinationAABB, aabox);
