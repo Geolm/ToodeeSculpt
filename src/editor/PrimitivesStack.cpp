@@ -465,7 +465,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
     if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 200, 400, 200), window_options))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-        mu_label(gui_context,"smoothness");
+        mu_label(gui_context,"smooth blend");
         res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
         mu_label(gui_context, "alpha");
         res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
@@ -475,7 +475,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
     }
 
     primitive* selected = (SelectedPrimitiveValid()) ? cc_get(&m_Primitives, m_SelectedPrimitiveIndex) : nullptr;
-    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 540), window_options))
+    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 600), window_options))
     {
         if (selected)
             res |= primitive_property_grid(selected, gui_context);

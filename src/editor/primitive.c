@@ -235,6 +235,7 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
         res |= mu_combo_box(gui_context, &g_SDFFillmodeComboBox, (int*)&p->m_Fillmode, fill_last, g_sdf_fillmode_names);
     }
 
+    mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
     mu_label(gui_context, "thickness");
     res |= mu_slider_ex(gui_context, &p->m_Thickness, 0.f, primitive_max_thickness, 0.1f, "%3.2f", 0);
 
@@ -244,6 +245,8 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
         mu_label(gui_context, "operation");
         res |= mu_combo_box(gui_context, &g_SDFOperationComboBox, (int*)&p->m_Operator, op_last, g_sdf_op_names);
     }
+
+    mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
 
     struct color_box color = 
     {
