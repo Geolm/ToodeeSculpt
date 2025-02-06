@@ -372,6 +372,7 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
                 serializer_read_struct(context, p->m_Operator);
                 serializer_read_struct(context, p->m_Color);
             }
+            p->m_NumArcs = (p->m_Shape == shape_spline) ? 6 : 0;
         }
     }
 }
