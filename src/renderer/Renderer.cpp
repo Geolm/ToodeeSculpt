@@ -599,7 +599,7 @@ void Renderer::DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, f
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            float roundness_thickness = (fillmode == fill_hollow) ? roundness : thickness;
+            float roundness_thickness = (fillmode == fill_hollow) ? thickness : roundness;
 
             p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
             p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
