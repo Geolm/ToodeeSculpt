@@ -58,7 +58,7 @@ static inline vec2 vec2_sign(vec2 a) {return (vec2) {float_sign(a.x), float_sign
 static inline vec2 vec2_pow(vec2 a, vec2 b) {return (vec2) {powf(a.x, b.x), powf(a.y, b.y)};}
 static inline float vec2_atan2(vec2 v) {return atan2f(v.y, v.x);}
 static inline void vec2_swap(vec2* a, vec2* b) {vec2 tmp = *a; *a = *b; *b = tmp;}
-static inline vec2 vec2_rotate(vec2 point, vec2 rotation) {return (vec2) {fmaf(point.x, rotation.x, point.y * rotation.y), fmaf(point.y, rotation.x, point.x * rotation.y)};}
+static inline vec2 vec2_rotate(vec2 point, vec2 rotation) {return (vec2) {fmaf(point.x, rotation.x, -point.y * rotation.y), fmaf(point.y, rotation.x, point.x * rotation.y)};}
 static inline vec2 vec2_floor(vec2 a) {return (vec2) {floorf(a.x), floorf(a.y)};}
 static inline vec2 vec2_lerp(vec2 a, vec2 b, float t) 
 {
