@@ -5,6 +5,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
+mu_Color hue_gradient(mu_Real value)
+{
+    hsv4f hsv = {.hue = value * 360.f, .saturation = 1.f, .value = 1.f};
+    packed_color color_uint = hsv_to_packed_color(hsv);
+    return mu_color(packed_color_get_red(color_uint), packed_color_get_green(color_uint), packed_color_get_blue(color_uint), 255);
+}
+
 //----------------------------------------------------------------------------------------------------------------------------
 int color_property_grid(struct mu_Context* gui_context, struct color_box* context)
 {
@@ -30,29 +37,9 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
     if (mu_header_ex(gui_context, "hsv", MU_OPT_EXPANDED))
     {
         mu_layout_row(gui_context, 2, (int[]) { 120, -1 }, 0);
-        mu_label(gui_context, "");
-        r = mu_layout_next(gui_context);
-
-        float hue_step = 360.f / (float)r.w;
-        hsv4f hsv = {.hue = 0.f, .saturation = 1.f, .value = 1.f};
-        for(int x=0; x<r.w; ++x)
-        {
-            packed_color color_uint = hsv_to_packed_color(hsv);
-            mu_draw_rect(gui_context, mu_rect(r.x + x, r.y, 1, r.h), 
-                        mu_color(packed_color_get_red(color_uint), packed_color_get_green(color_uint), packed_color_get_blue(color_uint), 255));
-            hsv.hue += hue_step;
-        }
-
-        int res_hsv = 0;
-        if (mu_mouse_over(gui_context, r) && gui_context->mouse_pressed&MU_MOUSE_LEFT)
-        {
-            context->hsv.hue = ((float)gui_context->mouse_pos.x - (float)r.x) / (float) r.w;
-            context->hsv.hue *= 360.f;
-            res_hsv |= MU_RES_CHANGE;
-        }
 
         mu_label(gui_context, "hue");
-        res_hsv |= mu_slider_ex(gui_context, &context->hsv.hue, 0.f, 360.f, 1.f, "%1.0f", 0);
+        int res_hsv = mu_slider_gradient(gui_context, &context->hsv.hue, 0.f, 360.f, 1.f, "%1.0f", 0, hue_gradient);
 
         mu_label(gui_context, "saturation");
         res_hsv |= mu_slider_ex(gui_context, &context->hsv.saturation, 0.f, 1.f, 0.01f, "%1.2f", 0);

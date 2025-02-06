@@ -1349,3 +1349,54 @@ int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, c
   return res;
 }
 
+//----------------------------------------------------------------------------------------------------------------------------
+int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const char *fmt, int opt, gradient_function gradient)
+{
+  char buf[MU_MAX_FMT + 1];
+  mu_Rect thumb;
+  int x, w, res = 0;
+  mu_Real last = *value, v = last;
+  mu_Id id = mu_get_id(ctx, &value, sizeof(value));
+  mu_Rect base = mu_layout_next(ctx);
+
+  /* handle text input mode */
+  if (number_textbox(ctx, &v, base, id)) { return res; }
+
+  /* handle normal mode */
+  mu_update_control(ctx, id, base, opt);
+
+  /* handle input */
+  if (ctx->focus == id &&
+      (ctx->mouse_down | ctx->mouse_pressed) == MU_MOUSE_LEFT)
+  {
+    v = low + (ctx->mouse_pos.x - base.x) * (high - low) / base.w;
+    if (step) { v = ((long long)((v + step / 2) / step)) * step; }
+  }
+  if (ctx->last_focus == id && (ctx->mouse_released&MU_MOUSE_LEFT))
+    res |= MU_RES_SUBMIT;
+
+  /* clamp and store value, update res */
+  *value = v = mu_clamp(v, low, high);
+  if (last != v) { res |= MU_RES_CHANGE; }
+
+  /* draw gradient */
+  mu_Real gradient_step = 1.f / (float) base.w;
+  mu_Real gradient_input = 0.f;
+  for(int x=0; x<base.w; ++x)
+  {
+    mu_draw_rect(ctx, mu_rect(base.x + x, base.y, 1, base.h), gradient(gradient_input));
+    gradient_input += gradient_step;
+  }
+
+  /* draw thumb */
+  w = ctx->style->thumb_size;
+  x = (v - low) * (base.w - w) / (high - low);
+  thumb = mu_rect(base.x + x, base.y, w, base.h);
+  mu_draw_control_frame(ctx, id, thumb, MU_COLOR_BUTTON, opt);
+  /* draw text  */
+  sprintf(buf, fmt, v);
+  mu_draw_control_text(ctx, buf, base, MU_COLOR_TEXT, opt);
+
+  return res;
+}
+
