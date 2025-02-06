@@ -271,86 +271,22 @@ vec2 primitive_compute_center(struct primitive const* p)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context, bool *over_popup)
+int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context, int *over_popup)
 {
     int res = 0;
 
-    *over_popup = false;
-
     if (p->m_Shape != shape_arc)
     {
-        if (mu_button_ex(gui_context, "fill", 0, 0))
-            mu_open_popup(gui_context, "fill");
-
-        mu_Rect r = gui_context->last_rect;
-        r.x += r.w-r.h;
-        r.w = r.h;
-        mu_draw_icon(gui_context, MU_ICON_COLLAPSED, r, gui_context->style->colors[MU_COLOR_TEXT]);
-
-        if (mu_begin_popup(gui_context, "fill"))
-        {
-            for(uint32_t i=0; i<fill_last; ++i)
-            {
-                if (mu_button_ex(gui_context, g_sdf_fillmode_names[i], 0, 0))
-                {
-                    p->m_Fillmode = (enum primitive_fillmode)i;
-                    res |= MU_RES_SUBMIT;
-                }
-
-                if (p->m_Fillmode == i)
-                {
-                    mu_Rect check_rect = gui_context->last_rect;
-                    check_rect.x += check_rect.w + gui_context->style->padding;
-                    check_rect.w = check_rect.h;
-                    mu_draw_icon(gui_context, MU_ICON_CHECK, check_rect, gui_context->style->colors[MU_COLOR_TEXT]);
-                }
-            }
-
-            mu_Container* container =  mu_get_current_container(gui_context);
-                container->rect.w += gui_context->style->title_height;
-            
-            if (mu_mouse_over(gui_context, container->rect))
-                *over_popup = true;
-
-            mu_end_popup(gui_context);
-        }
+        int fillmode = (int)p->m_Fillmode;
+        res |= mu_combo_button(gui_context, "fill", fill_last, g_sdf_fillmode_names, &fillmode, over_popup);
+        p->m_Fillmode = (enum primitive_fillmode) fillmode;
     }
 
     if (p->m_Shape != shape_spline)
     {
-        if (mu_button_ex(gui_context, "op", 0, 0))
-            mu_open_popup(gui_context, "operation");
-
-        if (mu_begin_popup(gui_context, "operation"))
-        {
-            for(uint32_t i=0; i<op_last; ++i)
-            {
-                if (mu_button_ex(gui_context, g_sdf_op_names[i], 0, 0))
-                {
-                    p->m_Operator = (enum sdf_operator)i;
-                    res |= MU_RES_SUBMIT;
-                }
-
-                if (p->m_Operator == i)
-                {
-                    mu_Rect r = gui_context->last_rect;
-                    r.x += r.w-r.h;
-                    r.w = r.h;
-                    mu_draw_icon(gui_context, MU_ICON_CHECK, r, gui_context->style->colors[MU_COLOR_TEXT]);
-                }
-            }
-
-            mu_Container* container =  mu_get_current_container(gui_context);
-            if (mu_mouse_over(gui_context, container->rect))
-                *over_popup = true;
-
-            mu_end_popup(gui_context);
-        }
-
-        mu_Rect r = gui_context->last_rect;
-        r.x += r.w-r.h;
-        r.w = r.h;
-        mu_draw_icon(gui_context, MU_ICON_COLLAPSED, r, gui_context->style->colors[MU_COLOR_TEXT]);
+        int operator = (int)p->m_Operator;
+        res |= mu_combo_button(gui_context, "op", op_last, g_sdf_op_names, &operator, over_popup);
+        p->m_Operator = (enum sdf_operator) operator;
     }
 
     return res;
