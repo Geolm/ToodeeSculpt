@@ -1304,3 +1304,48 @@ int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
     return res;
 }
 
+//----------------------------------------------------------------------------------------------------------------------------
+int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, const char** entries, int* output, int* over_popup)
+{
+  int res = 0;
+
+  if (mu_button_ex(ctx, button_name, 0, 0))
+    mu_open_popup(ctx, button_name);
+
+  mu_Rect r = ctx->last_rect;
+  r.x += r.w-r.h;
+  r.w = r.h;
+  mu_draw_icon(ctx, MU_ICON_COLLAPSED, r, ctx->style->colors[MU_COLOR_TEXT]);
+
+  if (mu_begin_popup(ctx, button_name))
+  {
+    *over_popup = 0;
+    for(uint32_t i=0; i<num_entries; ++i)
+    {
+      if (mu_button_ex(ctx, entries[i], 0, 0))
+      {
+          *output = i;
+          res |= MU_RES_SUBMIT;
+      }
+
+      // add a check on the right of the selected entry
+      if (*output == i)
+      {
+          mu_Rect check_rect = ctx->last_rect;
+          check_rect.x += check_rect.w + ctx->style->padding;
+          check_rect.w = check_rect.h;
+          mu_draw_icon(ctx, MU_ICON_CHECK, check_rect, ctx->style->colors[MU_COLOR_TEXT]);
+      }
+    }
+
+    mu_Container* container =  mu_get_current_container(ctx);
+      container->rect.w += ctx->style->title_height;
+    
+    if (mu_mouse_over(ctx, container->rect))
+      *over_popup = 1;
+
+    mu_end_popup(ctx);
+  }
+  return res;
+}
+

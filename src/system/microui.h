@@ -301,6 +301,7 @@ void mu_begin_panel_ex(mu_Context *ctx, const char *name, int opt);
 void mu_end_panel(mu_Context *ctx);
 int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries);
 int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue);
+int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, const char** entries, int* output, int* over_popup);
 
 #ifdef __cplusplus
 }
