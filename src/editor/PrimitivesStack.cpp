@@ -11,7 +11,6 @@
 #include "tds.h"
 #include "export.h"
 
-const vec2 contextual_menu_size = {100.f, 235.f};
 const size_t clipboard_buffer_size = (1<<18);
 struct palette primitive_palette;
 
@@ -498,11 +497,20 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 {
-    aabb window_aabb {.min = m_ContextualMenuPosition - vec2_scale(contextual_menu_size, .5f), .max = m_ContextualMenuPosition + vec2_scale(contextual_menu_size, .5f)};
-    mu_Rect window_rect = mu_rect((int)window_aabb.min.x, (int)window_aabb.min.y, (int)contextual_menu_size.x, (int)contextual_menu_size.y);
-
     if (m_NewPrimitiveContextualMenuOpen)
     {
+        mu_Rect window_rect;
+        window_rect.h = gui_context->style->title_height * 10;
+        window_rect.w = gui_context->text_width(0, "ellipseell", -1);
+        window_rect.x = (int)m_ContextualMenuPosition.x - window_rect.w/2;
+        window_rect.y = (int)m_ContextualMenuPosition.y - window_rect.h/2;
+
+        aabb window_aabb =
+        {
+            .min = vec2_set(window_rect.x, window_rect.y),
+            .max = vec2_set(window_rect.x + window_rect.w, window_rect.y + window_rect.h)
+        };
+
         if (mu_begin_window_ex(gui_context, "new", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
@@ -562,6 +570,18 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
     }
     else if (m_SelectedPrimitiveContextualMenuOpen && SelectedPrimitiveValid())
     {
+        mu_Rect window_rect;
+        window_rect.h = gui_context->style->title_height * 8;
+        window_rect.w = gui_context->text_width(0, "rotaterota", -1);
+        window_rect.x = (int)m_ContextualMenuPosition.x - window_rect.w/2;
+        window_rect.y = (int)m_ContextualMenuPosition.y - window_rect.h/2;
+
+        aabb window_aabb =
+        {
+            .min = vec2_set(window_rect.x, window_rect.y),
+            .max = vec2_set(window_rect.x + window_rect.w, window_rect.y + window_rect.h)
+        };
+
         if (mu_begin_window_ex(gui_context, "edit", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
@@ -594,14 +614,14 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            bool over_popup;
+            int over_popup = 0;
             if (SelectedPrimitiveValid() && primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context, &over_popup))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
                 UndoSnapshot();
             }
 
-            if (!aabb_test_point(&window_aabb, m_MousePosition) && !over_popup)
+            if (!aabb_test_point(&window_aabb, m_MousePosition) && over_popup == 0)
                 m_SelectedPrimitiveContextualMenuOpen = false;
 
             mu_end_window(gui_context);
