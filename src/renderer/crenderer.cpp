@@ -39,14 +39,9 @@ void renderer_drawellipse(void* cpp_renderer,vec2 p0, vec2 p1, float width, floa
     ((Renderer*) cpp_renderer)->DrawEllipse(p0, p1, width, thickness, fillmode, color, op);
 }
 
-void renderer_drawtriangle(void* cpp_renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op)
+void renderer_drawtriangle(void* cpp_renderer, vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
-    ((Renderer*) cpp_renderer)->DrawTriangle(p0, p1, p2, thickness, color, op);
-}
-
-void renderer_drawtriangle_filled(void* cpp_renderer, vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, enum sdf_operator op)
-{
-    ((Renderer*) cpp_renderer)->DrawTriangleFilled(p0, p1, p2, roundness, color, op);
+    ((Renderer*) cpp_renderer)->DrawTriangle(p0, p1, p2, roundness, thickness, fillmode, color, op);
 }
 
 void renderer_drawpie(void* cpp_renderer, vec2 center, vec2 point, float aperture, float width, draw_color color, enum sdf_operator op)

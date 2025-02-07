@@ -661,14 +661,13 @@ void Renderer::DrawEllipse(vec2 p0, vec2 p1, float width, float thickness, primi
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
     // exclude invalid triangle
     if (vec2_similar(p0, p1, small_float) || vec2_similar(p2, p1, small_float) || vec2_similar(p0, p2, small_float))
         return;
 
     thickness *= .5f;
-    bool filled = thickness < 0.f;
 
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
@@ -677,7 +676,7 @@ void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, f
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_triangle, filled ? fill_solid : fill_outline);
+        cmd->type = pack_type(primitive_triangle, fillmode);
 
         float* data = m_DrawData.NewMultiple(7);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
@@ -687,7 +686,7 @@ void Renderer::PrivateDrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, f
             p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
             p2 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p2);
             
-            float roundness_thickness = filled ? roundness : thickness;
+            float roundness_thickness = (fillmode != fill_hollow) ? roundness : thickness;
             distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), roundness_thickness);
 
             aabb bb = aabb_from_triangle(p0, p1, p2);

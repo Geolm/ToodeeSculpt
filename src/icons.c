@@ -29,16 +29,16 @@ void DrawIcon(void* renderer, aabb box, enum icon_type icon, draw_color primaray
         {
             aabb safe_box = box;
             aabb_scale(&safe_box, .4f);
-            renderer_drawtriangle_filled(renderer, aabb_get_vertex(&safe_box, aabb_bottom_left), 
-                                         aabb_get_vertex(&safe_box, aabb_top_left), center, 0.f, primaray_color, op_union);
+            renderer_drawtriangle(renderer, aabb_get_vertex(&safe_box, aabb_bottom_left), 
+                                  aabb_get_vertex(&safe_box, aabb_top_left), center, 0.f, 0.f, fill_solid, primaray_color, op_union);
             break;
         }
     case ICON_EXPANDED:     // a triangle pointing to the bottom
         {
             aabb safe_box = box;
             aabb_scale(&safe_box, .4f);
-            renderer_drawtriangle_filled(renderer, aabb_get_vertex(&safe_box, aabb_top_left), 
-                                         aabb_get_vertex(&safe_box, aabb_top_right), center, 0.f, primaray_color, op_union);
+            renderer_drawtriangle(renderer, aabb_get_vertex(&safe_box, aabb_top_left),  aabb_get_vertex(&safe_box, aabb_top_right),
+                                  center, 0.f, 0.f, fill_solid, primaray_color, op_union);
             break;
         }
     case ICON_CHECK:

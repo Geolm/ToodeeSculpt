@@ -19,8 +19,7 @@ void renderer_drawdisc(void* cpp_renderer, vec2 center, float radius, float thic
 void renderer_draworientedbox(void* cpp_renderer, vec2 p0, vec2 p1, float width, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_drawline(void* cpp_renderer, vec2 p0, vec2 p1, float width, draw_color color, enum sdf_operator op);
 void renderer_drawellipse(void* cpp_renderer,vec2 p0, vec2 p1, float width, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
-void renderer_drawtriangle(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op);
-void renderer_drawtriangle_filled(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float roundness, draw_color color, enum sdf_operator op);
+void renderer_drawtriangle(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_drawpie(void* cpp_renderer,vec2 center, vec2 point, float aperture, float width, draw_color color, enum sdf_operator op);
 void renderer_drawpie_filled(void* cpp_renderer,vec2 center, vec2 point, float aperture, draw_color color, enum sdf_operator op );
 void renderer_drawring(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op);

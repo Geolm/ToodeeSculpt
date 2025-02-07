@@ -465,10 +465,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
     {
     case shape_triangle:
     {
-        if (p->m_Fillmode == fill_solid) 
-            renderer_drawtriangle_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], roundness, color, op);
-        else
-            renderer_drawtriangle(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], p->m_Thickness, color, op);
+        renderer_drawtriangle(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], roundness, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 

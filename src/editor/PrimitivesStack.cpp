@@ -322,7 +322,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         if (m_PrimitiveShape == shape_triangle) 
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
-                renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, m_SelectedPrimitiveColor);
+                renderer.DrawTriangle(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor);
         }
         else if (m_PrimitiveShape == shape_arc)
         {
@@ -356,8 +356,8 @@ void PrimitivesStack::Draw(Renderer& renderer)
         {
         case shape_triangle:
         {
-            renderer.DrawTriangleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], 
-                                        m_Roundness, m_SelectedPrimitiveColor);
+            renderer.DrawTriangle(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2],
+                                        m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor);
             break;
         }
 
