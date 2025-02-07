@@ -400,7 +400,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     {
         renderer.DrawPieFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, m_SelectedPrimitiveColor);
     }
-    else if (GetState() == state::IDLE && !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen)
+    else if (GetState() == state::IDLE && !m_NewPrimitiveContextualMenuOpen)
     {
         MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
