@@ -68,6 +68,8 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
     float combination_smoothness;
     bool combining = false;
 
+    half4 outline_color = unpack_unorm4x8_to_half(input.outline_color.packed_data);
+
     tile_node node = tiles.head[in.tile_index];
     while (node.next != INVALID_INDEX)
     {
@@ -80,8 +82,9 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
         {
             float distance = 10.f;
             constant float* data = &input.draw_data[data_index];
+            command_type type = primitive_get_type(cmd.type);
 
-            if (primitive_get_type(cmd.type) == combination_begin)
+            if (type == combination_begin)
             {
                 previous_color = 0.h;
                 previous_distance = LARGE_DISTANCE;
@@ -92,7 +95,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
             {
                 const primitive_fillmode fillmode =  primitive_get_fillmode(cmd.type);
 
-                switch(primitive_get_type(cmd.type))
+                switch(type)
                 {
                 case primitive_disc :
                 {
@@ -197,7 +200,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 }
 
                 half4 color;
-                if (primitive_get_type(cmd.type) == combination_end)
+                if (type == combination_end)
                 {
                     combining = false;
                     color = previous_color;
@@ -212,10 +215,14 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
 
                     if (fillmode == fill_outline && distance >= outline_start)
                     {
-                        if (distance > outline_full && distance < 0.f)
-                            color.rgb = unpack_unorm4x8_to_half(input.outline_color.packed_data).rgb;
-
-                        color.rgb *= linearstep(outline_full, outline_start, distance); 
+                        if (distance >= outline_full && distance <= input.aa_width)
+                        {
+                            color = outline_color;
+                        }
+                        else if (distance < outline_full)
+                        {
+                            color = mix(outline_color, color, linearstep(half(outline_full), half(outline_start), half(distance)));
+                        }
                     }
                 }
 
