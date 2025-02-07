@@ -389,7 +389,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
 
         case shape_uneven_capsule:
         {
-            renderer.DrawUnevenCapsuleFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Roundness, m_Roundness, m_SelectedPrimitiveColor);
+            renderer.DrawUnevenCapsule(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Roundness, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor);
             break;
         }
 

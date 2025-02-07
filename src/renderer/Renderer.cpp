@@ -821,20 +821,19 @@ void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, floa
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
-    bool filled = thickness < 0.f;
     float delta = vec2_distance(p0, p1);
 
     if (radius0>radius1 && radius0 > radius1 + delta)
     {
-        DrawDisc(p0, radius0, thickness, filled ? fill_solid : fill_hollow, color, op);
+        DrawDisc(p0, radius0, thickness, fillmode, color, op);
         return;
     }
 
     if (radius1>radius0 && radius1 > radius0 + delta)
     {
-        DrawDisc(p1, radius1, thickness, filled ? fill_solid : fill_hollow, color, op);
+        DrawDisc(p1, radius1, thickness, fillmode, color, op);
         return;
     }
 
@@ -846,9 +845,9 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_uneven_capsule, filled ? fill_solid : fill_outline);
+        cmd->type = pack_type(primitive_uneven_capsule, fillmode);
 
-        float* data = m_DrawData.NewMultiple(filled ? 6 : 7);
+        float* data = m_DrawData.NewMultiple((fillmode != fill_hollow) ? 6 : 7);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
@@ -859,7 +858,7 @@ void Renderer::PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float r
             aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
             aabb_grow(&bb, vec2_splat(m_AAWidth + m_SmoothValue + thickness));
 
-            if (filled)
+            if (fillmode != fill_hollow)
                 write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1);
             else
                 write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1, thickness);
@@ -888,7 +887,7 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
         cmd->clip_index = (uint8_t) m_ClipsCount-1;
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
-        cmd->op = op_union;
+        cmd->op = op_add;
         cmd->type = primitive_aabox;
 
         float* data = m_DrawData.NewMultiple(4);

@@ -34,8 +34,6 @@ public:
     void EndCombination();
 
     inline void DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op = op_union);
-    inline void DrawUnevenCapsuleFilled(vec2 p0, vec2 p1, float radius0, float radius1, draw_color color, sdf_operator op = op_union);
-    inline void DrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, draw_color color, sdf_operator op = op_union);
     void DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
     void DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
     
@@ -44,6 +42,7 @@ public:
     void DrawEllipse(vec2 p0, vec2 p1, float width, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawPie(vec2 center, vec2 point, float aperture, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
+    void DrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
     void DrawChar(float x, float y, char c, draw_color color);
@@ -52,7 +51,6 @@ public:
 
 private:
     void PrivateDrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op, bool filled);
-    void PrivateDrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, draw_color color, sdf_operator op);
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
@@ -148,14 +146,4 @@ inline void Renderer::SetCamera(vec2 position, float scale)
 inline void Renderer::DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op)
 {
     PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, true);
-}
-
-inline void Renderer::DrawUnevenCapsuleFilled(vec2 p0, vec2 p1, float radius0, float radius1, draw_color color, sdf_operator op)
-{
-    PrivateDrawUnevenCapsule(p0, p1, radius0, radius1, -1.f, color, op);
-}
-
-inline void Renderer::DrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, draw_color color, sdf_operator op)
-{
-    PrivateDrawUnevenCapsule(p0, p1, radius0, radius1, thickness, color, op);
 }

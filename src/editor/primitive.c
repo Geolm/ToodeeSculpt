@@ -513,11 +513,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_uneven_capsule:
     {
-        if (p->m_Fillmode == fill_solid)
-            renderer_drawunevencapsule_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, color, op);
-        else
-            renderer_drawunevencapsule(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, p->m_Thickness, color, op);
-
+        renderer_drawunevencapsule(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
