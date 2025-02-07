@@ -702,7 +702,7 @@ void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float th
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawPie(vec2 center, vec2 point, float aperture, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
     if (vec2_similar(center, point, small_float))
         return;
@@ -721,9 +721,9 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_pie, filled ? fill_solid : fill_outline);
+        cmd->type = pack_type(primitive_pie, fillmode);
 
-        float* data = m_DrawData.NewMultiple(filled ? 7 : 8);
+        float* data = m_DrawData.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
@@ -737,7 +737,7 @@ void Renderer::PrivateDrawPie(vec2 center, vec2 point, float aperture, float thi
             aabb bb = aabb_from_circle(center, radius);
             aabb_grow(&bb, vec2_splat(thickness + m_AAWidth + m_SmoothValue));
 
-            if (filled)
+            if (fillmode != fill_hollow)
                 write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture));
             else
                 write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture), thickness);

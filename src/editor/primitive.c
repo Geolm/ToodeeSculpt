@@ -489,10 +489,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_pie:
     {
-        if (p->m_Fillmode == fill_solid)
-            renderer_drawpie_filled(renderer, p->m_Points[0], p->m_Points[1], p->m_Aperture, color, op);
-        else
-            renderer_drawpie(renderer, p->m_Points[0], p->m_Points[1], p->m_Aperture, p->m_Thickness, color, op);
+        renderer_drawpie(renderer, p->m_Points[0], p->m_Points[1], p->m_Aperture, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 

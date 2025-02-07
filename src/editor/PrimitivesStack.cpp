@@ -398,7 +398,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     }
     else if (GetState() == state::SET_ANGLE)
     {
-        renderer.DrawPieFilled(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, m_SelectedPrimitiveColor);
+        renderer.DrawPie(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, 0.f, fill_solid, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::IDLE && !m_NewPrimitiveContextualMenuOpen)
     {
