@@ -69,6 +69,8 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
     bool combining = false;
 
     half4 outline_color = unpack_unorm4x8_to_half(input.outline_color.packed_data);
+    float outline_full = -input.outline_width;
+    float outline_start = outline_full - input.aa_width;
 
     tile_node node = tiles.head[in.tile_index];
     while (node.next != INVALID_INDEX)
@@ -210,9 +212,6 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 {
                     color = unpack_unorm4x8_to_half(cmd.color.packed_data);
 
-                    float outline_full = -input.outline_width;
-                    float outline_start = outline_full - input.aa_width;
-
                     if (fillmode == fill_outline && distance >= outline_start)
                     {
                         if (distance >= outline_full && distance <= input.aa_width)
@@ -254,7 +253,18 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 }
                 else
                 {
-                    half alpha_factor = linearstep(half(input.aa_width), 0.h, half(distance));    // anti-aliasing
+                    half alpha_factor;
+                    if (fillmode == fill_outline)
+                    {
+                        if (distance > input.aa_width)
+                            color.rgb = outline_color.rgb;
+                        else
+                            color.rgb = mix(outline_color.rgb, color.rgb, linearstep(input.aa_width, 0.f, distance));
+                        alpha_factor = linearstep(half(input.aa_width+input.outline_width), half(input.outline_width), half(distance));    // anti-aliasing
+                    }
+                    else
+                        alpha_factor = linearstep(half(input.aa_width), 0.h, half(distance));    // anti-aliasing
+                    
                     color.a *= alpha_factor;
                     output = accumulate_color(color, output);
                 }
