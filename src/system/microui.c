@@ -1305,7 +1305,7 @@ int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, const char** entries, int* output, int* over_popup)
+int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, const char** entries, int* output)
 {
   int res = 0;
 
@@ -1319,7 +1319,6 @@ int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, c
 
   if (mu_begin_popup(ctx, button_name))
   {
-    *over_popup = 0;
     for(uint32_t i=0; i<num_entries; ++i)
     {
       if (mu_button_ex(ctx, entries[i], 0, 0))
@@ -1340,9 +1339,6 @@ int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, c
 
     mu_Container* container =  mu_get_current_container(ctx);
       container->rect.w += ctx->style->title_height;
-    
-    if (mu_mouse_over(ctx, container->rect))
-      *over_popup = 1;
 
     mu_end_popup(ctx);
   }

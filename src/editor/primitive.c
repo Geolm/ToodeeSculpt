@@ -271,22 +271,24 @@ vec2 primitive_compute_center(struct primitive const* p)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context, int *over_popup)
+int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context, aabb* window_aabb)
 {
     int res = 0;
 
     if (p->m_Shape != shape_arc)
     {
         int fillmode = (int)p->m_Fillmode;
-        res |= mu_combo_button(gui_context, "fill", fill_last, g_sdf_fillmode_names, &fillmode, over_popup);
+        res |= mu_combo_button(gui_context, "fill", fill_last, g_sdf_fillmode_names, &fillmode);
         p->m_Fillmode = (enum primitive_fillmode) fillmode;
+        *window_aabb = aabb_merge(*window_aabb, aabb_from_extent(vec2_set(gui_context->last_rect.x, gui_context->last_rect.y), gui_context->last_rect.w, gui_context->last_rect.h));
     }
 
     if (p->m_Shape != shape_spline)
     {
         int operator = (int)p->m_Operator;
-        res |= mu_combo_button(gui_context, "op", op_last, g_sdf_op_names, &operator, over_popup);
+        res |= mu_combo_button(gui_context, "op", op_last, g_sdf_op_names, &operator);
         p->m_Operator = (enum sdf_operator) operator;
+        *window_aabb = aabb_merge(*window_aabb, aabb_from_extent(vec2_set(gui_context->last_rect.x, gui_context->last_rect.y), gui_context->last_rect.w, gui_context->last_rect.h));
     }
 
     return res;

@@ -614,14 +614,13 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            int over_popup = 0;
-            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context, &over_popup))
+            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context, &window_aabb))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
                 UndoSnapshot();
             }
 
-            if (!aabb_test_point(&window_aabb, m_MousePosition) && over_popup == 0)
+            if (!aabb_test_point(&window_aabb, m_MousePosition))
                 m_SelectedPrimitiveContextualMenuOpen = false;
 
             mu_end_window(gui_context);

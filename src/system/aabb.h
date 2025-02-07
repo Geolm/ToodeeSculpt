@@ -15,6 +15,7 @@ enum aabb_corners
 };
 
 static aabb aabb_invalid(void);
+static aabb aabb_from_extent(vec2 min, float width, float height);
 static void aabb_grow(aabb* box, vec2 amount);
 static void aabb_encompass(aabb* box, vec2 point);
 static aabb aabb_merge(aabb box0, aabb box1);
@@ -43,6 +44,12 @@ static inline bool aabb_is_valid(aabb box)
 static inline aabb aabb_invalid(void)
 {
     return (aabb) {.min = vec2_splat(FLT_MAX), .max = vec2_splat(-FLT_MAX)};
+}
+
+//-----------------------------------------------------------------------------
+static inline aabb aabb_from_extent(vec2 min, float width, float height)
+{
+    return (aabb) {.min = min, .max = vec2_add(min, vec2_set(width, height))};
 }
 
 //-----------------------------------------------------------------------------
