@@ -1350,7 +1350,7 @@ int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, c
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const char *fmt, int opt, gradient_function gradient)
+int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const char *fmt, int opt, gradient_function gradient, void* user_data)
 {
   char buf[MU_MAX_FMT + 1];
   mu_Rect thumb;
@@ -1384,7 +1384,7 @@ int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real hig
   mu_Real gradient_input = 0.f;
   for(int x=0; x<base.w; ++x)
   {
-    mu_draw_rect(ctx, mu_rect(base.x + x, base.y, 1, base.h), gradient(gradient_input));
+    mu_draw_rect(ctx, mu_rect(base.x + x, base.y, 1, base.h), gradient(gradient_input, user_data));
     gradient_input += gradient_step;
   }
 

@@ -5,9 +5,31 @@
 #include <assert.h>
 #include <stdlib.h>
 
-mu_Color hue_gradient(mu_Real value)
+#define UNUSED_VARIABLE(a) (void)(a)
+
+//----------------------------------------------------------------------------------------------------------------------------
+mu_Color hue_gradient(mu_Real value, void* user_data)
 {
+    UNUSED_VARIABLE(user_data);
     hsv4f hsv = {.hue = value * 360.f, .saturation = 1.f, .value = 1.f};
+    packed_color color_uint = hsv_to_packed_color(hsv);
+    return mu_color(packed_color_get_red(color_uint), packed_color_get_green(color_uint), packed_color_get_blue(color_uint), 255);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+mu_Color saturation_gradient(mu_Real value, void* user_data)
+{
+    hsv4f hsv = *((hsv4f*) user_data);
+    hsv.saturation = value;
+    packed_color color_uint = hsv_to_packed_color(hsv);
+    return mu_color(packed_color_get_red(color_uint), packed_color_get_green(color_uint), packed_color_get_blue(color_uint), 255);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+mu_Color value_gradient(mu_Real value, void* user_data)
+{
+    hsv4f hsv = *((hsv4f*) user_data);
+    hsv.value = value;
     packed_color color_uint = hsv_to_packed_color(hsv);
     return mu_color(packed_color_get_red(color_uint), packed_color_get_green(color_uint), packed_color_get_blue(color_uint), 255);
 }
@@ -39,13 +61,13 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
         mu_layout_row(gui_context, 2, (int[]) { 120, -1 }, 0);
 
         mu_label(gui_context, "hue");
-        int res_hsv = mu_slider_gradient(gui_context, &context->hsv.hue, 0.f, 360.f, 1.f, "%1.0f", 0, hue_gradient);
+        int res_hsv = mu_slider_gradient(gui_context, &context->hsv.hue, 0.f, 360.f, 1.f, "%1.0f", 0, hue_gradient, NULL);
 
         mu_label(gui_context, "saturation");
-        res_hsv |= mu_slider_ex(gui_context, &context->hsv.saturation, 0.f, 1.f, 0.01f, "%1.2f", 0);
+        res_hsv |= mu_slider_gradient(gui_context, &context->hsv.saturation, 0.f, 1.f, 0.01f, "%1.2f", 0, saturation_gradient, &context->hsv);
 
         mu_label(gui_context, "value");
-        res_hsv |= mu_slider_ex(gui_context, &context->hsv.value, 0.f, 1.f, 0.01f, "%1.2f", 0);
+        res_hsv |= mu_slider_gradient(gui_context, &context->hsv.value, 0.f, 1.f, 0.01f, "%1.2f", 0, value_gradient, &context->hsv);
 
         if (res_hsv&MU_RES_CHANGE)
             *context->rgba_output = hsv_to_color4f(context->hsv);

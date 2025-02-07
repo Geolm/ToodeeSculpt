@@ -216,7 +216,7 @@ struct mu_Context {
   void* user_data;
 };
 
-typedef mu_Color (*gradient_function)(mu_Real value);
+typedef mu_Color (*gradient_function)(mu_Real value, void* user_data);
 
 #ifdef __cplusplus
 extern "C" {
@@ -304,7 +304,7 @@ void mu_end_panel(mu_Context *ctx);
 int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries);
 int mu_rgb_color(mu_Context *ctx, float *red, float *green, float *blue);
 int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, const char** entries, int* output, int* over_popup);
-int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const char *fmt, int opt, gradient_function gradient);
+int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const char *fmt, int opt, gradient_function gradient, void* user_data);
 
 #ifdef __cplusplus
 }
