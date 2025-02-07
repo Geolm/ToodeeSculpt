@@ -1380,11 +1380,11 @@ int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real hig
   if (last != v) { res |= MU_RES_CHANGE; }
 
   /* draw gradient */
-  mu_Real gradient_step = 1.f / (float) base.w;
+  mu_Real gradient_step = 2.f / (float) base.w;
   mu_Real gradient_input = 0.f;
-  for(int x=0; x<base.w; ++x)
+  for(int x=0; x<base.w; x+=2)
   {
-    mu_draw_rect(ctx, mu_rect(base.x + x, base.y, 1, base.h), gradient(gradient_input, user_data));
+    mu_draw_rect(ctx, mu_rect(base.x + x, base.y, 2, base.h), gradient(gradient_input, user_data));
     gradient_input += gradient_step;
   }
 
