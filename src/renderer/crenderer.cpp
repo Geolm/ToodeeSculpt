@@ -49,19 +49,14 @@ void renderer_drawpie(void* cpp_renderer,vec2 center, vec2 point, float aperture
     ((Renderer*) cpp_renderer)->DrawPie(center, point, aperture, thickness, fillmode, color, op);
 }
 
-void renderer_drawring(void* cpp_renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op)
+void renderer_drawring_frompoints(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
-    ((Renderer*) cpp_renderer)->DrawRing(p0, p1, p2, thickness, color, op);
+    ((Renderer*) cpp_renderer)->DrawRing(p0, p1, p2, thickness, fillmode, color, op);
 }
 
-void renderer_drawring_filled(void* cpp_renderer, vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op)
+void renderer_drawring(void* cpp_renderer, vec2 center, vec2 direction, float aperture, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
-    ((Renderer*) cpp_renderer)->DrawRingFilled(p0, p1, p2, thickness, color, op);
-}
-
-void renderer_drawarc_filled(void* cpp_renderer, vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, enum sdf_operator op)
-{
-    ((Renderer*) cpp_renderer)->DrawRingFilled(center, direction, aperture, radius, thickness, color, op);
+    ((Renderer*) cpp_renderer)->DrawRing(center, direction, aperture, radius, thickness, fillmode, color, op);
 }
 
 void renderer_drawunevencapsule(void* cpp_renderer, vec2 p0, vec2 p1, float r0, float r1, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)

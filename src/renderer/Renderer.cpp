@@ -752,7 +752,7 @@ void Renderer::DrawPie(vec2 center, vec2 point, float aperture, float thickness,
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
     vec2 center, direction;
     float aperture, radius;
@@ -765,29 +765,16 @@ void Renderer::DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_c
         return;
     }
 
-    PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, true);
+    DrawRing(center, direction, aperture, radius, thickness, fillmode, color, op);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op)
+void Renderer::DrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
 {
-    vec2 center, direction;
-    float aperture, radius;
-    arc_from_points(p0, p1, p2, &center, &direction, &aperture, &radius);
+    // don't support fill_hollow
+    if (fillmode == fill_hollow)
+        fillmode = fill_solid;
 
-    // colinear points
-    if (radius<0.f)
-    {
-        DrawOrientedBox(p0, p2, thickness, 0.f, -1.f, fill_solid, color, op);
-        return;
-    }
-
-    PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, false);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op, bool filled)
-{
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness, 0.f);
 
@@ -798,7 +785,7 @@ void Renderer::PrivateDrawRing(vec2 center, vec2 direction, float aperture, floa
         cmd->color = color;
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_ring, filled ? fill_solid : fill_outline);
+        cmd->type = pack_type(primitive_ring, fillmode);
 
         float* data = m_DrawData.NewMultiple(8);
         quantized_aabb* aabox = m_CommandsAABB.NewElement();

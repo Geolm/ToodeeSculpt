@@ -33,16 +33,14 @@ public:
     void BeginCombination(float smooth_value);
     void EndCombination();
 
-    inline void DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op = op_union);
-    void DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
-    void DrawRingFilled(vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, sdf_operator op = op_union);
-    
     void DrawDisc(vec2 center, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op  = op_union);
     void DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawEllipse(vec2 p0, vec2 p1, float width, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawPie(vec2 center, vec2 point, float aperture, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
+    void DrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
+    void DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
     void DrawBox(float x0, float y0, float x1, float y1, draw_color color);
     void DrawBox(aabb box, draw_color color) {DrawBox(box.min.x, box.min.y, box.max.x, box.max.y, color);}
     void DrawChar(float x, float y, char c, draw_color color);
@@ -50,7 +48,7 @@ public:
     inline void DrawText(vec2 coord, const char* text, draw_color color) {DrawText(coord.x, coord.y, text, color);}
 
 private:
-    void PrivateDrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op, bool filled);
+    
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();
@@ -141,9 +139,4 @@ inline void Renderer::SetCamera(vec2 position, float scale)
 {
     m_CameraPosition = position;
     m_CameraScale = scale;
-}
-
-inline void Renderer::DrawRingFilled(vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, sdf_operator op)
-{
-    PrivateDrawRing(center, direction, aperture, radius, thickness, color, op, true);
 }

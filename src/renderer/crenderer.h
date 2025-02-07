@@ -21,9 +21,8 @@ void renderer_drawline(void* cpp_renderer, vec2 p0, vec2 p1, float width, draw_c
 void renderer_drawellipse(void* cpp_renderer,vec2 p0, vec2 p1, float width, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_drawtriangle(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_drawpie(void* cpp_renderer,vec2 center, vec2 point, float aperture, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
-void renderer_drawring(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op);
-void renderer_drawring_filled(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, draw_color color, enum sdf_operator op);
-void renderer_drawarc_filled(void* cpp_renderer, vec2 center, vec2 direction, float aperture, float radius, float thickness, draw_color color, enum sdf_operator op);
+void renderer_drawring_frompoints(void* cpp_renderer,vec2 p0, vec2 p1, vec2 p2, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
+void renderer_drawring(void* cpp_renderer, vec2 center, vec2 direction, float aperture, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_drawunevencapsule(void* cpp_renderer, vec2 p0, vec2 p1, float r0, float r1, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 
 #ifdef __cplusplus

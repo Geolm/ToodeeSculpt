@@ -228,12 +228,9 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
     default : mu_text(gui_context, "unknown");break;
     }
 
-    if (p->m_Shape != shape_arc && p->m_Shape != shape_spline)
-    {
-        _Static_assert(sizeof(p->m_Fillmode) == sizeof(int), "fillmode enum must have a int size");
-        mu_label(gui_context, "fillmode");
-        res |= mu_combo_box(gui_context, &g_SDFFillmodeComboBox, (int*)&p->m_Fillmode, fill_last, g_sdf_fillmode_names);
-    }
+    _Static_assert(sizeof(p->m_Fillmode) == sizeof(int), "fillmode enum must have a int size");
+    mu_label(gui_context, "fillmode");
+    res |= mu_combo_box(gui_context, &g_SDFFillmodeComboBox, (int*)&p->m_Fillmode, fill_last, g_sdf_fillmode_names);
 
     mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
     mu_label(gui_context, "thickness");
@@ -273,15 +270,10 @@ vec2 primitive_compute_center(struct primitive const* p)
 //----------------------------------------------------------------------------------------------------------------------------
 int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* gui_context, aabb* window_aabb)
 {
-    int res = 0;
-
-    if (p->m_Shape != shape_arc)
-    {
-        int fillmode = (int)p->m_Fillmode;
-        res |= mu_combo_button(gui_context, "fill", fill_last, g_sdf_fillmode_names, &fillmode);
-        p->m_Fillmode = (enum primitive_fillmode) fillmode;
-        *window_aabb = aabb_merge(*window_aabb, aabb_from_extent(vec2_set(gui_context->last_rect.x, gui_context->last_rect.y), gui_context->last_rect.w, gui_context->last_rect.h));
-    }
+    int fillmode = (int)p->m_Fillmode;
+    int res = mu_combo_button(gui_context, "fill", fill_last, g_sdf_fillmode_names, &fillmode);
+    p->m_Fillmode = (enum primitive_fillmode) fillmode;
+    *window_aabb = aabb_merge(*window_aabb, aabb_from_extent(vec2_set(gui_context->last_rect.x, gui_context->last_rect.y), gui_context->last_rect.w, gui_context->last_rect.h));
 
     if (p->m_Shape != shape_spline)
     {
@@ -290,7 +282,6 @@ int primitive_contextual_property_grid(struct primitive* p, struct mu_Context* g
         p->m_Operator = (enum sdf_operator) operator;
         *window_aabb = aabb_merge(*window_aabb, aabb_from_extent(vec2_set(gui_context->last_rect.x, gui_context->last_rect.y), gui_context->last_rect.w, gui_context->last_rect.h));
     }
-
     return res;
 }
 
@@ -495,7 +486,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 
     case shape_arc:
     {
-        renderer_drawarc_filled(renderer, p->m_Center, p->m_Direction, p->m_Aperture, p->m_Radius, p->m_Thickness, color, op);
+        renderer_drawring(renderer, p->m_Center, p->m_Direction, p->m_Aperture, p->m_Radius, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
@@ -504,7 +495,7 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         for(uint32_t i=0; i<p->m_NumArcs; ++i)
         {
             if (p->m_Arcs[i].radius > 0.f)
-                renderer_drawarc_filled(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, color, op_add);
+                renderer_drawring(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, p->m_Fillmode, color, op_add);
             else
                 renderer_drawline(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, color, op_add);
         }
@@ -556,7 +547,7 @@ void primitive_draw_spline(void * renderer, const vec2* points, uint32_t num_poi
     renderer_begin_combination(renderer, 1.f);
     for(uint32_t i=0; i<num_arcs; ++i)
         if (arcs[i].radius>0.f)
-            renderer_drawarc_filled(renderer, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, color, op_add);
+            renderer_drawring(renderer, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, fill_solid,color, op_add);
         else
             renderer_drawline(renderer, arcs[i].center, arcs[i].direction, thickness, color, op_add);
 
