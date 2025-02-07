@@ -45,7 +45,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
         const bool is_hollow = (primitive_get_fillmode(input.commands[i].type) == fill_hollow);
         bool to_be_added = false;
         constant float* data = &input.draw_data[data_index];
-        switch(primitive_get_type(input.commands[i].type))
+        command_type type = primitive_get_type(input.commands[i].type);
+        switch(type)
         {
             case primitive_oriented_box :
             {
@@ -178,7 +179,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 output.head[tile_index].next = new_node_index;
             }
 
-            if (input.commands[i].type != combination_begin && input.commands[i].type != combination_end)
+            if (type != combination_begin && type != combination_end)
                 draw_something = true;
         }
     }
