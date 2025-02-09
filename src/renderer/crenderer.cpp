@@ -8,9 +8,9 @@ void renderer_begin_combination(void* cpp_renderer, float smooth_value)
     ((Renderer*) cpp_renderer)->BeginCombination(smooth_value);
 }
 
-void renderer_end_combination(void* cpp_renderer)
+void renderer_end_combination(void* cpp_renderer, bool outline)
 {
-    ((Renderer*) cpp_renderer)->EndCombination();
+    ((Renderer*) cpp_renderer)->EndCombination(outline);
 }
 
 void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color)

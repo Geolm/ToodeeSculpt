@@ -254,7 +254,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 else
                 {
                     half alpha_factor;
-                    if (fillmode == fill_outline)
+                    if (fillmode == fill_outline && type == combination_end)
                     {
                         if (distance > input.aa_width)
                             color.rgb = outline_color.rgb;

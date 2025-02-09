@@ -31,7 +31,7 @@ public:
     inline void SetOutlineWidth(float value) {m_OutlineWidth = value;}
 
     void BeginCombination(float smooth_value);
-    void EndCombination();
+    void EndCombination(bool outline);
 
     void DrawDisc(vec2 center, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op  = op_union);
     void DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op = op_union);
@@ -48,7 +48,6 @@ public:
     inline void DrawText(vec2 coord, const char* text, draw_color color) {DrawText(coord.x, coord.y, text, color);}
 
 private:
-    
     void BuildDepthStencilState();
     void BuildPSO();
     void BinCommands();

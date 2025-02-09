@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 void renderer_begin_combination(void* cpp_renderer, float smooth_value);
-void renderer_end_combination(void* cpp_renderer);
+void renderer_end_combination(void* cpp_renderer, bool outline);
 void renderer_drawbox(void* cpp_renderer, aabb box, draw_color color);
 void renderer_drawdisc(void* cpp_renderer, vec2 center, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draworientedbox(void* cpp_renderer, vec2 p0, vec2 p1, float width, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);

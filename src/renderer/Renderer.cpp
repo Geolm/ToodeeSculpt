@@ -488,7 +488,7 @@ void Renderer::BeginCombination(float smooth_value)
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->type = combination_begin;
+        cmd->type = pack_type(combination_begin, fill_solid);
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->clip_index = (uint8_t) m_ClipsCount-1;
 
@@ -511,14 +511,14 @@ void Renderer::BeginCombination(float smooth_value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::EndCombination()
+void Renderer::EndCombination(bool outline)
 {
     assert(m_CombinationAABB != nullptr);
 
     draw_command* cmd = m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->type = combination_end;
+        cmd->type = pack_type(combination_end, outline ? fill_outline : fill_solid);
         cmd->data_index = m_DrawData.GetNumElements();
         cmd->clip_index = (uint8_t) m_ClipsCount-1;
 

@@ -83,6 +83,7 @@ private:
     bool m_AABBDebug;
     bool m_SnapToGrid;
     float m_GridSubdivision;
+    int m_GlobalOutline;
 
     draw_color m_PointColor;
     draw_color m_SelectedPrimitiveColor;

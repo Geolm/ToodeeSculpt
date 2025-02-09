@@ -31,6 +31,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
     m_OutlineWidth = 2.f;
+    m_GlobalOutline = 0;
     palette_default(&primitive_palette);
     New();
 }
@@ -308,7 +309,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         if (m_PrimitiveIdDebug)
             renderer.DrawText(primitive_compute_center(primitive), format("%d", i), draw_color(na16_black));
     }
-    renderer.EndCombination();
+    renderer.EndCombination(m_GlobalOutline);
 
     if (GetState() == state::ADDING_POINTS)
     {
@@ -468,6 +469,8 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
         mu_label(gui_context, "alpha");
         res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
+        mu_label(gui_context, "enable outline");
+        res |= mu_checkbox(gui_context, "", &m_GlobalOutline);
         mu_label(gui_context, "outline width");
         res |= mu_slider_ex(gui_context, &m_OutlineWidth, 0.f, 20.f, 0.1f, "%2.2f", 0);
         mu_end_window(gui_context);

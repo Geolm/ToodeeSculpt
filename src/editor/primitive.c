@@ -524,7 +524,7 @@ void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color)
 {
     renderer_begin_combination(renderer, 1.f);
     primitive_draw(p, renderer, 0.f, color, op_add);
-    renderer_end_combination(renderer);
+    renderer_end_combination(renderer, false);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         renderer_drawdisc(renderer, p->m_Points[i], primitive_point_radius, -1.f, fill_solid, (draw_color){.packed_data = 0x7f10e010}, op_union);
@@ -551,5 +551,5 @@ void primitive_draw_spline(void * renderer, const vec2* points, uint32_t num_poi
         else
             renderer_drawline(renderer, arcs[i].center, arcs[i].direction, thickness, color, op_add);
 
-    renderer_end_combination(renderer);
+    renderer_end_combination(renderer, false);
 }
