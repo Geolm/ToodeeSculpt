@@ -215,13 +215,9 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     if (fillmode == fill_outline && distance >= outline_start)
                     {
                         if (distance >= outline_full && distance <= input.aa_width)
-                        {
-                            color = outline_color;
-                        }
+                            color.rgb = outline_color.rgb;
                         else if (distance < outline_full)
-                        {
-                            color = mix(outline_color, color, linearstep(half(outline_full), half(outline_start), half(distance)));
-                        }
+                            color.rgb = mix(outline_color.rgb, color.rgb, linearstep(half(outline_full), half(outline_start), half(distance)));
                     }
                 }
 
