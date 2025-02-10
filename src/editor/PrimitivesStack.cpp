@@ -30,7 +30,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
     m_PointColor = draw_color(0x10e010, 128);
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
-    m_OutlineWidth = 2.f;
+    m_OutlineWidth = 1.f;
     m_GlobalOutline = 0;
     palette_default(&primitive_palette);
     New();
