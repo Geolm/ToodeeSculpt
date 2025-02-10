@@ -1,10 +1,11 @@
 #pragma once
 
-#include "renderer/Renderer.h"
-
 struct GLFWwindow;
 struct mu_Context;
 class Editor;
+struct renderer;
+
+#include "system/vec2.h"
 
 class App
 {

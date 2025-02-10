@@ -1,4 +1,4 @@
-#include "../renderer/Renderer.h"
+#include "../renderer/renderer.h"
 #include "../system/microui.h"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>

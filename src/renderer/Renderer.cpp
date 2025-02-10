@@ -3,7 +3,7 @@
 #define CA_PRIVATE_IMPLEMENTATION
 #include "../Metal.hpp"
 
-#include "Renderer.h"
+#include "renderer.h"
 #include "shader_reader.h"
 #include "../system/microui.h"
 #include "../system/format.h"

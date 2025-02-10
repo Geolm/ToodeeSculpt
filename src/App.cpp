@@ -17,6 +17,7 @@
 #include "MouseCursors.h"
 #include "icons.h"
 #include "renderer/font9x16.h"
+#include "renderer/renderer.h"
 
 #define UNUSED_VARIABLE(a) (void)(a)
 

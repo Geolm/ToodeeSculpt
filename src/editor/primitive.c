@@ -5,7 +5,7 @@
 #include "../system/microui.h"
 #include "../system/serializer.h"
 #include "../system/log.h"
-#include "../renderer/Renderer.h"
+#include "../renderer/renderer.h"
 #include "../system/format.h"
 #include "../system/biarc.h"
 #include "color_box.h"

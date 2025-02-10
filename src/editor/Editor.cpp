@@ -1,4 +1,4 @@
-#include "../renderer/Renderer.h"
+#include "../renderer/renderer.h"
 #include "../system/undo.h"
 #include "../system/microui.h"
 #include "../system/format.h"

@@ -1,7 +1,7 @@
 #include "icons.h"
 #include "system/stateless.h"
 #include "system/vec2.h"
-#include "renderer/Renderer.h"
+#include "renderer/renderer.h"
 
 #define UNUSED_VARIABLE(a) (void)(a)
 
