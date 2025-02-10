@@ -11,7 +11,7 @@ You can find below more details about the implementation but here are some speci
 
 * **anti-aliasing** : all primitives are anti-aliased without additionnal rendertarget or a fullscreen effect. It's almost free
 * **alpha-blending** : all blending is done in the shader, you can stack as much alpha blended primitive you want. You pay only once the cost of alpha blending
-* **no polygons** : perfect curves, curves do not cost more than straight lines
+* **no polygons** : perfect curves, curves do not cost more than straight lines, all shapes can be rounded for no cost
 * **boolean operations** on primitives, we also support smooth blend (see https://iquilezles.org/articles/smin/)
 
 
