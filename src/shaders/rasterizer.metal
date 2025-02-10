@@ -260,7 +260,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     }
                     else
                         alpha_factor = linearstep(half(input.aa_width), 0.h, half(distance));    // anti-aliasing
-                    
+
                     color.a *= alpha_factor;
                     output = accumulate_color(color, output);
                 }
