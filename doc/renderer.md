@@ -15,7 +15,7 @@ You can find below more details about the implementation but here are some speci
 * **boolean operations** on primitives, we also support smooth blend (see https://iquilezles.org/articles/smin/)
 
 
-## Draw command list
+## 1 - Draw command list
 
 We build the command lists on the CPU, as it's 2d rendering the **order** of commands is important. A command describes a primitive. Here's the list of primitive currently supported :
 * disc
@@ -26,6 +26,8 @@ We build the command lists on the CPU, as it's 2d rendering the **order** of com
 * oriented ellipse
 * triangle
 
+![alt text](primitives.png)
+
 Each command also have:
 * a fill mode : solid, hollow or outline
 * a color RGBA8
@@ -34,3 +36,24 @@ Each command also have:
 * an index to the primitive float data
 
 All data the primitive (coordinates, radius, width, ...) is stored in a big float buffer that each command points at.
+
+## 2 - Animation, projection, preparation
+
+This compute shader works on the draw commmand lists, each thread works on a single command.
+
+### Animation (not yet implemented)
+
+Animate the primitive points/distances using analytical animation track.
+
+![alt text](animation.png)
+
+### Projection
+
+Transform the coordinates and distance from the viewport space to screen space.
+
+### Preparation
+
+Prepare the command for the tile binning and rasterization.
+
+* bounding box : to accelerate the binning phase, we precompute a bounding box quantized to the tile size. A little math is involved to get a fit aabb for any primitive.
+* primitive data : the intuitive data for some primitive needs to be transformed for the rasterization algorithm. For example : we define an arc with 3 points but the rasterization algorithm needs a direction vector, the cosinus and sinus of the aperture, the radius and the center of the arc.
