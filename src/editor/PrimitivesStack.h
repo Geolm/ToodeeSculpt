@@ -5,11 +5,12 @@
 #include "../system/cc.h"
 #include "../system/aabb.h"
 #include "../system/serializer.h"
+#include "../system/log.h"
 #include "../shaders/common.h"
 #include "primitive.h"
 
 struct mu_Context;
-class Renderer;
+struct renderer;
 
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
@@ -20,7 +21,7 @@ public:
     void Init(aabb zone, struct undo_context* undo);
     void OnMouseMove(vec2 pos);
     void OnMouseButton(int button, int action, int mods);
-    void Draw(Renderer& renderer);
+    void Draw(struct renderer* context);
     void UserInterface(struct mu_Context* gui_context);
     void UndoSnapshot();
     void Undo();

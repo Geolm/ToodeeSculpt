@@ -5,7 +5,7 @@
 #include "../system/microui.h"
 #include "../system/serializer.h"
 #include "../system/log.h"
-#include "../renderer/crenderer.h"
+#include "../renderer/Renderer.h"
 #include "../system/format.h"
 #include "../system/biarc.h"
 #include "color_box.h"
@@ -450,43 +450,43 @@ void primitive_expand(struct primitive* p, const aabb* box)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_color color, enum sdf_operator op)
+void primitive_draw(struct primitive* p, struct renderer* gfx_context, float roundness, draw_color color, enum sdf_operator op)
 {
     switch(p->m_Shape)
     {
     case shape_triangle:
     {
-        renderer_drawtriangle(renderer, p->m_Points[0], p->m_Points[1], p->m_Points[2], roundness, p->m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_triangle(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Points[2], roundness, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
     case shape_disc:
     {
-        renderer_drawdisc(renderer, p->m_Points[0], p->m_Roundness, p-> m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_disc(gfx_context, p->m_Points[0], p->m_Roundness, p-> m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
     case shape_oriented_ellipse:
     {
-        renderer_drawellipse(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_ellipse(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
     case shape_oriented_box:
     {
-        renderer_draworientedbox(renderer, p->m_Points[0], p->m_Points[1], p->m_Width, roundness, p->m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_orientedbox(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Width, roundness, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
     case shape_pie:
     {
-        renderer_drawpie(renderer, p->m_Points[0], p->m_Points[1], p->m_Aperture, p->m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_pie(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Aperture, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
     case shape_arc:
     {
-        renderer_drawring(renderer, p->m_Center, p->m_Direction, p->m_Aperture, p->m_Radius, p->m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_arc(gfx_context, p->m_Center, p->m_Direction, p->m_Aperture, p->m_Radius, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
@@ -495,16 +495,16 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
         for(uint32_t i=0; i<p->m_NumArcs; ++i)
         {
             if (p->m_Arcs[i].radius > 0.f)
-                renderer_drawring(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, p->m_Fillmode, color, op_add);
+                renderer_draw_arc(gfx_context, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Arcs[i].aperture, p->m_Arcs[i].radius, p->m_Thickness, p->m_Fillmode, color, op_add);
             else
-                renderer_drawline(renderer, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, color, op_add);
+                renderer_draw_line(gfx_context, p->m_Arcs[i].center, p->m_Arcs[i].direction, p->m_Thickness, color, op_add);
         }
         break;
     }
 
     case shape_uneven_capsule:
     {
-        renderer_drawunevencapsule(renderer, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, p->m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_unevencapsule(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
@@ -514,42 +514,42 @@ void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_c
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color)
+void primitive_draw_aabb(struct primitive* p, struct renderer* gfx_context, draw_color color)
 {
-    renderer_drawbox(renderer, p->m_AABB, color);
+    renderer_draw_aabb(gfx_context, p->m_AABB, color);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color)
+void primitive_draw_gizmo(struct primitive* p, struct renderer* gfx_context, draw_color color)
 {
-    renderer_begin_combination(renderer, 1.f);
-    primitive_draw(p, renderer, 0.f, color, op_add);
-    renderer_end_combination(renderer, false);
+    renderer_begin_combination(gfx_context, 1.f);
+    primitive_draw(p, gfx_context, 0.f, color, op_add);
+    renderer_end_combination(gfx_context, false);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
-        renderer_drawdisc(renderer, p->m_Points[i], primitive_point_radius, -1.f, fill_solid, (draw_color){.packed_data = 0x7f10e010}, op_union);
+        renderer_draw_disc(gfx_context, p->m_Points[i], primitive_point_radius, -1.f, fill_solid, (draw_color){.packed_data = 0x7f10e010}, op_add);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha)
+void primitive_draw_alpha(struct primitive* p, struct renderer* gfx_context, float alpha)
 {
     draw_color color = draw_color_from_float(p->m_Color.red, p->m_Color.green, p->m_Color.blue, alpha);
-    primitive_draw(p, renderer, p->m_Roundness, color, p->m_Operator);
+    primitive_draw(p, gfx_context, p->m_Roundness, color, p->m_Operator);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_spline(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color)
+void primitive_draw_spline(struct renderer* gfx_context, const vec2* points, uint32_t num_points, float thickness, draw_color color)
 {
     struct arc arcs[primitive_max_arcs];
     uint32_t num_arcs;
     num_arcs = biarc_spline(points, num_points, arcs);
 
-    renderer_begin_combination(renderer, 1.f);
+    renderer_begin_combination(gfx_context, 1.f);
     for(uint32_t i=0; i<num_arcs; ++i)
         if (arcs[i].radius>0.f)
-            renderer_drawring(renderer, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, fill_solid,color, op_add);
+            renderer_draw_arc(gfx_context, arcs[i].center, arcs[i].direction, arcs[i].aperture, arcs[i].radius, thickness, fill_solid,color, op_add);
         else
-            renderer_drawline(renderer, arcs[i].center, arcs[i].direction, thickness, color, op_add);
+            renderer_draw_line(gfx_context, arcs[i].center, arcs[i].direction, thickness, color, op_add);
 
-    renderer_end_combination(renderer, false);
+    renderer_end_combination(gfx_context, false);
 }

@@ -297,100 +297,103 @@ bool PrimitivesStack::SelectPrimitive()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Draw(Renderer& renderer)
+void PrimitivesStack::Draw(struct renderer* context)
 {
     // drawing *the* primitives
-    renderer.SetOutlineWidth(m_OutlineWidth);
-    renderer.BeginCombination(m_SmoothBlend);
+    renderer_set_outline_width(context, m_OutlineWidth);
+    renderer_begin_combination(context, m_SmoothBlend);
+
     for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
     {
         primitive *primitive = cc_get(&m_Primitives, i);
-        primitive_draw_alpha(primitive, &renderer, m_AlphaValue);
+        primitive_draw_alpha(primitive, context, m_AlphaValue);
         if (m_PrimitiveIdDebug)
-            renderer.DrawText(primitive_compute_center(primitive), format("%d", i), draw_color(na16_black));
+        {
+            vec2 center = primitive_compute_center(primitive);
+            renderer_draw_text(context, center.x, center.y, format("%d", i), draw_color(na16_black));
+        }
     }
-    renderer.EndCombination(m_GlobalOutline);
+    renderer_end_combination(context, m_GlobalOutline);
 
     if (GetState() == state::ADDING_POINTS)
     {
         for(uint32_t i=0; i<m_CurrentPoint; ++i)
-            renderer.DrawDisc(m_PrimitivePoints[i], primitive_point_radius, -1.f, fill_solid, m_PointColor);
+            renderer_draw_disc(context, m_PrimitivePoints[i], primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
 
         // preview primitive
         if (m_CurrentPoint == 1)
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, -1.f, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_orientedbox(context, m_PrimitivePoints[0], m_MousePosition, 0.f, 0.f, -1.f, fill_solid, m_SelectedPrimitiveColor, op_add);
 
         if (m_PrimitiveShape == shape_triangle) 
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
-                renderer.DrawTriangle(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor);
+                renderer_draw_triangle(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
         }
         else if (m_PrimitiveShape == shape_arc)
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
-                renderer.DrawRing(m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, fill_solid, m_SelectedPrimitiveColor);
+                renderer_draw_arc_from_circle(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
         }
         else if (m_PrimitiveShape == shape_spline)
         {
             if (m_CurrentPoint == 2 || (m_CurrentPoint == 3 && vec2_similar(m_PrimitivePoints[1], m_PrimitivePoints[2], 0.001f)))
-                primitive_draw_spline(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition}, 3, 0.f, m_SelectedPrimitiveColor);
+                primitive_draw_spline(context, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_MousePosition}, 3, 0.f, m_SelectedPrimitiveColor);
             else if (m_CurrentPoint == 3 || (m_CurrentPoint == 4 && vec2_similar(m_PrimitivePoints[2], m_PrimitivePoints[3], 0.001f)))
-                primitive_draw_spline(&renderer, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_MousePosition}, 4, 0.f, m_SelectedPrimitiveColor);
+                primitive_draw_spline(context, (vec2[]) {m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_MousePosition}, 4, 0.f, m_SelectedPrimitiveColor);
         }
-        renderer.DrawDisc(m_MousePosition, primitive_point_radius, -1.f, fill_solid, m_PointColor);
+        renderer_draw_disc(context, m_MousePosition, primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
     }
     else if (GetState() == state::SET_WIDTH)
     {
-        renderer.DrawDisc(m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor);
+        renderer_draw_disc(context, m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
 
         if (m_PrimitiveShape == shape_oriented_box)
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_orientedbox(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
         else if (m_PrimitiveShape == shape_oriented_ellipse)
-            renderer.DrawEllipse(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_ellipse(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
-        renderer.DrawDisc(m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor);
+        renderer_draw_disc(context, m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
 
         // preview primitive
         switch(m_PrimitiveShape)
         {
         case shape_triangle:
         {
-            renderer.DrawTriangle(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2],
-                                        m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_triangle(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
             break;
         }
 
         case shape_disc:
         {
-            renderer.DrawDisc(m_PrimitivePoints[0], m_Roundness, -1.f, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_disc(context, m_PrimitivePoints[0], m_Roundness, -1.f, fill_solid, m_SelectedPrimitiveColor, op_add);
             break;
         }
 
         case shape_oriented_box:
         {
-            renderer.DrawOrientedBox(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_orientedbox(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
             break;
         }
 
         case shape_arc:
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
-            renderer.DrawRing(m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_arc_from_circle(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, fill_solid, m_SelectedPrimitiveColor, op_add);
             break;
         }
 
         case shape_spline:
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
-            primitive_draw_spline(&renderer, m_PrimitivePoints, primitive_get_num_points(m_PrimitiveShape), thickness, m_SelectedPrimitiveColor);
+            primitive_draw_spline(context, m_PrimitivePoints, primitive_get_num_points(m_PrimitiveShape), thickness, m_SelectedPrimitiveColor);
             break;
         }
 
         case shape_uneven_capsule:
         {
-            renderer.DrawUnevenCapsule(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Roundness, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor);
+            renderer_draw_unevencapsule(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Roundness, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
             break;
         }
 
@@ -399,7 +402,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
     }
     else if (GetState() == state::SET_ANGLE)
     {
-        renderer.DrawPie(m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, 0.f, fill_solid, m_SelectedPrimitiveColor);
+        renderer_draw_pie(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
     }
     else if (GetState() == state::IDLE && !m_NewPrimitiveContextualMenuOpen)
     {
@@ -409,30 +412,33 @@ void PrimitivesStack::Draw(Renderer& renderer)
             primitive *primitive = cc_get(&m_Primitives, i);
             if (primitive_test_mouse_cursor(primitive, m_MousePosition, true))
             {
-                primitive_draw_gizmo(primitive, &renderer, m_HoveredPrimitiveColor);
+                primitive_draw_gizmo(primitive, context, m_HoveredPrimitiveColor);
                 if (i == m_SelectedPrimitiveIndex)
                     MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
         if (SelectedPrimitiveValid())
-            primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), &renderer, m_SelectedPrimitiveColor);
+            primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
         {
             primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-            primitive_draw_gizmo(primitive, &renderer, m_SelectedPrimitiveColor);
+            primitive_draw_gizmo(primitive, context, m_SelectedPrimitiveColor);
 
             if (m_PrimitiveIdDebug)
-                renderer.DrawText(primitive_compute_center(primitive), format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
+            {
+                vec2 center = primitive_compute_center(primitive);
+                renderer_draw_text(context, center.x, center.y, format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
+            }
         }
     }
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
-        renderer.DrawDisc(m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor);
-        primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), &renderer, m_SelectedPrimitiveColor);
+        renderer_draw_disc(context, m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
+        primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
     }
 
     if (m_AABBDebug)
@@ -440,7 +446,7 @@ void PrimitivesStack::Draw(Renderer& renderer)
         for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
         {
             primitive *p = cc_get(&m_Primitives, i);
-            primitive_draw_aabb(p, &renderer, draw_color(0x3fe01010));
+            primitive_draw_aabb(p, context, draw_color(0x3fe01010));
         }
     }
 }

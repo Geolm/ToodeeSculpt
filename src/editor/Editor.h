@@ -2,7 +2,7 @@
 
 #include "PrimitivesStack.h"
 
-class Renderer;
+struct renderer;
 struct mu_Context;
 struct undo_context;
 
@@ -15,7 +15,7 @@ public:
     void OnKeyEvent(int key, int scancode, int action, int mods);
     void OnMouseMove(vec2 pos);
     void OnMouseButton(int button, int action, int mods);
-    void Draw(Renderer& renderer);
+    void Draw(struct renderer* r);
     void DebugInterface(struct mu_Context* gui_context);
     void UserInterface(struct mu_Context* gui_context);
     void Terminate();

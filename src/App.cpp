@@ -16,6 +16,7 @@
 #include "editor/Editor.h"
 #include "MouseCursors.h"
 #include "icons.h"
+#include "renderer/font9x16.h"
 
 #define UNUSED_VARIABLE(a) (void)(a)
 
@@ -43,7 +44,7 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     m_WindowWidth = (uint32_t) width;
     m_LogSize = 1024;
 
-    m_Renderer.Init(m_Device, m_WindowWidth, m_WindowHeight);
+    m_pRenderer = renderer_init(m_Device, m_WindowWidth, m_WindowHeight);
     InitGui();
 
     glfwSetWindowUserPointer(window, this);
@@ -138,9 +139,9 @@ void App::InitGui()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::DrawGui()
 {
-    m_Renderer.SetViewport(m_WindowWidth, m_WindowHeight);
-    m_Renderer.SetCamera(vec2_zero(), 1.f);
-    m_Renderer.SetClipRect(0, 0, UINT16_MAX, UINT16_MAX);
+    renderer_set_viewport(m_pRenderer, m_WindowWidth, m_WindowHeight);
+    renderer_set_camera(m_pRenderer, vec2_zero(), 1.f);
+    renderer_set_cliprect(m_pRenderer, 0, 0, UINT16_MAX, UINT16_MAX);
 
     mu_Command *cmd = NULL;
     while (mu_next_command(m_pGuiContext, &cmd))
@@ -154,17 +155,17 @@ void App::DrawGui()
         {
         case MU_COMMAND_TEXT:
         {
-            m_Renderer.DrawText((float)cmd->text.pos.x, (float)cmd->text.pos.y, cmd->text.str, from_mu_color(cmd->text.color));
+            renderer_draw_text(m_pRenderer, (float)cmd->text.pos.x, (float)cmd->text.pos.y, cmd->text.str, from_mu_color(cmd->text.color));
             break;
         }
         case MU_COMMAND_RECT:
         {
-            m_Renderer.DrawBox(x0, y0, x1, y1, from_mu_color(cmd->rect.color));
+            renderer_draw_box(m_pRenderer, x0, y0, x1, y1, from_mu_color(cmd->rect.color));
             break;
         }
         case MU_COMMAND_CLIP : 
         {
-            m_Renderer.SetClipRect((uint16_t)cmd->rect.rect.x, (uint16_t)cmd->rect.rect.y,
+            renderer_set_cliprect(m_pRenderer, (uint16_t)cmd->rect.rect.x, (uint16_t)cmd->rect.rect.y,
                                    (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
             break;
         }
@@ -174,10 +175,10 @@ void App::DrawGui()
                               .max = (vec2) {(float)(cmd->icon.rect.x + cmd->icon.rect.w), (float)(cmd->icon.rect.y + cmd->icon.rect.h)}};
             switch(cmd->icon.id)
             {
-                case MU_ICON_CLOSE : DrawIcon(&m_Renderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
-                case MU_ICON_COLLAPSED : DrawIcon(&m_Renderer, box, ICON_COLLAPSED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
-                case MU_ICON_EXPANDED : DrawIcon(&m_Renderer, box, ICON_EXPANDED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
-                case MU_ICON_CHECK : DrawIcon(&m_Renderer, box, ICON_CHECK, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                case MU_ICON_CLOSE : DrawIcon(m_pRenderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
+                case MU_ICON_COLLAPSED : DrawIcon(m_pRenderer, box, ICON_COLLAPSED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                case MU_ICON_EXPANDED : DrawIcon(m_pRenderer, box, ICON_EXPANDED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                case MU_ICON_CHECK : DrawIcon(m_pRenderer, box, ICON_CHECK, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
             }
 
             break;
@@ -193,8 +194,8 @@ void App::Update(CA::MetalDrawable* drawable)
     m_DeltaTime = (float) stm_sec(stm_laptime(&m_LastTime));
 
     mu_begin(m_pGuiContext);
-    m_Renderer.BeginFrame();
-    m_pEditor->Draw(m_Renderer);
+    renderer_begin_frame(m_pRenderer);
+    m_pEditor->Draw(m_pRenderer);
     m_pEditor->UserInterface(m_pGuiContext);
 
     // debug interface
@@ -207,15 +208,16 @@ void App::Update(CA::MetalDrawable* drawable)
             mu_text(m_pGuiContext, format("%3.2f ms", m_DeltaTime*1000.f));
         }
 
-        m_Renderer.DebugInterface(m_pGuiContext);
+        renderer_debug_interface(m_pRenderer, m_pGuiContext);
         m_pEditor->DebugInterface(m_pGuiContext);
         mu_end_window(m_pGuiContext);
     }
 
     mu_end(m_pGuiContext);
     DrawGui();
-    m_Renderer.EndFrame();
-    m_Renderer.Flush(drawable);
+
+    renderer_end_frame(m_pRenderer);
+    renderer_flush(m_pRenderer, drawable);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -255,7 +257,7 @@ void App::OnKeyEvent(int key, int scancode, int action, int mods)
         mu_input_keyup(m_pGuiContext, ui_key);
 
     if (key == GLFW_KEY_R && action == GLFW_PRESS && mods&GLFW_MOD_SUPER)
-        m_Renderer.ReloadShaders();
+        renderer_reload_shaders(m_pRenderer);
 
     m_pEditor->OnKeyEvent(key, scancode, action, mods);
 }
@@ -265,7 +267,7 @@ void App::OnWindowResize(int width, int height)
 {
     m_WindowWidth = (uint32_t) width;
     m_WindowHeight = (uint32_t) height;
-    m_Renderer.Resize(m_WindowWidth, m_WindowHeight);
+    renderer_resize(m_pRenderer, m_WindowWidth, m_WindowHeight);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -303,7 +305,7 @@ void App::Terminate()
     MouseCursors::GetInstance().Terminate();
     m_pEditor->Terminate();
     delete m_pEditor;
-    m_Renderer.Terminate();
+    renderer_terminate(m_pRenderer);
     free(m_pGuiContext);
     free(m_pFolderPath);
 }

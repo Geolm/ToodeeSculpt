@@ -6,16 +6,18 @@
 #include "Renderer.h"
 #include "shader_reader.h"
 #include "../system/microui.h"
-#include "../system/aabb.h"
 #include "../system/format.h"
 #include "../system/arc.h"
-#include <float.h>
+#include "DynamicBuffer.h"
+#include "../system/PushArray.h"
+#include "../system/log.h"
+#include "../system/ortho.h"
+#include "font9x16.h"
 
 #ifdef SHADERS_IN_EXECUTABLE
 #include "../shaders/binning.h"
 #include "../shaders/rasterizer.h"
 #endif
-
 
 #define SAFE_RELEASE(p) if (p!=nullptr) p->release();
 #define SHADER_PATH "/Users/geolm/Code/Geolm/ToodeeSculpt/src/shaders/"
@@ -27,27 +29,86 @@ template<class T> void swap(T& a, T& b) {T tmp = a; a = b; b = tmp;}
 template<class T> T min(T a, T b) {return (a<b) ? a : b;}
 template<class T> T max(T a, T b) {return (a>b) ? a : b;}
 
-//----------------------------------------------------------------------------------------------------------------------------
-void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
+struct renderer
 {
-    assert(device!=nullptr);
-    m_pDevice = device;
-    m_pCommandQueue = device->newCommandQueue();
+    MTL::Device* m_pDevice;
+    MTL::CommandQueue* m_pCommandQueue;
+    MTL::CommandBuffer* m_pCommandBuffer;
+    MTL::ComputePipelineState* m_pBinningPSO {nullptr};
+    MTL::ComputePipelineState* m_pWriteIcbPSO {nullptr};
+    MTL::RenderPipelineState* m_pDrawPSO {nullptr};
+    MTL::DepthStencilState* m_pDepthStencilState {nullptr};
+    
+    DynamicBuffer m_DrawCommandsBuffer;
+    DynamicBuffer m_CommandsAABBBuffer;
+    DynamicBuffer m_DrawDataBuffer;
+    MTL::Buffer* m_pCountersBuffer {nullptr};
+    MTL::Fence* m_pClearBuffersFence {nullptr};
+    MTL::Fence* m_pWriteIcbFence {nullptr};
+    dispatch_semaphore_t m_Semaphore;
+    MTL::Buffer* m_pHead {nullptr};
+    MTL::Buffer* m_pNodes {nullptr};
+    MTL::Buffer* m_pTileIndices {nullptr};
+    MTL::Buffer* m_pFont {nullptr};
+    MTL::IndirectCommandBuffer* m_pIndirectCommandBuffer {nullptr};
+    MTL::Buffer* m_pIndirectArg {nullptr};
+    DynamicBuffer m_DrawCommandsArg;
+    DynamicBuffer m_BinOutputArg;
+    
+    PushArray<draw_command> m_Commands;
+    PushArray<float> m_DrawData;
+    PushArray<quantized_aabb> m_CommandsAABB;
+    
+    uint32_t m_FrameIndex {0};
+    uint32_t m_ClipsCount {0};
+    clip_rect m_Clips[MAX_CLIPS];
+    uint32_t m_WindowWidth;
+    uint32_t m_WindowHeight;
+    uint32_t m_NumTilesWidth;
+    uint32_t m_NumTilesHeight;
+    uint32_t m_NumDrawCommands;
+    float m_AAWidth {1.41421356237f};
+    float m_FontScale {1.f};
+    float m_SmoothValue {0.f};
+    float m_OutlineWidth {0.f};
+    bool m_CullingDebug {false};
+    struct view_proj m_ViewProj;
+    float m_CameraScale {1.f};
+    vec2 m_CameraPosition {.x = 0.f, .y = 0.f};
+    quantized_aabb* m_CombinationAABB {nullptr};
 
-    if (m_pCommandQueue == nullptr)
+    // stats
+    uint32_t m_PeakNumDrawCommands {0};
+};
+
+
+void renderer_build_pso(struct renderer* r);
+void renderer_reload_shaders(struct renderer* r);
+void renderer_build_depthstencil_state(struct renderer* r);
+
+//----------------------------------------------------------------------------------------------------------------------------
+struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
+{
+    renderer* r = new renderer;
+
+    assert(device!=nullptr);
+    r->m_pDevice = (MTL::Device*)device;
+    r->m_pCommandQueue = r->m_pDevice->newCommandQueue();
+
+    if (r->m_pCommandQueue == nullptr)
     {
         log_fatal("can't create a command queue");
         exit(EXIT_FAILURE);
     }
 
-    m_DrawCommandsBuffer.Init(m_pDevice, sizeof(draw_command) * MAX_COMMANDS);
-    m_DrawDataBuffer.Init(m_pDevice, sizeof(float) * MAX_DRAWDATA);
-    m_CommandsAABBBuffer.Init(m_pDevice, sizeof(quantized_aabb) * MAX_COMMANDS);
-    m_pCountersBuffer = m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
-    m_pNodes = m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
-    m_pFont = m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModeShared);
-    m_pClearBuffersFence = m_pDevice->newFence();
-    m_pWriteIcbFence = m_pDevice->newFence();
+    r->m_DrawCommandsBuffer.Init(r->m_pDevice, sizeof(draw_command) * MAX_COMMANDS);
+    r->m_DrawDataBuffer.Init(r->m_pDevice, sizeof(float) * MAX_DRAWDATA);
+    r->m_CommandsAABBBuffer.Init(r->m_pDevice, sizeof(quantized_aabb) * MAX_COMMANDS);
+    r->m_pCountersBuffer = r->m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
+    r->m_pNodes = r->m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
+    r->m_pFont = r->m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModeShared);
+    r->m_pClearBuffersFence = r->m_pDevice->newFence();
+    r->m_pWriteIcbFence = r->m_pDevice->newFence();
 
     MTL::IndirectCommandBufferDescriptor* pIcbDesc = MTL::IndirectCommandBufferDescriptor::alloc()->init();
     pIcbDesc->setCommandTypes(MTL::IndirectCommandTypeDraw);
@@ -55,59 +116,61 @@ void Renderer::Init(MTL::Device* device, uint32_t width, uint32_t height)
     pIcbDesc->setInheritPipelineState(true);
     pIcbDesc->setMaxVertexBufferBindCount(2);
     pIcbDesc->setMaxFragmentBufferBindCount(2);
-    m_pIndirectCommandBuffer = m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
+    r->m_pIndirectCommandBuffer = r->m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
     pIcbDesc->release();
 
-    m_Semaphore = dispatch_semaphore_create(DynamicBuffer::MaxInflightBuffers);
+    r->m_Semaphore = dispatch_semaphore_create(DynamicBuffer::MaxInflightBuffers);
 
-    BuildPSO();
-    BuildDepthStencilState();
-    Resize(width, height);
+    renderer_build_pso(r);
+    renderer_build_depthstencil_state(r);
+    renderer_resize(r, width, height);
+
+    return r;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::Resize(uint32_t width, uint32_t height)
+void renderer_resize(struct renderer* r, uint32_t width, uint32_t height)
 {
     log_info("resizing the viewport to %dx%d", width, height);
-    m_WindowWidth = width;
-    m_WindowHeight = height;
-    m_NumTilesWidth = (width + TILE_SIZE - 1) / TILE_SIZE;
-    m_NumTilesHeight = (height + TILE_SIZE - 1) / TILE_SIZE;
+    r->m_WindowWidth = width;
+    r->m_WindowHeight = height;
+    r->m_NumTilesWidth = (width + TILE_SIZE - 1) / TILE_SIZE;
+    r->m_NumTilesHeight = (height + TILE_SIZE - 1) / TILE_SIZE;
 
-    SAFE_RELEASE(m_pHead);
-    SAFE_RELEASE(m_pTileIndices);
-    m_pHead = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(tile_node), MTL::ResourceStorageModePrivate);
-    m_pTileIndices = m_pDevice->newBuffer(m_NumTilesWidth * m_NumTilesHeight * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
+    SAFE_RELEASE(r->m_pHead);
+    SAFE_RELEASE(r->m_pTileIndices);
+    r->m_pHead = r->m_pDevice->newBuffer(r->m_NumTilesWidth * r->m_NumTilesHeight * sizeof(tile_node), MTL::ResourceStorageModePrivate);
+    r->m_pTileIndices = r->m_pDevice->newBuffer(r->m_NumTilesWidth * r->m_NumTilesHeight * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::ReloadShaders()
+void renderer_reload_shaders(struct renderer* r)
 {
 #ifndef SHADERS_IN_EXECUTABLE
     log_info("reloading shaders");
-    BuildPSO();
+    renderer_build_pso(r);
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::BuildDepthStencilState()
+void renderer_build_depthstencil_state(struct renderer* r)
 {
     MTL::DepthStencilDescriptor* pDsDesc = MTL::DepthStencilDescriptor::alloc()->init();
 
     pDsDesc->setDepthCompareFunction(MTL::CompareFunction::CompareFunctionAlways);
     pDsDesc->setDepthWriteEnabled(false);
 
-    m_pDepthStencilState = m_pDevice->newDepthStencilState(pDsDesc);
+    r->m_pDepthStencilState = r->m_pDevice->newDepthStencilState(pDsDesc);
 
     pDsDesc->release();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 #ifdef SHADERS_IN_EXECUTABLE
-MTL::Library* Renderer::BuildShader(const char* shader_buffer, const char* name)
+MTL::Library* renderer_build_shader(struct renderer* r, const char* path, const char* name)
 {
     NS::Error* pError = nullptr;
-    MTL::Library* pLibrary = m_pDevice->newLibrary( NS::String::string(shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
+    MTL::Library* pLibrary = r->m_pDevice->newLibrary( NS::String::string(shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
 
     if (pLibrary == nullptr)
     {
@@ -116,7 +179,7 @@ MTL::Library* Renderer::BuildShader(const char* shader_buffer, const char* name)
     return pLibrary;
 }
 #else
-MTL::Library* Renderer::BuildShader(const char* path, const char* name)
+MTL::Library* renderer_build_shader(struct renderer* r, const char* path, const char* name)
 {
     char* shader_buffer = read_shader_include(path, name);
     if (shader_buffer == NULL)
@@ -126,7 +189,7 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
     }
 
     NS::Error* pError = nullptr;
-    MTL::Library* pLibrary = m_pDevice->newLibrary( NS::String::string(shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
+    MTL::Library* pLibrary = r->m_pDevice->newLibrary( NS::String::string(shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
 
     free(shader_buffer);
 
@@ -140,24 +203,24 @@ MTL::Library* Renderer::BuildShader(const char* path, const char* name)
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::BuildPSO()
+void renderer_build_pso(struct renderer* r)
 {
-    SAFE_RELEASE(m_pBinningPSO);
-    SAFE_RELEASE(m_pDrawPSO);
-    SAFE_RELEASE(m_pWriteIcbPSO);
+    SAFE_RELEASE(r->m_pBinningPSO);
+    SAFE_RELEASE(r->m_pDrawPSO);
+    SAFE_RELEASE(r->m_pWriteIcbPSO);
 
 #ifdef SHADERS_IN_EXECUTABLE
-    MTL::Library* pLibrary = BuildShader(binning_shader, "binning");
+    MTL::Library* pLibrary = renderer_build_shader(r, binning_shader, "binning");
 #else
-    MTL::Library* pLibrary = BuildShader(SHADER_PATH, "binning.metal");
+    MTL::Library* pLibrary = renderer_build_shader(r, SHADER_PATH, "binning.metal");
 #endif
     if (pLibrary != nullptr)
     {
         MTL::Function* pBinningFunction = pLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
         NS::Error* pError = nullptr;
-        m_pBinningPSO = m_pDevice->newComputePipelineState(pBinningFunction, &pError);
+        r->m_pBinningPSO = r->m_pDevice->newComputePipelineState(pBinningFunction, &pError);
 
-        if (m_pBinningPSO == nullptr)
+        if (r->m_pBinningPSO == nullptr)
         {
             log_error( "%s", pError->localizedDescription()->utf8String());
             return;
@@ -166,25 +229,25 @@ void Renderer::BuildPSO()
         MTL::ArgumentEncoder* inputArgumentEncoder = pBinningFunction->newArgumentEncoder(0);
         MTL::ArgumentEncoder* outputArgumentEncoder = pBinningFunction->newArgumentEncoder(1);
 
-        m_DrawCommandsArg.Init(m_pDevice, inputArgumentEncoder->encodedLength());
-        m_BinOutputArg.Init(m_pDevice, outputArgumentEncoder->encodedLength());
+        r->m_DrawCommandsArg.Init(r->m_pDevice, inputArgumentEncoder->encodedLength());
+        r->m_BinOutputArg.Init(r->m_pDevice, outputArgumentEncoder->encodedLength());
 
         inputArgumentEncoder->release();
         outputArgumentEncoder->release();
         pBinningFunction->release();
 
         MTL::Function* pWriteIcbFunction = pLibrary->newFunction(NS::String::string("write_icb", NS::UTF8StringEncoding));
-        m_pWriteIcbPSO = m_pDevice->newComputePipelineState(pWriteIcbFunction, &pError);
-        if (m_pWriteIcbPSO == nullptr)
+        r->m_pWriteIcbPSO = r->m_pDevice->newComputePipelineState(pWriteIcbFunction, &pError);
+        if (r->m_pWriteIcbPSO == nullptr)
         {
             log_error( "%s", pError->localizedDescription()->utf8String());
             return;
         }
 
         MTL::ArgumentEncoder* indirectArgumentEncoder = pWriteIcbFunction->newArgumentEncoder(1);
-        m_pIndirectArg = m_pDevice->newBuffer(indirectArgumentEncoder->encodedLength(), MTL::ResourceStorageModeShared);
-        indirectArgumentEncoder->setArgumentBuffer(m_pIndirectArg, 0);
-        indirectArgumentEncoder->setIndirectCommandBuffer(m_pIndirectCommandBuffer, 0);
+        r->m_pIndirectArg = r->m_pDevice->newBuffer(indirectArgumentEncoder->encodedLength(), MTL::ResourceStorageModeShared);
+        indirectArgumentEncoder->setArgumentBuffer(r->m_pIndirectArg, 0);
+        indirectArgumentEncoder->setIndirectCommandBuffer(r->m_pIndirectCommandBuffer, 0);
 
         indirectArgumentEncoder->release();
         pWriteIcbFunction->release();
@@ -192,9 +255,9 @@ void Renderer::BuildPSO()
     }
 
 #ifdef SHADERS_IN_EXECUTABLE
-    pLibrary = BuildShader(rasterizer_shader, "rasterizer");
+    pLibrary = renderer_build_shader(r, rasterizer_shader, "rasterizer");
 #else
-    pLibrary = BuildShader(SHADER_PATH, "rasterizer.metal");
+    pLibrary = renderer_build_shader(r, SHADER_PATH, "rasterizer.metal");
 #endif
     if (pLibrary != nullptr)
     {
@@ -217,9 +280,9 @@ void Renderer::BuildPSO()
         pRenderbufferAttachment->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
         pRenderbufferAttachment->setAlphaBlendOperation(MTL::BlendOperationAdd);
 
-        m_pDrawPSO = m_pDevice->newRenderPipelineState( pDesc, &pError );
+        r->m_pDrawPSO = r->m_pDevice->newRenderPipelineState( pDesc, &pError );
 
-        if (m_pDrawPSO == nullptr)
+        if (r->m_pDrawPSO == nullptr)
             log_error( "%s", pError->localizedDescription()->utf8String());
 
         pVertexFunction->release();
@@ -229,198 +292,198 @@ void Renderer::BuildPSO()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::BeginFrame()
+void renderer_begin_frame(struct renderer* r)
 {
-    assert(m_CombinationAABB == nullptr);
-    m_FrameIndex++;
-    m_ClipsCount = 0;
+    assert(r->m_CombinationAABB == nullptr);
+    r->m_FrameIndex++;
+    r->m_ClipsCount = 0;
 
-    m_Commands.Set(m_DrawCommandsBuffer.Map(m_FrameIndex), sizeof(draw_command) * MAX_COMMANDS);
-    m_CommandsAABB.Set(m_CommandsAABBBuffer.Map(m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
-    m_DrawData.Set(m_DrawDataBuffer.Map(m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
-    SetClipRect(0, 0, (uint16_t) m_WindowWidth, (uint16_t) m_WindowHeight);
-    SetViewport((float)m_WindowWidth, (float)m_WindowHeight);
-    SetCamera(vec2_zero(), 1.f);
-    m_CombinationAABB = nullptr;
+    r->m_Commands.Set(r->m_DrawCommandsBuffer.Map(r->m_FrameIndex), sizeof(draw_command) * MAX_COMMANDS);
+    r->m_CommandsAABB.Set(r->m_CommandsAABBBuffer.Map(r->m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
+    r->m_DrawData.Set(r->m_DrawDataBuffer.Map(r->m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
+    renderer_set_cliprect(r, 0, 0, (uint16_t) r->m_WindowWidth, (uint16_t) r->m_WindowHeight);
+    renderer_set_viewport(r, (float)r->m_WindowWidth, (float)r->m_WindowHeight);
+    renderer_set_camera(r, vec2_zero(), 1.f);
+    r->m_CombinationAABB = nullptr;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::EndFrame()
+void renderer_end_frame(struct renderer* r)
 {
-    assert(m_CombinationAABB == nullptr);
-    m_DrawCommandsBuffer.Unmap(m_FrameIndex, 0, m_Commands.GetNumElements() * sizeof(draw_command));
-    m_CommandsAABBBuffer.Unmap(m_FrameIndex, 0, m_CommandsAABB.GetNumElements() * sizeof(quantized_aabb));
-    m_DrawDataBuffer.Unmap(m_FrameIndex, 0, m_DrawData.GetNumElements() * sizeof(float));
-    m_NumDrawCommands = m_Commands.GetNumElements();
-    m_PeakNumDrawCommands = max(m_PeakNumDrawCommands, m_NumDrawCommands);
+    assert(r->m_CombinationAABB == nullptr);
+    r->m_DrawCommandsBuffer.Unmap(r->m_FrameIndex, 0, r->m_Commands.GetNumElements() * sizeof(draw_command));
+    r->m_CommandsAABBBuffer.Unmap(r->m_FrameIndex, 0, r->m_CommandsAABB.GetNumElements() * sizeof(quantized_aabb));
+    r->m_DrawDataBuffer.Unmap(r->m_FrameIndex, 0, r->m_DrawData.GetNumElements() * sizeof(float));
+    r->m_NumDrawCommands = r->m_Commands.GetNumElements();
+    r->m_PeakNumDrawCommands = max(r->m_PeakNumDrawCommands, r->m_NumDrawCommands);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::BinCommands()
+void renderer_bin_commands(struct renderer* r)
 {
-    if (m_pBinningPSO == nullptr)
+    if (r->m_pBinningPSO == nullptr)
         return;
 
     // clear buffers
-    MTL::BlitCommandEncoder* pBlitEncoder = m_pCommandBuffer->blitCommandEncoder();
-    pBlitEncoder->fillBuffer(m_pCountersBuffer, NS::Range(0, m_pCountersBuffer->length()), 0);
-    pBlitEncoder->fillBuffer(m_pHead, NS::Range(0, m_pHead->length()), 0xff);
-    pBlitEncoder->resetCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
-    pBlitEncoder->updateFence(m_pClearBuffersFence);
+    MTL::BlitCommandEncoder* pBlitEncoder = r->m_pCommandBuffer->blitCommandEncoder();
+    pBlitEncoder->fillBuffer(r->m_pCountersBuffer, NS::Range(0, r->m_pCountersBuffer->length()), 0);
+    pBlitEncoder->fillBuffer(r->m_pHead, NS::Range(0, r->m_pHead->length()), 0xff);
+    pBlitEncoder->resetCommandsInBuffer(r->m_pIndirectCommandBuffer, NS::Range(0, 1));
+    pBlitEncoder->updateFence(r->m_pClearBuffersFence);
     pBlitEncoder->endEncoding();
 
     // run binning shader
-    MTL::ComputeCommandEncoder* pComputeEncoder = m_pCommandBuffer->computeCommandEncoder();
-    pComputeEncoder->waitForFence(m_pClearBuffersFence);
-    pComputeEncoder->setComputePipelineState(m_pBinningPSO);
+    MTL::ComputeCommandEncoder* pComputeEncoder = r->m_pCommandBuffer->computeCommandEncoder();
+    pComputeEncoder->waitForFence(r->m_pClearBuffersFence);
+    pComputeEncoder->setComputePipelineState(r->m_pBinningPSO);
 
-    draw_cmd_arguments* args = (draw_cmd_arguments*) m_DrawCommandsArg.Map(m_FrameIndex);
-    args->aa_width = m_AAWidth;
-    args->commands_aabb = (quantized_aabb*) m_CommandsAABBBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
-    args->commands = (draw_command*) m_DrawCommandsBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
-    args->draw_data = (float*) m_DrawDataBuffer.GetBuffer(m_FrameIndex)->gpuAddress();
-    args->font = (uint16_t*) m_pFont->gpuAddress();
-    memcpy(args->clips, m_Clips, sizeof(m_Clips));
+    draw_cmd_arguments* args = (draw_cmd_arguments*) r->m_DrawCommandsArg.Map(r->m_FrameIndex);
+    args->aa_width = r->m_AAWidth;
+    args->commands_aabb = (quantized_aabb*) r->m_CommandsAABBBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
+    args->commands = (draw_command*) r->m_DrawCommandsBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
+    args->draw_data = (float*) r->m_DrawDataBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
+    args->font = (uint16_t*) r->m_pFont->gpuAddress();
+    memcpy(args->clips, r->m_Clips, sizeof(r->m_Clips));
     args->max_nodes = MAX_NODES_COUNT;
-    args->num_commands = m_NumDrawCommands;
-    args->num_tile_height = m_NumTilesHeight;
-    args->num_tile_width = m_NumTilesWidth;
-    args->screen_div = (float2) {.x = 1.f / (float)m_WindowWidth, .y = 1.f / (float) m_WindowHeight};
-    args->font_scale = m_FontScale;
+    args->num_commands = r->m_NumDrawCommands;
+    args->num_tile_height = r->m_NumTilesHeight;
+    args->num_tile_width = r->m_NumTilesWidth;
+    args->screen_div = (float2) {.x = 1.f / (float)r->m_WindowWidth, .y = 1.f / (float) r->m_WindowHeight};
+    args->font_scale = r->m_FontScale;
     args->font_size = (float2) {FONT_WIDTH, FONT_HEIGHT};
-    args->outline_width = m_OutlineWidth;
+    args->outline_width = r->m_OutlineWidth;
     args->outline_color = draw_color(0xff000000);
-    args->culling_debug = m_CullingDebug;
-    m_DrawCommandsArg.Unmap(m_FrameIndex, 0, sizeof(draw_cmd_arguments));
+    args->culling_debug = r->m_CullingDebug;
+    r->m_DrawCommandsArg.Unmap(r->m_FrameIndex, 0, sizeof(draw_cmd_arguments));
 
-    tiles_data* output = (tiles_data*) m_BinOutputArg.Map(m_FrameIndex);
-    output->head = (tile_node*) m_pHead->gpuAddress();
-    output->nodes = (tile_node*) m_pNodes->gpuAddress();
-    output->tile_indices = (uint16_t*) m_pTileIndices->gpuAddress();
-    m_BinOutputArg.Unmap(m_FrameIndex, 0, sizeof(tiles_data));
+    tiles_data* output = (tiles_data*) r->m_BinOutputArg.Map(r->m_FrameIndex);
+    output->head = (tile_node*) r->m_pHead->gpuAddress();
+    output->nodes = (tile_node*) r->m_pNodes->gpuAddress();
+    output->tile_indices = (uint16_t*) r->m_pTileIndices->gpuAddress();
+    r->m_BinOutputArg.Unmap(r->m_FrameIndex, 0, sizeof(tiles_data));
 
-    pComputeEncoder->setBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
-    pComputeEncoder->setBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
-    pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 2);
+    pComputeEncoder->setBuffer(r->m_DrawCommandsArg.GetBuffer(r->m_FrameIndex), 0, 0);
+    pComputeEncoder->setBuffer(r->m_BinOutputArg.GetBuffer(r->m_FrameIndex), 0, 1);
+    pComputeEncoder->setBuffer(r->m_pCountersBuffer, 0, 2);
 
-    pComputeEncoder->useResource(m_CommandsAABBBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-    pComputeEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-    pComputeEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-    pComputeEncoder->useResource(m_pHead, MTL::ResourceUsageRead|MTL::ResourceUsageWrite);
-    pComputeEncoder->useResource(m_pNodes, MTL::ResourceUsageWrite);
-    pComputeEncoder->useResource(m_pTileIndices, MTL::ResourceUsageWrite);
+    pComputeEncoder->useResource(r->m_CommandsAABBBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
+    pComputeEncoder->useResource(r->m_DrawCommandsBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
+    pComputeEncoder->useResource(r->m_DrawDataBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
+    pComputeEncoder->useResource(r->m_pHead, MTL::ResourceUsageRead|MTL::ResourceUsageWrite);
+    pComputeEncoder->useResource(r->m_pNodes, MTL::ResourceUsageWrite);
+    pComputeEncoder->useResource(r->m_pTileIndices, MTL::ResourceUsageWrite);
 
-    MTL::Size gridSize = MTL::Size(m_NumTilesWidth, m_NumTilesHeight, 1);
+    MTL::Size gridSize = MTL::Size(r->m_NumTilesWidth, r->m_NumTilesHeight, 1);
 
-    NS::UInteger w = m_pBinningPSO->threadExecutionWidth();
-    NS::UInteger h = m_pBinningPSO->maxTotalThreadsPerThreadgroup() / w;
+    NS::UInteger w = r->m_pBinningPSO->threadExecutionWidth();
+    NS::UInteger h = r->m_pBinningPSO->maxTotalThreadsPerThreadgroup() / w;
     MTL::Size threadgroupSize(w, h, 1);
     pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
 
-    pComputeEncoder->setComputePipelineState(m_pWriteIcbPSO);
-    pComputeEncoder->setBuffer(m_pCountersBuffer, 0, 0);
-    pComputeEncoder->setBuffer(m_pIndirectArg, 0, 1);
-    pComputeEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageWrite);
+    pComputeEncoder->setComputePipelineState(r->m_pWriteIcbPSO);
+    pComputeEncoder->setBuffer(r->m_pCountersBuffer, 0, 0);
+    pComputeEncoder->setBuffer(r->m_pIndirectArg, 0, 1);
+    pComputeEncoder->useResource(r->m_pIndirectCommandBuffer, MTL::ResourceUsageWrite);
     pComputeEncoder->dispatchThreads(MTL::Size(1, 1, 1), MTL::Size(1, 1, 1));
-    pComputeEncoder->updateFence(m_pWriteIcbFence);
+    pComputeEncoder->updateFence(r->m_pWriteIcbFence);
     pComputeEncoder->endEncoding();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::Flush(CA::MetalDrawable* pDrawable)
+void renderer_flush(struct renderer* r, void* drawable)
 {
-    m_pCommandBuffer = m_pCommandQueue->commandBuffer();
+    r->m_pCommandBuffer = r->m_pCommandQueue->commandBuffer();
 
-    dispatch_semaphore_wait(m_Semaphore, DISPATCH_TIME_FOREVER);
+    dispatch_semaphore_wait(r->m_Semaphore, DISPATCH_TIME_FOREVER);
 
-    BinCommands();
+    renderer_bin_commands(r);
 
     MTL::RenderPassDescriptor* renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
     MTL::RenderPassColorAttachmentDescriptor* cd = renderPassDescriptor->colorAttachments()->object(0);
-    cd->setTexture(pDrawable->texture());
+    cd->setTexture(((CA::MetalDrawable*)drawable)->texture());
     cd->setLoadAction(MTL::LoadActionClear);
     cd->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
     cd->setStoreAction(MTL::StoreActionStore);
 
-    MTL::RenderCommandEncoder* pRenderEncoder = m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
+    MTL::RenderCommandEncoder* pRenderEncoder = r->m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
 
-    if (m_pDrawPSO != nullptr && m_pBinningPSO != nullptr)
+    if (r->m_pDrawPSO != nullptr && r->m_pBinningPSO != nullptr)
     {
-        pRenderEncoder->waitForFence(m_pWriteIcbFence, MTL::RenderStageVertex|MTL::RenderStageFragment|MTL::RenderStageMesh|MTL::RenderStageObject);
+        pRenderEncoder->waitForFence(r->m_pWriteIcbFence, MTL::RenderStageVertex|MTL::RenderStageFragment|MTL::RenderStageMesh|MTL::RenderStageObject);
         pRenderEncoder->setCullMode(MTL::CullModeNone);
-        pRenderEncoder->setDepthStencilState(m_pDepthStencilState);
-        pRenderEncoder->setVertexBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
-        pRenderEncoder->setVertexBuffer(m_pTileIndices, 0, 1);
-        pRenderEncoder->setFragmentBuffer(m_DrawCommandsArg.GetBuffer(m_FrameIndex), 0, 0);
-        pRenderEncoder->setFragmentBuffer(m_BinOutputArg.GetBuffer(m_FrameIndex), 0, 1);
-        pRenderEncoder->useResource(m_DrawCommandsArg.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(m_DrawCommandsBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(m_DrawDataBuffer.GetBuffer(m_FrameIndex), MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(m_pHead, MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(m_pNodes, MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(m_pTileIndices, MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(m_pIndirectCommandBuffer, MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(m_pFont, MTL::ResourceUsageRead);
-        pRenderEncoder->setRenderPipelineState(m_pDrawPSO);
-        pRenderEncoder->executeCommandsInBuffer(m_pIndirectCommandBuffer, NS::Range(0, 1));
+        pRenderEncoder->setDepthStencilState(r->m_pDepthStencilState);
+        pRenderEncoder->setVertexBuffer(r->m_DrawCommandsArg.GetBuffer(r->m_FrameIndex), 0, 0);
+        pRenderEncoder->setVertexBuffer(r->m_pTileIndices, 0, 1);
+        pRenderEncoder->setFragmentBuffer(r->m_DrawCommandsArg.GetBuffer(r->m_FrameIndex), 0, 0);
+        pRenderEncoder->setFragmentBuffer(r->m_BinOutputArg.GetBuffer(r->m_FrameIndex), 0, 1);
+        pRenderEncoder->useResource(r->m_DrawCommandsArg.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_DrawCommandsBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_DrawDataBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_pHead, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_pNodes, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_pTileIndices, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_pIndirectCommandBuffer, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_pFont, MTL::ResourceUsageRead);
+        pRenderEncoder->setRenderPipelineState(r->m_pDrawPSO);
+        pRenderEncoder->executeCommandsInBuffer(r->m_pIndirectCommandBuffer, NS::Range(0, 1));
         pRenderEncoder->endEncoding();
     }
 
-    Renderer* pRenderer = this;
-    m_pCommandBuffer->addCompletedHandler(^void( MTL::CommandBuffer* pCmd )
+    r->m_pCommandBuffer->addCompletedHandler(^void( MTL::CommandBuffer* pCmd )
     {
         UNUSED_VARIABLE(pCmd);
-        dispatch_semaphore_signal( pRenderer->m_Semaphore );
+        dispatch_semaphore_signal( r->m_Semaphore );
     });
 
-    m_pCommandBuffer->presentDrawable(pDrawable);
-    m_pCommandBuffer->commit();
-    m_pCommandBuffer->waitUntilCompleted();
+    r->m_pCommandBuffer->presentDrawable((CA::MetalDrawable*)drawable);
+    r->m_pCommandBuffer->commit();
+    r->m_pCommandBuffer->waitUntilCompleted();
     
     renderPassDescriptor->release();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DebugInterface(struct mu_Context* gui_context)
+void renderer_debug_interface(struct renderer* r, struct mu_Context* gui_context)
 {
     if (mu_header(gui_context, "Renderer"))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_text(gui_context, "frame count");
-        mu_text(gui_context, format("%6d", m_FrameIndex));
+        mu_text(gui_context, format("%6d", r->m_FrameIndex));
         mu_text(gui_context, "draw cmd count");
-        mu_text(gui_context, format("%6d/%d", m_Commands.GetNumElements(), m_Commands.GetMaxElements()));
+        mu_text(gui_context, format("%6d/%d", r->m_Commands.GetNumElements(), r->m_Commands.GetMaxElements()));
         mu_text(gui_context, "peak cmd count");
-        mu_text(gui_context, format("%6d", m_PeakNumDrawCommands));
+        mu_text(gui_context, format("%6d", r->m_PeakNumDrawCommands));
         mu_text(gui_context, "draw data buffer");
-        mu_text(gui_context, format("%6d/%d", m_DrawData.GetNumElements(), m_DrawData.GetMaxElements()));
+        mu_text(gui_context, format("%6d/%d", r->m_DrawData.GetNumElements(), r->m_DrawData.GetMaxElements()));
         mu_text(gui_context, "aa width");
-        mu_slider(gui_context, &m_AAWidth, 0.f, 4.f);
+        mu_slider(gui_context, &r->m_AAWidth, 0.f, 4.f);
     }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::Terminate()
+void renderer_terminate(struct renderer* r)
 {
-    m_DrawCommandsBuffer.Terminate();
-    m_DrawDataBuffer.Terminate();
-    m_CommandsAABBBuffer.Terminate();
-    m_DrawCommandsArg.Terminate();
-    m_BinOutputArg.Terminate();
-    SAFE_RELEASE(m_pFont);
-    SAFE_RELEASE(m_pDepthStencilState);
-    SAFE_RELEASE(m_pCountersBuffer);
-    SAFE_RELEASE(m_pClearBuffersFence);
-    SAFE_RELEASE(m_pWriteIcbFence);
-    SAFE_RELEASE(m_pBinningPSO);
-    SAFE_RELEASE(m_pDrawPSO);
-    SAFE_RELEASE(m_pWriteIcbPSO);
-    SAFE_RELEASE(m_pHead);
-    SAFE_RELEASE(m_pNodes);
-    SAFE_RELEASE(m_pTileIndices);
-    SAFE_RELEASE(m_pIndirectArg);
-    SAFE_RELEASE(m_pIndirectCommandBuffer);
-    SAFE_RELEASE(m_pCommandQueue);
+    r->m_DrawCommandsBuffer.Terminate();
+    r->m_DrawDataBuffer.Terminate();
+    r->m_CommandsAABBBuffer.Terminate();
+    r->m_DrawCommandsArg.Terminate();
+    r->m_BinOutputArg.Terminate();
+    SAFE_RELEASE(r->m_pFont);
+    SAFE_RELEASE(r->m_pDepthStencilState);
+    SAFE_RELEASE(r->m_pCountersBuffer);
+    SAFE_RELEASE(r->m_pClearBuffersFence);
+    SAFE_RELEASE(r->m_pWriteIcbFence);
+    SAFE_RELEASE(r->m_pBinningPSO);
+    SAFE_RELEASE(r->m_pDrawPSO);
+    SAFE_RELEASE(r->m_pWriteIcbPSO);
+    SAFE_RELEASE(r->m_pHead);
+    SAFE_RELEASE(r->m_pNodes);
+    SAFE_RELEASE(r->m_pTileIndices);
+    SAFE_RELEASE(r->m_pIndirectArg);
+    SAFE_RELEASE(r->m_pIndirectCommandBuffer);
+    SAFE_RELEASE(r->m_pCommandQueue);
+    delete r;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -480,86 +543,86 @@ static inline quantized_aabb invalid_aabb()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::BeginCombination(float smooth_value)
+void renderer_begin_combination(struct renderer* r, float smooth_value)
 {
-    assert(m_CombinationAABB == nullptr);
+    assert(r->m_CombinationAABB == nullptr);
     assert(smooth_value >= 0.f);
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
         cmd->type = pack_type(combination_begin, fill_solid);
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
 
-        float* k = m_DrawData.NewElement(); // just one float for the smooth
-        m_CombinationAABB = m_CommandsAABB.NewElement();
+        float* k = r->m_DrawData.NewElement(); // just one float for the smooth
+        r->m_CombinationAABB = r->m_CommandsAABB.NewElement();
         
-        if (m_CombinationAABB != nullptr && k != nullptr)
+        if (r->m_CombinationAABB != nullptr && k != nullptr)
         {
-            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), smooth_value);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), smooth_value);
             *k = smooth_value;
-            m_SmoothValue = smooth_value;
+            r->m_SmoothValue = smooth_value;
 
             // reserve a aabb that we're going to update depending on the coming shapes
-            *m_CombinationAABB = invalid_aabb();
+            *r->m_CombinationAABB = invalid_aabb();
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::EndCombination(bool outline)
+void renderer_end_combination(struct renderer* r, bool outline)
 {
-    assert(m_CombinationAABB != nullptr);
+    assert(r->m_CombinationAABB != nullptr);
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
         cmd->type = pack_type(combination_end, outline ? fill_outline : fill_solid);
-        cmd->data_index = m_DrawData.GetNumElements();
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
 
         // we put also the smooth value as we traverse the list in reverse order on the gpu
-        float* k = m_DrawData.NewElement(); 
+        float* k = r->m_DrawData.NewElement(); 
 
-        quantized_aabb* aabb = m_CommandsAABB.NewElement();
+        quantized_aabb* aabb = r->m_CommandsAABB.NewElement();
         if (aabb != nullptr && k != nullptr)
         {
-            *aabb = *m_CombinationAABB;
-            *k = m_SmoothValue;
-            m_CombinationAABB = nullptr;
-            m_SmoothValue = 0.f;
+            *aabb = *r->m_CombinationAABB;
+            *k = r->m_SmoothValue;
+            r->m_CombinationAABB = nullptr;
+            r->m_SmoothValue = 0.f;
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawDisc(vec2 center, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_disc(struct renderer* r, vec2 center, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     thickness *= .5f;
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_disc, fillmode);
 
-        float* data = m_DrawData.NewMultiple((fillmode == fill_hollow) ? 4 : 3);
-        quantized_aabb* aabb = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple((fillmode == fill_hollow) ? 4 : 3);
+        quantized_aabb* aabb = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabb != nullptr)
         {
-            center = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, center);
-            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), radius, thickness);
+            center = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, center);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius, thickness);
 
-            float max_radius = radius + m_AAWidth + m_SmoothValue;
+            float max_radius = radius + r->m_AAWidth + r->m_SmoothValue;
 
             if (fillmode == fill_hollow)
             {
@@ -570,98 +633,104 @@ void Renderer::DrawDisc(vec2 center, float radius, float thickness, primitive_fi
                 write_float(data, center.x, center.y, radius);
 
             write_aabb(aabb, center.x - max_radius, center.y - max_radius, center.x + max_radius, center.y + max_radius);
-            merge_aabb(m_CombinationAABB, aabb);
+            merge_aabb(r->m_CombinationAABB, aabb);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawOrientedBox(vec2 p0, vec2 p1, float width, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_orientedbox(struct renderer* r, vec2 p0, vec2 p1, float width, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     if (vec2_similar(p0, p1, small_float))
         return;
 
     thickness *= .5f;
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_oriented_box, fillmode);
 
-        float* data = m_DrawData.NewMultiple(6);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple(6);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             float roundness_thickness = (fillmode == fill_hollow) ? thickness : roundness;
 
-            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
-            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
-            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), width, roundness_thickness);
+            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
+            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), width, roundness_thickness);
 
-            aabb bb = aabb_from_rounded_obb(p0, p1, width, roundness_thickness + m_AAWidth + m_SmoothValue);
+            aabb bb = aabb_from_rounded_obb(p0, p1, width, roundness_thickness + r->m_AAWidth + r->m_SmoothValue);
             write_float(data, p0.x, p0.y, p1.x, p1.y, width, roundness_thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
+            merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawEllipse(vec2 p0, vec2 p1, float width, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_line(struct renderer* r, vec2 p0, vec2 p1, float width, draw_color color, enum sdf_operator op)
+{
+    renderer_draw_orientedbox(r, p0, p1, width, 0.f, 0.f, fill_solid, color, op);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_draw_ellipse(struct renderer* r, vec2 p0, vec2 p1, float width, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     if (vec2_similar(p0, p1, small_float))
         return;
 
     if (width <= small_float)
-        DrawOrientedBox(p0, p1, 0.f, 0.f, -1.f, fill_solid, color, op);
+        renderer_draw_orientedbox(r, p0, p1, 0.f, 0.f, -1.f, fill_solid, color, op);
     else
     {
         thickness = float_max(thickness * .5f, 0.f);
-        draw_command* cmd = m_Commands.NewElement();
+        draw_command* cmd = r->m_Commands.NewElement();
         if (cmd != nullptr)
         {
-            cmd->clip_index = (uint8_t) m_ClipsCount-1;
+            cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
             cmd->color = color;
-            cmd->data_index = m_DrawData.GetNumElements();
+            cmd->data_index = r->m_DrawData.GetNumElements();
             cmd->op = op;
             cmd->type = pack_type(primitive_ellipse, fillmode);
 
-            float* data = m_DrawData.NewMultiple((fillmode == fill_hollow) ? 6 : 5);
-            quantized_aabb* aabox = m_CommandsAABB.NewElement();
+            float* data = r->m_DrawData.NewMultiple((fillmode == fill_hollow) ? 6 : 5);
+            quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
             if (data != nullptr && aabox != nullptr)
             {
-                p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
-                p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
-                distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), width, thickness);
+                p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
+                p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
+                distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), width, thickness);
 
-                aabb bb = aabb_from_rounded_obb(p0, p1, width, m_AAWidth + m_SmoothValue + thickness);
+                aabb bb = aabb_from_rounded_obb(p0, p1, width, r->m_AAWidth + r->m_SmoothValue + thickness);
                 if (fillmode == fill_hollow)
                     write_float(data, p0.x, p0.y, p1.x, p1.y, width, thickness);
                 else
                     write_float(data, p0.x, p0.y, p1.x, p1.y, width);
 
                 write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-                merge_aabb(m_CombinationAABB, aabox);
+                merge_aabb(r->m_CombinationAABB, aabox);
                 return;
             }
-            m_Commands.RemoveLast();
+            r->m_Commands.RemoveLast();
         }
         log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
     }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_triangle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     // exclude invalid triangle
     if (vec2_similar(p0, p1, small_float) || vec2_similar(p2, p1, small_float) || vec2_similar(p0, p2, small_float))
@@ -669,40 +738,40 @@ void Renderer::DrawTriangle(vec2 p0, vec2 p1, vec2 p2, float roundness, float th
 
     thickness *= .5f;
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_triangle, fillmode);
 
-        float* data = m_DrawData.NewMultiple(7);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple(7);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
-            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
-            p2 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p2);
+            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
+            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
+            p2 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p2);
             
             float roundness_thickness = (fillmode != fill_hollow) ? roundness : thickness;
-            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), roundness_thickness);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), roundness_thickness);
 
             aabb bb = aabb_from_triangle(p0, p1, p2);
-            aabb_grow(&bb, vec2_splat(roundness_thickness + m_AAWidth + m_SmoothValue));
+            aabb_grow(&bb, vec2_splat(roundness_thickness + r->m_AAWidth + r->m_SmoothValue));
             write_float(data, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, roundness_thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
+            merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawPie(vec2 center, vec2 point, float aperture, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_pie(struct renderer* r, vec2 center, vec2 point, float aperture, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     if (vec2_similar(center, point, small_float))
         return;
@@ -714,28 +783,28 @@ void Renderer::DrawPie(vec2 center, vec2 point, float aperture, float thickness,
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness * .5f, 0.f);
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_pie, fillmode);
 
-        float* data = m_DrawData.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            center = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, center);
-            point = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, point);
-            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale),  thickness);
+            center = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, center);
+            point = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, point);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale),  thickness);
 
             vec2 direction = point - center;
             float radius = vec2_normalize(&direction);
             
             aabb bb = aabb_from_circle(center, radius);
-            aabb_grow(&bb, vec2_splat(thickness + m_AAWidth + m_SmoothValue));
+            aabb_grow(&bb, vec2_splat(thickness + r->m_AAWidth + r->m_SmoothValue));
 
             if (fillmode != fill_hollow)
                 write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture));
@@ -743,16 +812,16 @@ void Renderer::DrawPie(vec2 center, vec2 point, float aperture, float thickness,
                 write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture), thickness);
                 
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
+            merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_arc_from_circle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     vec2 center, direction;
     float aperture, radius;
@@ -761,15 +830,15 @@ void Renderer::DrawRing(vec2 p0, vec2 p1, vec2 p2, float thickness, primitive_fi
     // colinear points
     if (radius<0.f)
     {
-        DrawOrientedBox(p0, p2, thickness, 0.f, -1.f, fill_solid, color, op);
+        renderer_draw_orientedbox(r, p0, p2, thickness, 0.f, -1.f, fill_solid, color, op);
         return;
     }
 
-    DrawRing(center, direction, aperture, radius, thickness, fillmode, color, op);
+    renderer_draw_arc(r, center, direction, aperture, radius, thickness, fillmode, color, op);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawRing(vec2 center, vec2 direction, float aperture, float radius, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_arc(struct renderer* r, vec2 center, vec2 direction, float aperture, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     // don't support fill_hollow
     if (fillmode == fill_hollow)
@@ -778,72 +847,72 @@ void Renderer::DrawRing(vec2 center, vec2 direction, float aperture, float radiu
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness, 0.f);
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_ring, fillmode);
 
-        float* data = m_DrawData.NewMultiple(8);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple(8);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            center = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, center);
-            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), radius, thickness);
+            center = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, center);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius, thickness);
 
             aabb bb = aabb_from_circle(center, radius);
-            aabb_grow(&bb, vec2_splat(thickness + m_AAWidth + m_SmoothValue));
+            aabb_grow(&bb, vec2_splat(thickness + r->m_AAWidth + r->m_SmoothValue));
 
             write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture), thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
+            merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1, float thickness, primitive_fillmode fillmode, draw_color color, sdf_operator op)
+void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float radius0, float radius1, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     float delta = vec2_distance(p0, p1);
 
     if (radius0>radius1 && radius0 > radius1 + delta)
     {
-        DrawDisc(p0, radius0, thickness, fillmode, color, op);
+        renderer_draw_disc(r, p0, radius0, thickness, fillmode, color, op);
         return;
     }
 
     if (radius1>radius0 && radius1 > radius0 + delta)
     {
-        DrawDisc(p1, radius1, thickness, fillmode, color, op);
+        renderer_draw_disc(r, p1, radius1, thickness, fillmode, color, op);
         return;
     }
 
     thickness = float_max(thickness * .5f, 0.f);
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_uneven_capsule, fillmode);
 
-        float* data = m_DrawData.NewMultiple((fillmode != fill_hollow) ? 6 : 7);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple((fillmode != fill_hollow) ? 6 : 7);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
-            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
-            distance_screen_space(ortho_get_radius_scale(&m_ViewProj, m_CameraScale), radius0, radius1);
+            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
+            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1);
 
             aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
-            aabb_grow(&bb, vec2_splat(m_AAWidth + m_SmoothValue + thickness));
+            aabb_grow(&bb, vec2_splat(r->m_AAWidth + r->m_SmoothValue + thickness));
 
             if (fillmode != fill_hollow)
                 write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1);
@@ -851,16 +920,16 @@ void Renderer::DrawUnevenCapsule(vec2 p0, vec2 p1, float radius0, float radius1,
                 write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1, thickness);
 
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
-            merge_aabb(m_CombinationAABB, aabox);
+            merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
+void renderer_draw_box(struct renderer* r, float x0, float y0, float x1, float y1, draw_color color)
 {
     if (x0>x1) swap(x0, x1);
     if (y0>y1) swap(y0, y1);
@@ -868,70 +937,119 @@ void Renderer::DrawBox(float x0, float y0, float x1, float y1, draw_color color)
     vec2 p0 = vec2_set(x0, y0);
     vec2 p1 = vec2_set(x1, y1);
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op_add;
-        cmd->type = primitive_aabox;
+        cmd->type = pack_type(primitive_aabox, fill_solid);
 
-        float* data = m_DrawData.NewMultiple(4);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple(4);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            p0 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p0);
-            p1 = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, p1);
+            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
+            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
             write_float(data, p0.x, p0.y, p1.x, p1.y);
             write_aabb(aabox, p0.x, p0.y, p1.x, p1.y);
-            merge_aabb(m_CombinationAABB, aabox);
+            merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawChar(float x, float y, char c, draw_color color)
+void renderer_draw_aabb(struct renderer* r, aabb box, draw_color color)
+{
+    renderer_draw_box(r, box.min.x, box.min.y, box.max.x, box.max.y, color);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color color)
 {
     if (c < FONT_CHAR_FIRST || c > FONT_CHAR_LAST)
         return;
 
-    draw_command* cmd = m_Commands.NewElement();
+    draw_command* cmd = r->m_Commands.NewElement();
     if (cmd != nullptr)
     {
-        cmd->clip_index = (uint8_t) m_ClipsCount-1;
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = m_DrawData.GetNumElements();
+        cmd->data_index = r->m_DrawData.GetNumElements();
         cmd->op = op_union;
         cmd->type = primitive_char;
         cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
 
-        float* data = m_DrawData.NewMultiple(2);
-        quantized_aabb* aabox = m_CommandsAABB.NewElement();
+        float* data = r->m_DrawData.NewMultiple(2);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             write_float(data, x, y);
             write_aabb(aabox, x, y, x + FONT_WIDTH, y + FONT_HEIGHT);
-            merge_aabb(m_CombinationAABB, aabox);
+            merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        m_Commands.RemoveLast();
+        r->m_Commands.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Renderer::DrawText(float x, float y, const char* text, draw_color color)
+void renderer_draw_text(struct renderer* r, float x, float y, const char* text, draw_color color)
 {
-    vec2 p = ortho_transform_point(&m_ViewProj, m_CameraPosition, m_CameraScale, vec2_set(x, y));
-    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * m_FontScale;
+    vec2 p = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, vec2_set(x, y));
+    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * r->m_FontScale;
     for(const char *c = text; *c != 0; c++)
     {
-        DrawChar(p.x, p.y, *c, color);
+        renderer_draw_char(r, p.x, p.y, *c, color);
         p.x += font_spacing;
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_set_cliprect(struct renderer* r, uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y)
+{
+    // avoid redundant clip rect
+    if (r->m_ClipsCount>0)
+    {
+        uint32_t index = r->m_ClipsCount-1;
+        if (r->m_Clips[index].min_x == min_x && r->m_Clips[index].min_y == min_y &&
+            r->m_Clips[index].max_x == max_x && r->m_Clips[index].max_y == max_y)
+            return;
+    }
+
+    if (r->m_ClipsCount < MAX_CLIPS)
+        r->m_Clips[r->m_ClipsCount++] = (clip_rect) {.min_x = min_x, .min_y = min_y, .max_x = max_x, .max_y = max_y};
+    else
+        log_error("too many clip rectangle! maximum is %d", MAX_CLIPS);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_set_culling_debug(struct renderer* r, bool b)
+{
+    r->m_CullingDebug = b;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_set_outline_width(struct renderer* r, float value)
+{
+    r->m_OutlineWidth = value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_set_viewport(struct renderer* r, float width, float height)
+{
+    ortho_set_viewport(&r->m_ViewProj, vec2_set(r->m_WindowWidth, r->m_WindowHeight), vec2_set(width, height));
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_set_camera(struct renderer* r, vec2 position, float scale)
+{
+    r->m_CameraPosition = position;
+    r->m_CameraScale = scale;
 }
 

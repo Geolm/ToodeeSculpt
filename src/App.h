@@ -25,7 +25,7 @@ private:
 
 private:
     MTL::Device* m_Device {nullptr};
-    Renderer m_Renderer;
+    renderer* m_pRenderer;
     GLFWwindow* m_Window;
     uint32_t m_WindowHeight;
     uint32_t m_WindowWidth;

@@ -56,6 +56,7 @@ extern "C" {
 #endif
 
 struct mu_Context;
+struct renderer;
 
 void primitive_init(struct primitive* p, enum primitive_shape type, enum sdf_operator op, color4f color, float roundness, float width);
 bool primitive_test_mouse_cursor(struct primitive const* primitive, vec2 mouse_position, bool test_vertices);
@@ -71,11 +72,11 @@ void primitive_rotate(struct primitive* p, float angle);
 void primitive_scale(struct primitive* p, float scale);
 void primitive_normalize(struct primitive* p, const aabb* box);
 void primitive_expand(struct primitive* p, const aabb* box);
-void primitive_draw(struct primitive* p, void* renderer, float roundness, draw_color color, enum sdf_operator op);
-void primitive_draw_gizmo(struct primitive* p, void* renderer, draw_color color);
-void primitive_draw_alpha(struct primitive* p, void* renderer, float alpha);
-void primitive_draw_aabb(struct primitive* p, void* renderer, draw_color color);
-void primitive_draw_spline(void * renderer, const vec2* points, uint32_t num_points, float thickness, draw_color color);
+void primitive_draw(struct primitive* p, struct renderer* gfx_context, float roundness, draw_color color, enum sdf_operator op);
+void primitive_draw_gizmo(struct primitive* p, struct renderer* gfx_context, draw_color color);
+void primitive_draw_alpha(struct primitive* p, struct renderer* gfx_context, float alpha);
+void primitive_draw_aabb(struct primitive* p, struct renderer* gfx_context, draw_color color);
+void primitive_draw_spline(struct renderer* gfx_context, const vec2* points, uint32_t num_points, float thickness, draw_color color);
 
 
 #ifdef __cplusplus
