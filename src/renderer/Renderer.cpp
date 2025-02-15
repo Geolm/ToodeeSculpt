@@ -36,6 +36,7 @@ struct renderer
     MTL::CommandBuffer* m_pCommandBuffer;
     MTL::ComputePipelineState* m_pBinningPSO {nullptr};
     MTL::ComputePipelineState* m_pWriteIcbPSO {nullptr};
+    MTL::ComputePipelineState* m_pTransformPSO {nullptr};
     MTL::RenderPipelineState* m_pDrawPSO {nullptr};
     MTL::DepthStencilState* m_pDepthStencilState {nullptr};
     
@@ -54,9 +55,16 @@ struct renderer
     MTL::Buffer* m_pIndirectArg {nullptr};
     DynamicBuffer m_DrawCommandsArg;
     DynamicBuffer m_BinOutputArg;
+
+    DynamicBuffer m_ViewProjectBuffer;
+    DynamicBuffer m_SDFormBuffer;
+    MTL::Buffer* m_pCommandsAABBBuffer;
+    DynamicBuffer m_TransformArg;
     
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;
+    PushArray<view_project> m_ViewProject;
+    PushArray<sdform> m_SDForms;
     PushArray<quantized_aabb> m_CommandsAABB;
     
     uint32_t m_FrameIndex {0};
@@ -107,6 +115,9 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
     r->m_pCountersBuffer = r->m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     r->m_pNodes = r->m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
     r->m_pFont = r->m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModeShared);
+    r->m_ViewProjectBuffer.Init(r->m_pDevice, sizeof(view_proj) * MAX_VIEWPROJECT);
+    r->m_SDFormBuffer.Init(r->m_pDevice, sizeof(sdform) * MAX_SDFORMS);
+    r->m_pCommandsAABBBuffer = r->m_pDevice->newBuffer(sizeof(quantized_aabb) * MAX_COMMANDS, MTL::ResourceStorageModePrivate);
     r->m_pClearBuffersFence = r->m_pDevice->newFence();
     r->m_pWriteIcbFence = r->m_pDevice->newFence();
 
@@ -208,11 +219,35 @@ void renderer_build_pso(struct renderer* r)
     SAFE_RELEASE(r->m_pBinningPSO);
     SAFE_RELEASE(r->m_pDrawPSO);
     SAFE_RELEASE(r->m_pWriteIcbPSO);
+    SAFE_RELEASE(r->m_pTransformPSO);
 
 #ifdef SHADERS_IN_EXECUTABLE
-    MTL::Library* pLibrary = renderer_build_shader(r, binning_shader, "binning");
+    MTL::Library* pLibrary = renderer_build_shader(r, transform_shader, "transform");
 #else
-    MTL::Library* pLibrary = renderer_build_shader(r, SHADER_PATH, "binning.metal");
+    MTL::Library* pLibrary = renderer_build_shader(r, SHADER_PATH, "transform.metal");
+#endif
+    if (pLibrary != nullptr)
+    {
+        MTL::Function* pTransformFunction = pLibrary->newFunction(NS::String::string("transform", NS::UTF8StringEncoding));
+        NS::Error* pError = nullptr;
+        r->m_pTransformPSO = r->m_pDevice->newComputePipelineState(pTransformFunction, &pError);
+
+        if (r->m_pTransformPSO == nullptr)
+        {
+            log_error( "%s", pError->localizedDescription()->utf8String());
+            return;
+        }
+
+        MTL::ArgumentEncoder* inputArgumentEncoder = pTransformFunction->newArgumentEncoder(0);
+        r->m_TransformArg.Init(r->m_pDevice, inputArgumentEncoder->encodedLength());
+        inputArgumentEncoder->release();
+        pTransformFunction->release();
+    }
+
+#ifdef SHADERS_IN_EXECUTABLE
+    pLibrary = renderer_build_shader(r, binning_shader, "binning");
+#else
+    pLibrary = renderer_build_shader(r, SHADER_PATH, "binning.metal");
 #endif
     if (pLibrary != nullptr)
     {
@@ -301,6 +336,8 @@ void renderer_begin_frame(struct renderer* r)
     r->m_Commands.Set(r->m_DrawCommandsBuffer.Map(r->m_FrameIndex), sizeof(draw_command) * MAX_COMMANDS);
     r->m_CommandsAABB.Set(r->m_CommandsAABBBuffer.Map(r->m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
     r->m_DrawData.Set(r->m_DrawDataBuffer.Map(r->m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
+    r->m_ViewProject.Set(r->m_ViewProjectBuffer.Map(r->m_FrameIndex), sizeof(view_proj) * MAX_VIEWPROJECT);
+    r->m_SDForms.Set(r->m_SDFormBuffer.Map(r->m_FrameIndex), sizeof(sdform) * MAX_SDFORMS);
     renderer_set_cliprect(r, 0, 0, (uint16_t) r->m_WindowWidth, (uint16_t) r->m_WindowHeight);
     renderer_set_viewport(r, (float)r->m_WindowWidth, (float)r->m_WindowHeight);
     renderer_set_camera(r, vec2_zero(), 1.f);
