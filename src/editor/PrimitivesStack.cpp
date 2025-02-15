@@ -475,7 +475,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
         mu_label(gui_context, "alpha");
         res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
-        mu_label(gui_context, "enable outline");
+        mu_label(gui_context, "global outline");
         res |= mu_checkbox(gui_context, "", &m_GlobalOutline);
         mu_label(gui_context, "outline width");
         res |= mu_slider_ex(gui_context, &m_OutlineWidth, 0.f, 20.f, 0.1f, "%2.2f", 0);
