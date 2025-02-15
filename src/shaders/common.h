@@ -6,8 +6,6 @@
 #define MAX_CLIPS (256)
 #define MAX_COMMANDS (1<<16)
 #define MAX_DRAWDATA (MAX_COMMANDS * 4)
-#define MAX_VIEWPROJECT (1<<10)
-#define MAX_SDFORMS (1<<14)
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
@@ -22,7 +20,6 @@
 #else
     typedef struct {float x, y;} float2;
 #endif
-typedef struct {float x, y, z, w;} float4;
 #else
 using namespace metal;
 #endif
@@ -107,8 +104,6 @@ typedef struct draw_command
     uint8_t custom_data;
     draw_color color;
     uint32_t data_index;
-    uint16_t viewproject_index;
-    uint16_t group_index;
 } draw_command;
 
 static inline uint8_t pack_type(enum command_type type,  enum primitive_fillmode fillmode)
@@ -155,30 +150,6 @@ typedef struct quantized_aabb
 {
     uint8_t min_x, min_y, max_x, max_y;
 } quantized_aabb;
-
-typedef struct view_project
-{
-    float4 projection;  // (x,y) : scale and (z,w) : translation
-    float4 camera;  // (x, y) : scale and (z,w) : translation
-} view_project;
-
-typedef struct sdform
-{
-    float2 translation;
-    float rotation;
-    float smooth_blend;
-    float outline_width;        // negative value means no outline
-} sdform;
-
-typedef struct transform_arguments
-{
-    device draw_command* commands;
-    device quantized_aabb* commands_aabb;
-    constant view_project* vp;
-    constant sdform* forms;
-    float window_size;
-    uint32_t num_commands;
-} transform_arguments;
 
 typedef struct draw_cmd_arguments
 {
