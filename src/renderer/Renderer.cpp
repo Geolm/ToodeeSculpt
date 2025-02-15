@@ -506,7 +506,6 @@ void renderer_terminate(struct renderer* r)
     r->m_CommandsAABBBuffer.Terminate();
     r->m_DrawCommandsArg.Terminate();
     r->m_BinOutputArg.Terminate();
-    r->m_TransformArg.Terminate();
     SAFE_RELEASE(r->m_pFont);
     SAFE_RELEASE(r->m_pDepthStencilState);
     SAFE_RELEASE(r->m_pCountersBuffer);
@@ -521,8 +520,6 @@ void renderer_terminate(struct renderer* r)
     SAFE_RELEASE(r->m_pIndirectArg);
     SAFE_RELEASE(r->m_pIndirectCommandBuffer);
     SAFE_RELEASE(r->m_pCommandQueue);
-    SAFE_RELEASE(r->m_pCommandsAABBBuffer);
-    SAFE_RELEASE(r->m_pTransformPSO);
     delete r;
 }
 

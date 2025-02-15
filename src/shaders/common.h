@@ -108,7 +108,7 @@ typedef struct draw_command
     draw_color color;
     uint32_t data_index;
     uint16_t viewproject_index;
-    uint16_t sdform_index;
+    uint16_t group_index;
 } draw_command;
 
 static inline uint8_t pack_type(enum command_type type,  enum primitive_fillmode fillmode)
@@ -172,11 +172,10 @@ typedef struct sdform
 
 typedef struct transform_arguments
 {
-    constant draw_command* commands;
+    device draw_command* commands;
+    device quantized_aabb* commands_aabb;
     constant view_project* vp;
     constant sdform* forms;
-    device float* draw_data;
-    device quantized_aabb* commands_aabb;
     float window_size;
     uint32_t num_commands;
 } transform_arguments;
