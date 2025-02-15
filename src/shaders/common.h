@@ -164,8 +164,7 @@ typedef struct view_project
 
 typedef struct sdform
 {
-    float2 translation;
-    float rotation;
+    float4 translation_rotation;    // (x, y) : translation (z,w ) cos(angle), sin(angle)
     float smooth_blend;
     float outline_width;        // negative value means no outline
 } sdform;
@@ -177,7 +176,7 @@ typedef struct transform_arguments
     constant sdform* forms;
     device float* draw_data;
     device quantized_aabb* commands_aabb;
-    float window_size;
+    float2 window_size;
     uint32_t num_commands;
 } transform_arguments;
 
