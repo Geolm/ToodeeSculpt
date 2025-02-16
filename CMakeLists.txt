@@ -32,6 +32,7 @@ add_executable(ToodeeSculpt
 ./src/editor/Editor.cpp
 ./src/editor/export.c
 ./src/editor/primitive.c
+./src/editor/primitive_list.c
 ./src/editor/PrimitivesStack.cpp
 ./src/renderer/Renderer.cpp
 ./src/renderer/shader_reader.c
