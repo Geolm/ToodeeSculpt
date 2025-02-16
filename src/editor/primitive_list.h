@@ -2,6 +2,8 @@
 #define __PRIMITIVE_LIST_H__
 
 #include <stdint.h>
+#include "../system/serializer.h"
+#include "../system/aabb.h"
 
 struct primitive;
 
@@ -18,6 +20,7 @@ void plist_push(struct primitive* p);
 void plist_erase(uint32_t index);
 void plist_insert(uint32_t index, struct primitive* p);
 void plist_resize(uint32_t new_size);
+void plist_serialize(serializer_context* context, bool normalization, const aabb* edition_zone);
 void plist_terminate(void);
 
 

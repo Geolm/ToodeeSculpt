@@ -17,8 +17,7 @@ struct palette primitive_palette;
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
 {
-    cc_init(&m_Primitives);
-    cc_reserve(&m_Primitives, PRIMITIVES_STACK_RESERVATION);
+    plist_init(PRIMITIVES_STACK_RESERVATION);
     cc_init(&m_MultipleSelection);
     cc_reserve(&m_MultipleSelection, PRIMITIVES_STACK_RESERVATION);
     m_EditionZone = zone;
@@ -49,7 +48,7 @@ void PrimitivesStack::New()
     SetSelectedPrimitive(INVALID_INDEX);
     primitive_set_invalid(&m_CopiedPrimitive);
     m_pGrabbedPoint = nullptr;
-    cc_clear(&m_Primitives);
+    plist_clear();
     cc_clear(&m_MultipleSelection);
     UndoSnapshot();
 }
@@ -68,6 +67,8 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
     m_MouseLastPosition = m_MousePosition;
     m_MousePosition = pos;
 
+    primitive* selected = SelectedPrimitiveValid() ? plist_get(m_SelectedPrimitiveIndex) : NULL;
+
     if (GetState() == state::SET_ROUNDNESS)
     {
         m_Roundness = vec2_distance(pos, m_Reference);
@@ -85,24 +86,22 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
     else if (GetState() == state::MOVING_POINT && m_pGrabbedPoint != nullptr)
     {
         *m_pGrabbedPoint = m_MousePosition;
-        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        primitive_update_aabb(selected);
     }
     else if (GetState() == state::MOVING_PRIMITIVE)
     {
-        primitive_translate(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), m_MousePosition - m_Reference);
-        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        primitive_translate(selected, m_MousePosition - m_Reference);
+        primitive_update_aabb(selected);
         m_Reference = m_MousePosition;
     }
     else if (GetState() == state::ROTATING_PRIMITIVE)
     {
-        primitive* selected = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         *selected = m_CopiedPrimitive;
         primitive_rotate(selected, vec2_atan2(m_MousePosition - m_Reference));
-        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        primitive_update_aabb(selected);
     }
     else if (GetState() == state::SCALING_PRIMITIVE)
     {
-        primitive* selected = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
         *selected = m_CopiedPrimitive;
 
         float scale = (m_MousePosition.x - m_Reference.x); ;
@@ -112,7 +111,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
             scale = float_max(1.f + (scale / (aabb_get_size(&m_EditionZone).x * 0.1f)), 0.1f);
 
         primitive_scale(selected, scale);
-        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        primitive_update_aabb(selected);
     }
 }
 
@@ -125,7 +124,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         if (aabb_test_point(&m_EditionZone, m_MousePosition))
         {
-            if (SelectedPrimitiveValid() && primitive_test_mouse_cursor(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), m_MousePosition, false))
+            if (SelectedPrimitiveValid() && primitive_test_mouse_cursor(plist_get(m_SelectedPrimitiveIndex), m_MousePosition, false))
             {
                 m_SelectedPrimitiveContextualMenuOpen = !m_SelectedPrimitiveContextualMenuOpen;
             }
@@ -142,7 +141,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         if (SelectedPrimitiveValid())
         {
-            primitive *primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+            primitive *primitive = plist_get(m_SelectedPrimitiveIndex);
             for(uint32_t i=0; i<primitive_get_num_points(primitive->m_Shape); ++i)
             {
                 if (point_in_disc(primitive_get_points(primitive, i), primitive_point_radius, m_MousePosition))
@@ -173,7 +172,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
         {
-            primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+            primitive_update_aabb(plist_get(m_SelectedPrimitiveIndex));
             SetState(state::IDLE);
             UndoSnapshot();
         }
@@ -181,7 +180,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     // moving primitive
     else if (GetState() == state::MOVING_PRIMITIVE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {
-        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        primitive_update_aabb(plist_get(m_SelectedPrimitiveIndex));
         SetState(state::IDLE);
         if (m_StartingPoint != m_MousePosition)
             UndoSnapshot();
@@ -226,7 +225,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
     }
     else if ((GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE) && left_button_pressed)
     {
-        primitive_update_aabb(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        primitive_update_aabb(plist_get(m_SelectedPrimitiveIndex));
         SetState(state::IDLE);
         UndoSnapshot();
     }
@@ -251,9 +250,9 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 
         primitive_update_aabb(&new_primitive);
 
-        cc_push(&m_Primitives, new_primitive);
+        plist_push(&new_primitive);
         SetState(state::IDLE);
-        SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
+        SetSelectedPrimitive(plist_last());
         UndoSnapshot();
     }
 }
@@ -262,9 +261,9 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 bool PrimitivesStack::SelectPrimitive()
 {
     cc_clear(&m_MultipleSelection);
-    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    for(uint32_t i=0; i<plist_size(); ++i)
     {
-        primitive *p = cc_get(&m_Primitives, i);
+        primitive *p = plist_get(i);
         if (primitive_test_mouse_cursor(p, m_MousePosition, true))
             cc_push(&m_MultipleSelection, i);
     }
@@ -281,7 +280,7 @@ bool PrimitivesStack::SelectPrimitive()
     float min_distance = FLT_MAX;
     for(uint32_t i=0; i<cc_size(&m_MultipleSelection); ++i)
     {
-        primitive *p = cc_get(&m_Primitives, *cc_get(&m_MultipleSelection, i));
+        primitive *p = plist_get(*cc_get(&m_MultipleSelection, i));
         float distance = primitive_distance_to_nearest_point(p, m_MousePosition);
         if (distance < min_distance)
         {
@@ -303,9 +302,9 @@ void PrimitivesStack::Draw(struct renderer* context)
     renderer_set_outline_width(context, m_OutlineWidth);
     renderer_begin_combination(context, m_SmoothBlend);
 
-    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    for(uint32_t i=0; i<plist_size(); ++i)
     {
-        primitive *primitive = cc_get(&m_Primitives, i);
+        primitive *primitive = plist_get(i);
         primitive_draw_alpha(primitive, context, m_AlphaValue);
         if (m_PrimitiveIdDebug)
         {
@@ -407,9 +406,9 @@ void PrimitivesStack::Draw(struct renderer* context)
     else if (GetState() == state::IDLE && !m_NewPrimitiveContextualMenuOpen)
     {
         MouseCursors::GetInstance().Default();
-        for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+        for(uint32_t i=0; i<plist_size(); ++i)
         {
-            primitive *primitive = cc_get(&m_Primitives, i);
+            primitive *primitive = plist_get(i);
             if (primitive_test_mouse_cursor(primitive, m_MousePosition, true))
             {
                 primitive_draw_gizmo(primitive, context, m_HoveredPrimitiveColor);
@@ -419,13 +418,13 @@ void PrimitivesStack::Draw(struct renderer* context)
         }
 
         if (SelectedPrimitiveValid())
-            primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
+            primitive_draw_gizmo(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
         {
-            primitive* primitive = cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+            primitive* primitive = plist_get(m_SelectedPrimitiveIndex);
             primitive_draw_gizmo(primitive, context, m_SelectedPrimitiveColor);
 
             if (m_PrimitiveIdDebug)
@@ -438,14 +437,14 @@ void PrimitivesStack::Draw(struct renderer* context)
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
         renderer_draw_disc(context, m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
-        primitive_draw_gizmo(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
+        primitive_draw_gizmo(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
     }
 
     if (m_AABBDebug)
     {
-        for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+        for(uint32_t i=0; i<plist_size(); ++i)
         {
-            primitive *p = cc_get(&m_Primitives, i);
+            primitive *p = plist_get(i);
             primitive_draw_aabb(p, context, draw_color(0x3fe01010));
         }
     }
@@ -456,9 +455,9 @@ void PrimitivesStack::DuplicateSelected()
 {
     if (SelectedPrimitiveValid())
     {
-        primitive new_primitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-        cc_push(&m_Primitives, new_primitive);
-        SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
+        primitive new_primitive = *plist_get(m_SelectedPrimitiveIndex);
+        plist_push(&new_primitive);
+        SetSelectedPrimitive(plist_last());
         log_debug("primitive duplicated");
     }
 }
@@ -482,7 +481,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
-    primitive* selected = (SelectedPrimitiveValid()) ? cc_get(&m_Primitives, m_SelectedPrimitiveIndex) : nullptr;
+    primitive* selected = (SelectedPrimitiveValid()) ? plist_get(m_SelectedPrimitiveIndex) : nullptr;
     if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 600), window_options))
     {
         if (selected)
@@ -606,24 +605,24 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
             }
             else if (mu_button_ex(gui_context, "front", 0, 0))
             {
-                primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-                cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
-                cc_push(&m_Primitives, temp);
+                primitive temp = *plist_get(m_SelectedPrimitiveIndex);
+                plist_erase(m_SelectedPrimitiveIndex);
+                plist_push(&temp);
                 SetSelectedPrimitive(INVALID_INDEX);
                 UndoSnapshot();
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
             else if (mu_button_ex(gui_context, "back", 0, 0))
             {
-                primitive temp = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
-                cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
-                cc_insert(&m_Primitives, 0, temp);
+                primitive temp = *plist_get(m_SelectedPrimitiveIndex);
+                plist_erase(m_SelectedPrimitiveIndex);
+                plist_push(&temp);
                 SetSelectedPrimitive(INVALID_INDEX);
                 UndoSnapshot();
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
 
-            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(cc_get(&m_Primitives, m_SelectedPrimitiveIndex), gui_context, &window_aabb))
+            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(plist_get(m_SelectedPrimitiveIndex), gui_context, &window_aabb))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
                 UndoSnapshot();
@@ -640,21 +639,11 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitivesStack::Serialize(serializer_context* context, bool normalization)
 {
-    size_t array_size = cc_size(&m_Primitives);
     serializer_write_float(context, m_AlphaValue);
     serializer_write_float(context, m_SmoothBlend);
     serializer_write_uint32_t(context, m_SelectedPrimitiveIndex);
     serializer_write_float(context, m_OutlineWidth);
-
-    serializer_write_size_t(context, cc_size(&m_Primitives));
-     for(uint32_t i=0; i<array_size; ++i)
-     {
-        primitive p = *cc_get(&m_Primitives, i);
-        if (normalization)
-            primitive_normalize(&p, &m_EditionZone);
-
-        primitive_serialize(&p, context);
-     }
+    plist_serialize(context, normalization, &m_EditionZone);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -670,11 +659,11 @@ void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, u
     size_t array_size = serializer_read_size_t(context);
     log_debug("%d primitives found", array_size);
 
-    cc_resize(&m_Primitives, array_size);
+    plist_resize(array_size);
 
     for(uint32_t i=0; i<array_size; ++i)
     {
-        primitive* p = cc_get(&m_Primitives, i);
+        primitive* p = plist_get(i);
 
         primitive_deserialize(p, context, major, minor);
         if (normalization)
@@ -727,7 +716,7 @@ void PrimitivesStack::CopySelected()
 {
     if (SelectedPrimitiveValid())
     {
-        m_CopiedPrimitive = *cc_get(&m_Primitives, m_SelectedPrimitiveIndex);
+        m_CopiedPrimitive = *plist_get(m_SelectedPrimitiveIndex);
         log_debug("primitive copied");
     }
 }
@@ -740,8 +729,8 @@ void PrimitivesStack::Paste()
         vec2 center = primitive_compute_center(&m_CopiedPrimitive);
         primitive_translate(&m_CopiedPrimitive, m_MousePosition - center);
         primitive_update_aabb(&m_CopiedPrimitive);
-        cc_push(&m_Primitives, m_CopiedPrimitive);
-        SetSelectedPrimitive(uint32_t(cc_size(&m_Primitives))-1);
+        plist_push(&m_CopiedPrimitive);
+        SetSelectedPrimitive(plist_last());
         UndoSnapshot();
         log_debug("primitive pasted");
     }
@@ -752,7 +741,7 @@ void PrimitivesStack::DeleteSelected()
 {
     if (GetState() == state::IDLE && SelectedPrimitiveValid())
     {
-        cc_erase(&m_Primitives, m_SelectedPrimitiveIndex);
+        plist_erase(m_SelectedPrimitiveIndex);
         SetSelectedPrimitive(INVALID_INDEX);
         log_debug("primitive deleted");
         UndoSnapshot();
@@ -767,10 +756,9 @@ void PrimitivesStack::Export(void* window)
     shadertoy_start(&clipboard);
 
     float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
-    for(uint32_t i=0; i<cc_size(&m_Primitives); ++i)
+    for(uint32_t i=0; i<plist_size(); ++i)
     {
-        primitive p = *cc_get(&m_Primitives, i);
-
+        primitive p = *plist_get(i);
         primitive_normalize(&p, &m_EditionZone);
         shadertoy_export_primitive(&clipboard, &p, i, normalized_smooth_blend);
     }
@@ -794,13 +782,13 @@ void PrimitivesStack::SetState(enum state new_state)
     if (new_state == state::SCALING_PRIMITIVE)
     {
         m_Reference = m_MousePosition;
-        m_CopiedPrimitive = *(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        m_CopiedPrimitive = *(plist_get(m_SelectedPrimitiveIndex));
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
 
     if (new_state == state::ROTATING_PRIMITIVE)
     {
-        m_CopiedPrimitive = *(cc_get(&m_Primitives, m_SelectedPrimitiveIndex));
+        m_CopiedPrimitive = *(plist_get(m_SelectedPrimitiveIndex));
         m_Reference = primitive_compute_center(&m_CopiedPrimitive);
         m_Angle = 0.f;
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
@@ -843,6 +831,6 @@ void PrimitivesStack::SetState(enum state new_state)
 void PrimitivesStack::Terminate()
 {
     palette_free(&primitive_palette);
-    cc_cleanup(&m_Primitives);
+    plist_terminate();
     cc_cleanup(&m_MultipleSelection);
 }

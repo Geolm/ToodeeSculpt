@@ -8,6 +8,7 @@
 #include "../system/log.h"
 #include "../shaders/common.h"
 #include "primitive.h"
+#include "primitive_list.h"
 
 struct mu_Context;
 struct renderer;
@@ -61,12 +62,11 @@ private:
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
     bool SelectPrimitive();
-    inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < cc_size(&m_Primitives);}
+    inline bool SelectedPrimitiveValid() {return m_SelectedPrimitiveIndex < plist_size();}
     inline bool SetSelectedPrimitive(uint32_t index);
 
 private:
     // serialized data 
-    cc_vec(primitive) m_Primitives;
     float m_SmoothBlend;
     float m_AlphaValue;
     uint32_t m_SelectedPrimitiveIndex;
@@ -114,7 +114,7 @@ private:
 //----------------------------------------------------------------------------------------------------------------------------
 inline bool PrimitivesStack::SetSelectedPrimitive(uint32_t index)
 {
-    assert(index == INVALID_INDEX || index < cc_size(&m_Primitives));
+    assert(index == INVALID_INDEX || index < plist_size());
     bool different = (m_SelectedPrimitiveIndex != index);
     m_SelectedPrimitiveIndex = index;
     log_debug("selected primitive : %d", m_SelectedPrimitiveIndex);

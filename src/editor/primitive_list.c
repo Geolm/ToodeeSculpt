@@ -1,6 +1,8 @@
 #include "primitive_list.h"
 #include "primitive.h"
 #include "assert.h"
+
+#define CC_NO_SHORT_NAMES
 #include "../system/cc.h"
 
 static cc_vec(struct primitive) list;
@@ -61,6 +63,21 @@ void plist_insert(uint32_t index, struct primitive* p)
 void plist_resize(uint32_t new_size)
 {
     cc_resize(&list, new_size);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+void plist_serialize(serializer_context* context, bool normalization, const aabb* edition_zone)
+{
+    size_t array_size = cc_size(&list);
+    serializer_write_size_t(context, array_size);
+    for(uint32_t i=0; i<array_size; ++i)
+    {
+        struct primitive p = *cc_get(&list, i);
+        if (normalization)
+            primitive_normalize(&p, edition_zone);
+
+        primitive_serialize(&p, context);
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
