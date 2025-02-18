@@ -21,6 +21,7 @@ void plist_erase(uint32_t index);
 void plist_insert(uint32_t index, struct primitive* p);
 void plist_resize(uint32_t new_size);
 void plist_serialize(serializer_context* context, bool normalization, const aabb* edition_zone);
+void plist_deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization, const aabb* edition_zone);
 void plist_terminate(void);
 
 

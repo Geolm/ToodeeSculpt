@@ -4,6 +4,7 @@
 
 #define CC_NO_SHORT_NAMES
 #include "../system/cc.h"
+#include "../system/log.h"
 
 static cc_vec(struct primitive) list;
 
@@ -77,6 +78,23 @@ void plist_serialize(serializer_context* context, bool normalization, const aabb
             primitive_normalize(&p, edition_zone);
 
         primitive_serialize(&p, context);
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+void plist_deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization, const aabb* edition_zone)
+{
+    size_t array_size = serializer_read_size_t(context);
+    log_debug("%d primitives found", array_size);
+
+    plist_resize(array_size);
+    for(uint32_t i=0; i<array_size; ++i)
+    {
+        struct primitive* p = plist_get(i);
+        primitive_deserialize(p, context, major, minor);
+        if (normalization)
+            primitive_expand(p, edition_zone);
+        primitive_update_aabb(p);
     }
 }
 

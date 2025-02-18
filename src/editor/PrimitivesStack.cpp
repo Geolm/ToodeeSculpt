@@ -656,20 +656,7 @@ void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, u
     if (minor>=5)
         m_OutlineWidth = serializer_read_float(context);
 
-    size_t array_size = serializer_read_size_t(context);
-    log_debug("%d primitives found", array_size);
-
-    plist_resize(array_size);
-
-    for(uint32_t i=0; i<array_size; ++i)
-    {
-        primitive* p = plist_get(i);
-
-        primitive_deserialize(p, context, major, minor);
-        if (normalization)
-            primitive_expand(p, &m_EditionZone);
-        primitive_update_aabb(p);
-    }
+    plist_deserialize(context, major, minor, normalization, &m_EditionZone);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
