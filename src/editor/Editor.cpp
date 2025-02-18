@@ -12,7 +12,7 @@
 #define UNUSED_VARIABLE(a) (void)(a)
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::Init(void* window, aabb zone, const char* folder_path)
+void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
 {
     m_ExternalZone = m_Zone = zone;
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));

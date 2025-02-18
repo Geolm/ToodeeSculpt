@@ -1,7 +1,5 @@
 #include "../renderer/renderer.h"
 #include "../system/microui.h"
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #include "../MouseCursors.h"
 #include "../system/palettes.h"
 #include "../system/point_in.h"
@@ -9,9 +7,10 @@
 #include "../system/format.h"
 #include "PrimitivesStack.h"
 #include "tds.h"
-#include "export.h"
 
-const size_t clipboard_buffer_size = (1<<18);
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -736,24 +735,9 @@ void PrimitivesStack::DeleteSelected()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Export(void* window)
+void PrimitivesStack::Export(struct GLFWwindow* window)
 {
-    struct string_buffer clipboard = string_buffer_init(clipboard_buffer_size);
-
-    shadertoy_start(&clipboard);
-
-    float normalized_smooth_blend = m_SmoothBlend / aabb_get_size(&m_EditionZone).x;
-    for(uint32_t i=0; i<plist_size(); ++i)
-    {
-        primitive p = *plist_get(i);
-        primitive_normalize(&p, &m_EditionZone);
-        shadertoy_export_primitive(&clipboard, &p, i, normalized_smooth_blend);
-    }
-
-    shadertoy_finalize(&clipboard);
-    glfwSetClipboardString((GLFWwindow*) window, clipboard.buffer);
-
-    string_buffer_terminate(&clipboard);
+    plist_export(window, m_SmoothBlend, &m_EditionZone);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

@@ -1,11 +1,17 @@
 #include "primitive_list.h"
 #include "primitive.h"
-#include "assert.h"
+#include "export.h"
+#include <assert.h>
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 
 #define CC_NO_SHORT_NAMES
 #include "../system/cc.h"
 #include "../system/log.h"
+#include "../system/format.h"
 
+const size_t clipboard_buffer_size = (1<<18);
 static cc_vec(struct primitive) list;
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -96,6 +102,27 @@ void plist_deserialize(serializer_context* context, uint16_t major, uint16_t min
             primitive_expand(p, edition_zone);
         primitive_update_aabb(p);
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+void plist_export(struct GLFWwindow* window, float smooth_blend, const aabb* edition_zone)
+{
+    struct string_buffer clipboard = string_buffer_init(clipboard_buffer_size);
+
+    shadertoy_start(&clipboard);
+
+    float normalized_smooth_blend = smooth_blend / aabb_get_size(edition_zone).x;
+    for(uint32_t i=0; i<plist_size(); ++i)
+    {
+        struct primitive p = *plist_get(i);
+        primitive_normalize(&p, edition_zone);
+        shadertoy_export_primitive(&clipboard, &p, i, normalized_smooth_blend);
+    }
+
+    shadertoy_finalize(&clipboard);
+    glfwSetClipboardString(window, clipboard.buffer);
+
+    string_buffer_terminate(&clipboard);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------

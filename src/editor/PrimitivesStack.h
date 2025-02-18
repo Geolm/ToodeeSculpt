@@ -12,6 +12,7 @@
 
 struct mu_Context;
 struct renderer;
+struct GLFWwindow;
 
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
@@ -32,7 +33,7 @@ public:
     void Paste();
     void DeleteSelected();
     void New();
-    void Export(void* window);
+    void Export(struct GLFWwindow* window);
     void Terminate();
 
     void DuplicateSelected();
