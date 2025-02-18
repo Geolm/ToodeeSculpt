@@ -226,7 +226,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 mu_checkbox(gui_context, "Culling debug", &m_CullingDebug);
 
                 if (mu_checkbox(gui_context, "AABB debug", &m_AABBDebug))
-                    m_PrimitivesStack.setAABBDebug((bool)m_AABBDebug);
+                    m_PrimitivesStack.SetAABBDebug((bool)m_AABBDebug);
 
 
                 if (mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid))

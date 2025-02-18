@@ -40,7 +40,7 @@ public:
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
     void SetPrimimitiveIdDebug(bool flag) {m_PrimitiveIdDebug = flag;}
-    void setAABBDebug(bool flag) {m_AABBDebug = flag;}
+    void SetAABBDebug(bool flag) {m_AABBDebug = flag;}
 
 private:
     
