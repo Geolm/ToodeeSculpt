@@ -5,7 +5,7 @@
 #include "../system/point_in.h"
 #include "../system/undo.h"
 #include "../system/format.h"
-#include "PrimitivesStack.h"
+#include "PrimitiveEditor.h"
 #include "tds.h"
 
 #define GLFW_INCLUDE_NONE
@@ -14,7 +14,7 @@
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
+void PrimitiveEditor::Init(aabb zone, struct undo_context* undo)
 {
     plist_init(PRIMITIVES_STACK_RESERVATION);
     cc_init(&m_MultipleSelection);
@@ -35,7 +35,7 @@ void PrimitivesStack::Init(aabb zone, struct undo_context* undo)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::New()
+void PrimitiveEditor::New()
 {
     m_NewPrimitiveContextualMenuOpen = false;
     m_SelectedPrimitiveContextualMenuOpen = false;
@@ -53,7 +53,7 @@ void PrimitivesStack::New()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::OnMouseMove(vec2 pos) 
+void PrimitiveEditor::OnMouseMove(vec2 pos) 
 {
     if ((GetState() == state::ADDING_POINTS || GetState() == state::MOVING_POINT) && m_SnapToGrid)
     {
@@ -115,7 +115,7 @@ void PrimitivesStack::OnMouseMove(vec2 pos)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::OnMouseButton(int button, int action, int mods)
+void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
 {
     bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) && !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen;
 
@@ -257,7 +257,7 @@ void PrimitivesStack::OnMouseButton(int button, int action, int mods)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-bool PrimitivesStack::SelectPrimitive()
+bool PrimitiveEditor::SelectPrimitive()
 {
     cc_clear(&m_MultipleSelection);
     for(uint32_t i=0; i<plist_size(); ++i)
@@ -295,7 +295,7 @@ bool PrimitivesStack::SelectPrimitive()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Draw(struct renderer* context)
+void PrimitiveEditor::Draw(struct renderer* context)
 {
     // drawing *the* primitives
     renderer_set_outline_width(context, m_OutlineWidth);
@@ -450,7 +450,7 @@ void PrimitivesStack::Draw(struct renderer* context)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::DuplicateSelected()
+void PrimitiveEditor::DuplicateSelected()
 {
     if (SelectedPrimitiveValid())
     {
@@ -462,7 +462,7 @@ void PrimitivesStack::DuplicateSelected()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
+void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 {
     int res = 0;
     int window_options = MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE;
@@ -502,7 +502,7 @@ void PrimitivesStack::UserInterface(struct mu_Context* gui_context)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
+void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
 {
     if (m_NewPrimitiveContextualMenuOpen)
     {
@@ -636,7 +636,7 @@ void PrimitivesStack::ContextualMenu(struct mu_Context* gui_context)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Serialize(serializer_context* context, bool normalization)
+void PrimitiveEditor::Serialize(serializer_context* context, bool normalization)
 {
     serializer_write_float(context, m_AlphaValue);
     serializer_write_float(context, m_SmoothBlend);
@@ -646,7 +646,7 @@ void PrimitivesStack::Serialize(serializer_context* context, bool normalization)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization)
+void PrimitiveEditor::Deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization)
 {
     m_AlphaValue = serializer_read_float(context);
     m_SmoothBlend = serializer_read_float(context);
@@ -659,7 +659,7 @@ void PrimitivesStack::Deserialize(serializer_context* context, uint16_t major, u
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::UndoSnapshot()
+void PrimitiveEditor::UndoSnapshot()
 {
     serializer_context serializer;
     size_t max_size;
@@ -674,7 +674,7 @@ void PrimitivesStack::UndoSnapshot()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Undo()
+void PrimitiveEditor::Undo()
 {
     // cancel primitive creation
     if (GetState() == state::ADDING_POINTS || GetState() == state::SET_ROUNDNESS)
@@ -698,7 +698,7 @@ void PrimitivesStack::Undo()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::CopySelected()
+void PrimitiveEditor::CopySelected()
 {
     if (SelectedPrimitiveValid())
     {
@@ -708,7 +708,7 @@ void PrimitivesStack::CopySelected()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Paste()
+void PrimitiveEditor::Paste()
 {
     if (primitive_is_valid(&m_CopiedPrimitive))
     {
@@ -723,7 +723,7 @@ void PrimitivesStack::Paste()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::DeleteSelected()
+void PrimitiveEditor::DeleteSelected()
 {
     if (GetState() == state::IDLE && SelectedPrimitiveValid())
     {
@@ -735,13 +735,13 @@ void PrimitivesStack::DeleteSelected()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Export(struct GLFWwindow* window)
+void PrimitiveEditor::Export(struct GLFWwindow* window)
 {
     plist_export(window, m_SmoothBlend, &m_EditionZone);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::SetState(enum state new_state)
+void PrimitiveEditor::SetState(enum state new_state)
 {
     if (GetState() == state::IDLE && new_state == state::ADDING_POINTS)
     {
@@ -799,7 +799,7 @@ void PrimitivesStack::SetState(enum state new_state)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitivesStack::Terminate()
+void PrimitiveEditor::Terminate()
 {
     palette_free(&primitive_palette);
     plist_terminate();

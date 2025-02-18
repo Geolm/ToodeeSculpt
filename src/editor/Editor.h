@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PrimitivesStack.h"
+#include "PrimitiveEditor.h"
 
 struct renderer;
 struct mu_Context;
@@ -43,7 +43,7 @@ private:
     void MenuBar(struct mu_Context* gui_context);
 
 private:
-    PrimitivesStack m_PrimitivesStack;
+    PrimitiveEditor m_PrimitivesStack;
     aabb m_Zone;
     aabb m_ExternalZone;
     vec2 m_PopupCoord;

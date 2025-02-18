@@ -17,7 +17,7 @@ struct GLFWwindow;
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
 //----------------------------------------------------------------------------------------------------------------------------
-class PrimitivesStack
+class PrimitiveEditor
 {
 public:
     void Init(aabb zone, struct undo_context* undo);
@@ -113,7 +113,7 @@ private:
 };
 
 //----------------------------------------------------------------------------------------------------------------------------
-inline bool PrimitivesStack::SetSelectedPrimitive(uint32_t index)
+inline bool PrimitiveEditor::SetSelectedPrimitive(uint32_t index)
 {
     assert(index == INVALID_INDEX || index < plist_size());
     bool different = (m_SelectedPrimitiveIndex != index);
