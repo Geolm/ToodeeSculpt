@@ -19,7 +19,7 @@ void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
     m_PopupHalfSize = (vec2) {250.f, 50.f};
     m_PopupCoord = vec2_sub(aabb_get_center(&m_Zone), m_PopupHalfSize);
     m_pUndoContext = undo_init(1<<18, 1<<10);
-    m_PrimitivesStack.Init(zone, m_pUndoContext);
+    m_PrimitiveEditor.Init(zone, m_pUndoContext);
     m_MenuBarState = MenuBar_None;
     m_SnapToGrid = 0;
     m_ShowGrid = 0;
@@ -30,6 +30,7 @@ void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
     m_AABBDebug = false;
     m_LogLevel = 0;
     m_LogLevelCombo = 0;
+    m_WindowDebugOpen = 0;
     m_Window = window;
 }
 
@@ -58,7 +59,7 @@ void Editor::OnMouseMove(vec2 pos)
 {
     if (!m_PopupOpen)
     {
-        m_PrimitivesStack.OnMouseMove(pos);
+        m_PrimitiveEditor.OnMouseMove(pos);
         if (aabb_test_point(&m_ExternalZone, pos))
             m_MenuBarState = MenuBar_None;
     }
@@ -68,7 +69,7 @@ void Editor::OnMouseMove(vec2 pos)
 void Editor::OnMouseButton(int button, int action, int mods)
 {
     if (!m_PopupOpen)
-        m_PrimitivesStack.OnMouseButton(button, action, mods);
+        m_PrimitiveEditor.OnMouseButton(button, action, mods);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -95,7 +96,7 @@ void Editor::Draw(struct renderer* r)
     }
 
     renderer_set_cliprect(r, (int)m_Zone.min.x, (int)m_Zone.min.y, (int)m_Zone.max.x, (int)m_Zone.max.y);
-    m_PrimitivesStack.Draw(r);
+    m_PrimitiveEditor.Draw(r);
     renderer_set_cliprect(r, 0, 0, UINT16_MAX, UINT16_MAX);
 }
 
@@ -120,7 +121,7 @@ void Editor::DebugInterface(struct mu_Context* gui_context)
 void Editor::UserInterface(struct mu_Context* gui_context)
 {
     MenuBar(gui_context);
-    m_PrimitivesStack.UserInterface(gui_context);
+    m_PrimitiveEditor.UserInterface(gui_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -179,7 +180,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button_ex(gui_context, "Export", 0, 0))
                 {
-                    m_PrimitivesStack.Export(m_Window);
+                    m_PrimitiveEditor.Export(m_Window);
                     m_MenuBarState = MenuBar_None;
                 }
                 mu_end_window(gui_context);
@@ -204,12 +205,12 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button_ex(gui_context, "Copy ~C", 0, 0))
                 {
-                    m_PrimitivesStack.CopySelected();
+                    m_PrimitiveEditor.CopySelected();
                     m_MenuBarState = MenuBar_None;
                 }
                 if (mu_button_ex(gui_context, "Paste ~V", 0, 0))
                 {
-                    m_PrimitivesStack.Paste();
+                    m_PrimitiveEditor.Paste();
                     m_MenuBarState = MenuBar_None;
                 }
                 mu_end_window(gui_context);
@@ -219,25 +220,28 @@ void Editor::MenuBar(struct mu_Context* gui_context)
         if (m_MenuBarState == MenuBar_Options)
         {
             if (mu_begin_window_ex(gui_context, "options", 
-                mu_rect(row_size * 2 + 10, text_height + padding, 250.f, text_height * 5 + padding), window_options))
+                mu_rect(row_size * 2 + 10, text_height + padding, 250.f, text_height * 6 + padding), window_options))
             {
                 mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
 
                 mu_checkbox(gui_context, "Culling debug", &m_CullingDebug);
 
                 if (mu_checkbox(gui_context, "AABB debug", &m_AABBDebug))
-                    m_PrimitivesStack.SetAABBDebug((bool)m_AABBDebug);
+                    m_PrimitiveEditor.SetAABBDebug((bool)m_AABBDebug);
 
 
                 if (mu_checkbox(gui_context, "Snap to grid", &m_SnapToGrid))
-                    m_PrimitivesStack.SetSnapToGrid((bool)m_SnapToGrid);
+                    m_PrimitiveEditor.SetSnapToGrid((bool)m_SnapToGrid);
 
                 mu_checkbox(gui_context, "Show grid", &m_ShowGrid);
                 mu_layout_row(gui_context, 2, (int[]) {100, -1}, 0);
-                mu_label(gui_context, "Grid sub");
 
+                mu_label(gui_context, "Grid sub");
                 if (mu_slider_ex(gui_context, &m_GridSubdivision, 4.f, 50.f, 1.f, "%2.0f", 0)&MU_RES_SUBMIT)
-                    m_PrimitivesStack.SetGridSubdivision(m_GridSubdivision);
+                    m_PrimitiveEditor.SetGridSubdivision(m_GridSubdivision);
+
+                mu_layout_row(gui_context, 1, (int[]) {-1}, 0);
+                mu_checkbox(gui_context, "Debug window", &m_WindowDebugOpen);
                 
                 mu_end_window(gui_context);
             }
@@ -285,7 +289,7 @@ void Editor::Save()
         serializer_write_uint32_t(&serializer, TDS_FOURCC);
         serializer_write_uint16_t(&serializer, TDS_MAJOR);
         serializer_write_uint16_t(&serializer, TDS_MINOR);
-        m_PrimitivesStack.Serialize(&serializer, tds_normalizion_support(TDS_MAJOR, TDS_MINOR));
+        m_PrimitiveEditor.Serialize(&serializer, tds_normalizion_support(TDS_MAJOR, TDS_MINOR));
 
         if (serializer_get_status(&serializer) == serializer_no_error)
         {
@@ -344,12 +348,12 @@ void Editor::Load()
                         uint16_t minor = serializer_read_uint16_t(&serializer);
                         log_debug("loading file version %d.%03d", major, minor);
 
-                        m_PrimitivesStack.Deserialize(&serializer, major, minor, tds_normalizion_support(major, minor));
+                        m_PrimitiveEditor.Deserialize(&serializer, major, minor, tds_normalizion_support(major, minor));
 
                         if (serializer_get_status(&serializer) != serializer_no_error)
                             Popup("load failure", "unable to load primitives");
                         else
-                            m_PrimitivesStack.UndoSnapshot();
+                            m_PrimitiveEditor.UndoSnapshot();
                     }
                     else
                         Popup("load failure", "file too old and not compatible");
@@ -373,36 +377,36 @@ void Editor::Load()
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Undo()
 {
-    m_PrimitivesStack.Undo();
+    m_PrimitiveEditor.Undo();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Delete()
 {
-    m_PrimitivesStack.DeleteSelected();
+    m_PrimitiveEditor.DeleteSelected();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::New()
 {
-    m_PrimitivesStack.New();
+    m_PrimitiveEditor.New();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Copy()
 {
-    m_PrimitivesStack.CopySelected();
+    m_PrimitiveEditor.CopySelected();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Paste()
 {
-    m_PrimitivesStack.Paste();
+    m_PrimitiveEditor.Paste();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Terminate()
 {
     undo_terminate(m_pUndoContext);
-    m_PrimitivesStack.Terminate();
+    m_PrimitiveEditor.Terminate();
 }

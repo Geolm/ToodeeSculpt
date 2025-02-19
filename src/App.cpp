@@ -198,7 +198,7 @@ void App::Update(CA::MetalDrawable* drawable)
     m_pEditor->UserInterface(m_pGuiContext);
 
     // debug interface
-    if (mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
+    if (m_pEditor->IsDebugWindowOpen() && mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
     {
         if (mu_header(m_pGuiContext, "FPS"))
         {

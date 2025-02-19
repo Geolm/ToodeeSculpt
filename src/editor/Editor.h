@@ -31,6 +31,8 @@ public:
     void Undo();
     void Delete();
 
+    bool IsDebugWindowOpen() const {return m_WindowDebugOpen == 1;}
+
 private:
     enum MenuBarState
     {
@@ -43,7 +45,7 @@ private:
     void MenuBar(struct mu_Context* gui_context);
 
 private:
-    PrimitiveEditor m_PrimitivesStack;
+    PrimitiveEditor m_PrimitiveEditor;
     aabb m_Zone;
     aabb m_ExternalZone;
     vec2 m_PopupCoord;
@@ -60,6 +62,7 @@ private:
     int m_AABBDebug;
     int m_LogLevel;
     int m_LogLevelCombo;
+    int m_WindowDebugOpen;
 
     // load/save
     const char* m_pFolderPath;
