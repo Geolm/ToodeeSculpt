@@ -43,7 +43,6 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 
     m_WindowHeight = (uint32_t) height;
     m_WindowWidth = (uint32_t) width;
-    m_LogSize = 1024;
 
     m_pRenderer = renderer_init(m_Device, m_WindowWidth, m_WindowHeight);
     InitGui();
@@ -124,10 +123,10 @@ void App::InitGui()
     {
         .hue = 216.0f,
         .saturation = 0.65f,
-        .value = 0.15f,
-        .hue_shift = -150.f,
-        .saturation_shift = -1.f,
-        .value_shift = 1.0f
+        .value = 0.25f,
+        .hue_shift = -200.f,
+        .saturation_shift = -0.65f,
+        .value_shift = .75f
     };
 
     for(uint32_t i=0; i<MU_COLOR_MAX; ++i)
@@ -181,7 +180,6 @@ void App::DrawGui()
                 case MU_ICON_EXPANDED : DrawIcon(m_pRenderer, box, ICON_EXPANDED, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
                 case MU_ICON_CHECK : DrawIcon(m_pRenderer, box, ICON_CHECK, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
             }
-
             break;
         }
         }
