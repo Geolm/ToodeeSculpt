@@ -1,5 +1,4 @@
 #include "../renderer/renderer.h"
-#include "../system/undo.h"
 #include "../system/microui.h"
 #include "../system/format.h"
 #include "../system/palettes.h"
@@ -30,8 +29,8 @@ void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
     aabb_grow(&m_ExternalZone, vec2_splat(4.f));
     m_PopupHalfSize = (vec2) {250.f, 50.f};
     m_PopupCoord = vec2_sub(aabb_get_center(&m_Zone), m_PopupHalfSize);
-    m_pUndoContext = undo_init(1<<18, 1<<10);
-    m_PrimitiveEditor.Init(zone, m_pUndoContext);
+    m_PrimitiveEditor.Init(zone);
+    m_PrimitiveEditor.SetActive(true);
     m_MenuBarState = MenuBar_None;
     m_SnapToGrid = 0;
     m_ShowGrid = 0;
@@ -113,18 +112,7 @@ void Editor::Draw(struct renderer* context)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::DebugInterface(struct mu_Context* gui_context)
 {
-    if (mu_header(gui_context, "Undo"))
-    {
-        float undo_buffer_stat, undo_states_stat;
-        undo_stats(m_pUndoContext, &undo_buffer_stat, &undo_states_stat);
-        mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-        mu_text(gui_context, "buffer");
-        mu_text(gui_context, format("%3.2f%%", undo_buffer_stat));
-        mu_text(gui_context, "states");
-        mu_text(gui_context, format("%3.2f%%", undo_states_stat));
-        mu_text(gui_context, "stack");
-        mu_text(gui_context, format("%d", undo_get_num_states(m_pUndoContext)));
-    }
+    m_PrimitiveEditor.DebugInterface(gui_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -417,6 +405,5 @@ void Editor::Paste()
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Terminate()
 {
-    undo_terminate(m_pUndoContext);
     m_PrimitiveEditor.Terminate();
 }
