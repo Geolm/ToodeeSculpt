@@ -12,6 +12,18 @@
 #define UNUSED_VARIABLE(a) (void)(a)
 
 //----------------------------------------------------------------------------------------------------------------------------
+Editor::Editor() : BaseEditor()
+{
+    SetActive(true);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+Editor::~Editor()
+{
+
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
 {
     m_ExternalZone = m_Zone = zone;
@@ -73,31 +85,29 @@ void Editor::OnMouseButton(int button, int action, int mods)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::Draw(struct renderer* r)
+void Editor::Draw(struct renderer* context)
 {
     if (!m_CullingDebug)
     {
-        renderer_draw_aabb(r, m_ExternalZone, draw_color(0, 0, 0, 0xff));
-        renderer_draw_aabb(r, m_Zone, draw_color(0xffffffff));
-        renderer_set_culling_debug(r, false);
+        renderer_draw_aabb(context, m_ExternalZone, draw_color(0, 0, 0, 0xff));
+        renderer_draw_aabb(context, m_Zone, draw_color(0xffffffff));
+        renderer_set_culling_debug(context, false);
     }
     else
-    renderer_set_culling_debug(r, true);
+    renderer_set_culling_debug(context, true);
 
     if (m_ShowGrid)
     {
         vec2 step = vec2_scale(m_Zone.max - m_Zone.min, 1.f / m_GridSubdivision);
         
         for(float x = m_Zone.min.x; x<m_Zone.max.x; x += step.x)
-            renderer_draw_box(r, x, m_Zone.min.y, x+1, m_Zone.max.y, draw_color(na16_light_grey, 128));
+            renderer_draw_box(context, x, m_Zone.min.y, x+1, m_Zone.max.y, draw_color(na16_light_grey, 128));
 
         for(float y = m_Zone.min.y; y<m_Zone.max.y; y += step.y)
-            renderer_draw_box(r, m_Zone.min.x, y, m_Zone.max.x, y+1, draw_color(na16_light_grey, 128));
+            renderer_draw_box(context, m_Zone.min.x, y, m_Zone.max.x, y+1, draw_color(na16_light_grey, 128));
     }
 
-    renderer_set_cliprect(r, (int)m_Zone.min.x, (int)m_Zone.min.y, (int)m_Zone.max.x, (int)m_Zone.max.y);
-    m_PrimitiveEditor.Draw(r);
-    renderer_set_cliprect(r, 0, 0, UINT16_MAX, UINT16_MAX);
+    m_PrimitiveEditor.Draw(context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -205,12 +215,12 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button_ex(gui_context, "Copy ~C", 0, 0))
                 {
-                    m_PrimitiveEditor.CopySelected();
+                    Copy();
                     m_MenuBarState = MenuBar_None;
                 }
                 if (mu_button_ex(gui_context, "Paste ~V", 0, 0))
                 {
-                    m_PrimitiveEditor.Paste();
+                    Paste();
                     m_MenuBarState = MenuBar_None;
                 }
                 mu_end_window(gui_context);
@@ -383,7 +393,7 @@ void Editor::Undo()
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Delete()
 {
-    m_PrimitiveEditor.DeleteSelected();
+    m_PrimitiveEditor.Delete();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -395,7 +405,7 @@ void Editor::New()
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Copy()
 {
-    m_PrimitiveEditor.CopySelected();
+    m_PrimitiveEditor.Copy();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

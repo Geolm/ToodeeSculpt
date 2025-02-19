@@ -10,6 +10,8 @@
 #include "primitive.h"
 #include "primitive_list.h"
 
+#include "BaseEditor.h"
+
 struct mu_Context;
 struct renderer;
 struct GLFWwindow;
@@ -17,33 +19,36 @@ struct GLFWwindow;
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
 //----------------------------------------------------------------------------------------------------------------------------
-class PrimitiveEditor
+class PrimitiveEditor : public BaseEditor
 {
 public:
+    PrimitiveEditor();
+    ~PrimitiveEditor();
+
+    virtual void OnMouseMove(vec2 pos);
+    virtual void OnMouseButton(int button, int action, int mods);
+    virtual void Draw(struct renderer* context);
+    virtual void UserInterface(struct mu_Context* gui_context);
+
+    virtual void Copy();
+    virtual void Paste();
+    virtual void Undo();
+    virtual void Delete();
+
     void Init(aabb zone, struct undo_context* undo);
-    void OnMouseMove(vec2 pos);
-    void OnMouseButton(int button, int action, int mods);
-    void Draw(struct renderer* context);
-    void UserInterface(struct mu_Context* gui_context);
     void UndoSnapshot();
-    void Undo();
     void Serialize(serializer_context* context, bool normalization);
     void Deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization);
-    void CopySelected();
-    void Paste();
-    void DeleteSelected();
     void New();
     void Export(struct GLFWwindow* window);
     void Terminate();
 
-    void DuplicateSelected();
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
     void SetPrimimitiveIdDebug(bool flag) {m_PrimitiveIdDebug = flag;}
     void SetAABBDebug(bool flag) {m_AABBDebug = flag;}
 
 private:
-    
     enum state
     {
         IDLE,
@@ -59,6 +64,7 @@ private:
     };
 
 private:
+    void DuplicateSelected();
     void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}

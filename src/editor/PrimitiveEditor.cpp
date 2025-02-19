@@ -14,6 +14,16 @@
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
+PrimitiveEditor::PrimitiveEditor() : BaseEditor()
+{
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+PrimitiveEditor::~PrimitiveEditor()
+{
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Init(aabb zone, struct undo_context* undo)
 {
     plist_init(PRIMITIVES_STACK_RESERVATION);
@@ -55,6 +65,9 @@ void PrimitiveEditor::New()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::OnMouseMove(vec2 pos) 
 {
+    if (!IsActive())
+        return;
+
     if ((GetState() == state::ADDING_POINTS || GetState() == state::MOVING_POINT) && m_SnapToGrid)
     {
         pos = vec2_div(pos - m_EditionZone.min, aabb_get_size(&m_EditionZone));
@@ -117,6 +130,9 @@ void PrimitiveEditor::OnMouseMove(vec2 pos)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
 {
+    if (!IsActive())
+        return;
+
     bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) && !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen;
 
     if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -297,6 +313,11 @@ bool PrimitiveEditor::SelectPrimitive()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Draw(struct renderer* context)
 {
+    if (!IsActive())
+        return;
+
+    renderer_set_cliprect(context, (int)m_EditionZone.min.x, (int)m_EditionZone.min.y, (int)m_EditionZone.max.x, (int)m_EditionZone.max.y);
+
     // drawing *the* primitives
     renderer_set_outline_width(context, m_OutlineWidth);
     renderer_begin_combination(context, m_SmoothBlend);
@@ -447,6 +468,8 @@ void PrimitiveEditor::Draw(struct renderer* context)
             primitive_draw_aabb(p, context, draw_color(0x3fe01010));
         }
     }
+
+    renderer_set_cliprect(context, 0, 0, UINT16_MAX, UINT16_MAX);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -676,6 +699,9 @@ void PrimitiveEditor::UndoSnapshot()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Undo()
 {
+    if (!IsActive())
+        return;
+
     // cancel primitive creation
     if (GetState() == state::ADDING_POINTS || GetState() == state::SET_ROUNDNESS)
         SetState(state::IDLE);
@@ -698,8 +724,11 @@ void PrimitiveEditor::Undo()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::CopySelected()
+void PrimitiveEditor::Copy()
 {
+    if (!IsActive())
+        return;
+
     if (SelectedPrimitiveValid())
     {
         m_CopiedPrimitive = *plist_get(m_SelectedPrimitiveIndex);
@@ -710,6 +739,9 @@ void PrimitiveEditor::CopySelected()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Paste()
 {
+    if (!IsActive())
+        return;
+
     if (primitive_is_valid(&m_CopiedPrimitive))
     {
         vec2 center = primitive_compute_center(&m_CopiedPrimitive);
@@ -723,8 +755,11 @@ void PrimitiveEditor::Paste()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::DeleteSelected()
+void PrimitiveEditor::Delete()
 {
+    if (!IsActive())
+        return;
+
     if (GetState() == state::IDLE && SelectedPrimitiveValid())
     {
         plist_erase(m_SelectedPrimitiveIndex);
