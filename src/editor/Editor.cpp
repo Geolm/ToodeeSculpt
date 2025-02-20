@@ -32,6 +32,7 @@ void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
     m_PopupCoord = vec2_sub(aabb_get_center(&m_Zone), m_PopupHalfSize);
     m_pUndoContext = undo_init(1<<18, 1<<10);
     m_PrimitiveEditor.Init(zone, m_pUndoContext);
+    m_PrimitiveEditor.SetActive(true);
     m_MenuBarState = MenuBar_None;
     m_SnapToGrid = 0;
     m_ShowGrid = 0;

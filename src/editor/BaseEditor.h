@@ -22,7 +22,7 @@ public:
     virtual void Paste() {}
     virtual void Undo() {}
     virtual void Delete() {}
-    
+
     bool IsActive() const {return m_Active;}
     void SetActive(bool value) {m_Active = value;}
 

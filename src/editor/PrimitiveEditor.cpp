@@ -487,6 +487,9 @@ void PrimitiveEditor::DuplicateSelected()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 {
+    if (!IsActive())
+        return;
+
     int res = 0;
     int window_options = MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE;
     if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 200, 400, 200), window_options))
