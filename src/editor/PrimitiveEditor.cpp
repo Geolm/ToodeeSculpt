@@ -24,12 +24,13 @@ PrimitiveEditor::~PrimitiveEditor()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::Init(aabb zone)
+void PrimitiveEditor::Init(aabb zone, struct undo_context* undo)
 {
     plist_init(PRIMITIVES_STACK_RESERVATION);
     cc_init(&m_MultipleSelection);
     cc_reserve(&m_MultipleSelection, PRIMITIVES_STACK_RESERVATION);
     m_EditionZone = zone;
+    m_pUndoContext = undo;
     m_SnapToGrid = false;
     m_GridSubdivision = 20.f;
     m_PrimitiveIdDebug = false;
@@ -39,7 +40,6 @@ void PrimitiveEditor::Init(aabb zone)
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
     m_OutlineWidth = 1.f;
     m_GlobalOutline = 0;
-    m_pUndoContext = undo_init(1<<18, 1<<10);
     palette_default(&primitive_palette);
     New();
 }
@@ -487,9 +487,6 @@ void PrimitiveEditor::DuplicateSelected()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 {
-    if (!IsActive())
-        return;
-
     int res = 0;
     int window_options = MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE;
     if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 200, 400, 200), window_options))
@@ -523,27 +520,8 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 
         UndoSnapshot();
     }
+
     ContextualMenu(gui_context);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::DebugInterface(struct mu_Context* gui_context)
-{
-    if (!IsActive())
-        return;
-
-    if (mu_header(gui_context, "Undo"))
-    {
-        float undo_buffer_stat, undo_states_stat;
-        undo_stats(m_pUndoContext, &undo_buffer_stat, &undo_states_stat);
-        mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-        mu_text(gui_context, "buffer");
-        mu_text(gui_context, format("%3.2f%%", undo_buffer_stat));
-        mu_text(gui_context, "states");
-        mu_text(gui_context, format("%3.2f%%", undo_states_stat));
-        mu_text(gui_context, "stack");
-        mu_text(gui_context, format("%d", undo_get_num_states(m_pUndoContext)));
-    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -858,7 +836,6 @@ void PrimitiveEditor::SetState(enum state new_state)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Terminate()
 {
-    undo_terminate(m_pUndoContext);
     palette_free(&primitive_palette);
     plist_terminate();
     cc_cleanup(&m_MultipleSelection);

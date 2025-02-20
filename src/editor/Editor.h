@@ -3,6 +3,7 @@
 #include "BaseEditor.h"
 #include "PrimitiveEditor.h"
 
+struct undo_context;
 struct GLFWwindow;
 
 #define POPUP_STRING_LENGTH (2048)
@@ -51,6 +52,7 @@ private:
     aabb m_ExternalZone;
     vec2 m_PopupCoord;
     vec2 m_PopupHalfSize;
+    struct undo_context* m_pUndoContext;
     struct GLFWwindow* m_Window;
 
     // menubar

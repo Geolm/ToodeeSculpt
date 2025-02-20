@@ -15,7 +15,6 @@
 struct mu_Context;
 struct renderer;
 struct GLFWwindow;
-struct undo_context;
 
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
@@ -30,14 +29,13 @@ public:
     virtual void OnMouseButton(int button, int action, int mods);
     virtual void Draw(struct renderer* context);
     virtual void UserInterface(struct mu_Context* gui_context);
-    virtual void DebugInterface(struct mu_Context* gui_context);
 
     virtual void Copy();
     virtual void Paste();
     virtual void Undo();
     virtual void Delete();
 
-    void Init(aabb zone);
+    void Init(aabb zone, struct undo_context* undo);
     void UndoSnapshot();
     void Serialize(serializer_context* context, bool normalization);
     void Deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization);
