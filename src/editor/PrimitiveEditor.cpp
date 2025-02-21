@@ -525,22 +525,36 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
         UndoSnapshot();
     }
 
-    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 215, 600), MU_OPT_NOCLOSE|MU_OPT_NORESIZE))//MU_OPT_FORCE_SIZE|MU_OPT_NOCLOSE))
+    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 600), MU_OPT_NOCLOSE|MU_OPT_NORESIZE))//MU_OPT_FORCE_SIZE|MU_OPT_NOCLOSE))
     {
-        
-        mu_layout_row(gui_context, 2, (int[]) { 100, 100}, 0);
-        mu_layout_height(gui_context, 100);
-        
-        if (mu_button_ex(gui_context, NULL, ICON_DISC, 0) && GetState() == state::IDLE)
+        if (mu_header_ex(gui_context, "new primitive", MU_OPT_EXPANDED))
         {
-            m_PrimitiveShape = shape_disc;
-            SetState(state::ADDING_POINTS);
-        }
+            mu_layout_row(gui_context, 4, (int[]) { 50, 50, 50, 50}, 0);
+            mu_layout_height(gui_context, 50);
+            
+            if (mu_button_ex(gui_context, NULL, ICON_DISC, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_disc;
+                SetState(state::ADDING_POINTS);
+            }
 
-        if (mu_button_ex(gui_context, NULL, ICON_ORIENTEDBOX, 0) && GetState() == state::IDLE)
-        {
-            m_PrimitiveShape = shape_oriented_box;
-            SetState(state::ADDING_POINTS);
+            if (mu_button_ex(gui_context, NULL, ICON_ORIENTEDBOX, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_oriented_box;
+                SetState(state::ADDING_POINTS);
+            }
+
+            if (mu_button_ex(gui_context, NULL, ICON_ELLIPSE, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_oriented_ellipse;
+                SetState(state::ADDING_POINTS);
+            }
+
+            if (mu_button_ex(gui_context, NULL, ICON_PIE, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_pie;
+                SetState(state::ADDING_POINTS);
+            }
         }
 
         mu_end_window(gui_context);
@@ -663,7 +677,7 @@ void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
             {
                 primitive temp = *plist_get(m_SelectedPrimitiveIndex);
                 plist_erase(m_SelectedPrimitiveIndex);
-                plist_push(&temp);
+                plist_insert(0, &temp);
                 SetSelectedPrimitive(INVALID_INDEX);
                 UndoSnapshot();
                 m_SelectedPrimitiveContextualMenuOpen = false;

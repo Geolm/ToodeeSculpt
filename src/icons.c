@@ -60,11 +60,21 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_ORIENTEDBOX:
         {
-            renderer_draw_orientedbox(gfx_context, aabb_bilinear(&box, vec2_set(.8f, .2f)), aabb_bilinear(&box, vec2_set(.1f, .7f)),
+            renderer_draw_orientedbox(gfx_context, aabb_bilinear(&box, vec2_set(.8f, .2f)), aabb_bilinear(&box, vec2_set(.2f, .8f)),
                                       max_radius * 0.3f, max_radius * 0.05f, 0.f, fill_outline, primaray_color, op_add);
             break;
         }
-
+    case ICON_ELLIPSE:
+        {
+            renderer_draw_ellipse(gfx_context, aabb_bilinear(&box, vec2_set(.3f, .2f)), aabb_bilinear(&box, vec2_set(.7f, .8f)), 
+                                  max_radius * 0.5f, 0.f, fill_outline, primaray_color, op_add);
+            break;
+        }
+    case ICON_PIE:
+        {
+            renderer_draw_pie(gfx_context, center, aabb_bilinear(&box, vec2_set(.8f, .7f)), VEC2_PI * .75f, 0.f, fill_outline, primaray_color, op_add);
+            break;
+        }
     default: break;
     }
 }
