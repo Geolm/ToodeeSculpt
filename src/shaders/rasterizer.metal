@@ -142,7 +142,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
 
                     if (all(uv >= 0.f && uv <= 1.f))
                     {
-                        uv = linearstep(float2(-0.1f), float2(1.05f), uv);
+                        uv = float2(.1f, .1f) + float2(0.8f, 0.85f) * uv;
                         float2 char_uv = float2(float(FONT_CHAR_WIDTH) / float(FONT_TEXTURE_WIDTH),
                                                 float(FONT_CHAR_HEIGHT) / float(FONT_TEXTURE_HEIGHT));
                         uv *= char_uv;
