@@ -492,8 +492,8 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
         return;
 
     int res = 0;
-    int window_options = MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE;
-    if (mu_begin_window_ex(gui_context, "Global control", mu_rect(50, 200, 400, 200), window_options))
+    int window_options = MU_OPT_NOCLOSE|MU_OPT_NORESIZE;
+    if (mu_begin_window_ex(gui_context, "Global control", mu_rect(50, 100, 400, 200), window_options))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_label(gui_context,"smooth blend");
@@ -525,7 +525,7 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
         UndoSnapshot();
     }
 
-    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 600), MU_OPT_NOCLOSE|MU_OPT_NORESIZE))//MU_OPT_FORCE_SIZE|MU_OPT_NOCLOSE))
+    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 200), window_options))
     {
         if (mu_header_ex(gui_context, "new primitive", MU_OPT_EXPANDED))
         {

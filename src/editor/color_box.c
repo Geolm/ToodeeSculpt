@@ -42,6 +42,7 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
     context->hsv = color4f_to_hsv(*context->rgba_output);
     mu_layout_row(gui_context, 2, (int[]) { 100, -1 }, 0);
     mu_label(gui_context, "color");
+    mu_layout_height(gui_context, 50);
     mu_Rect r = mu_layout_next(gui_context);
     mu_draw_rect(gui_context, r, mu_color((int)(context->rgba_output->red*255.f), (int)(context->rgba_output->green*255.f), (int)(context->rgba_output->blue*255.f), 255));
 
