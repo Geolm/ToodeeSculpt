@@ -16,7 +16,7 @@
 #define FONT_CHAR_WIDTH 21
 #define FONT_CHAR_HEIGHT 31
 #define FONT_WIDTH 10
-#define FONT_HEIGHT 16
+#define FONT_HEIGHT 15
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
