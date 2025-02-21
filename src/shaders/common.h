@@ -1,11 +1,22 @@
 // ---------------------------------------------------------------------------------------------------------------------------
-// constants
+// renderer constants
 #define TILE_SIZE (16)
 #define MAX_NODES_COUNT (1<<20)
 #define INVALID_INDEX (0xffffffff)
 #define MAX_CLIPS (256)
 #define MAX_COMMANDS (1<<16)
 #define MAX_DRAWDATA (MAX_COMMANDS * 4)
+
+// font constants
+#define FONT_TEXTURE_WIDTH 256
+#define FONT_TEXTURE_HEIGHT 256
+#define FONT_CHAR_FIRST 33
+#define FONT_CHAR_LAST	126
+#define FONT_CHARS 95
+#define FONT_CHAR_WIDTH 21
+#define FONT_CHAR_HEIGHT 31
+#define FONT_WIDTH 10
+#define FONT_HEIGHT 16
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
@@ -15,6 +26,7 @@
 #define atomic_uint uint32_t
 #define device
 #define command_buffer void*
+#define texture_half uint64_t
 #ifdef __cplusplus
     typedef struct alignas(8) {float x, y;} float2;
 #else
@@ -22,6 +34,7 @@
 #endif
 #else
 using namespace metal;
+#define texture_half texture2d<half>
 #endif
 
 // packed on 6 bits
@@ -156,7 +169,7 @@ typedef struct draw_cmd_arguments
     constant draw_command* commands;
     constant quantized_aabb* commands_aabb;
     constant float* draw_data;
-    constant uint16_t* font;
+    texture_half font;
     clip_rect clips[MAX_CLIPS];
     uint32_t num_commands;
     uint32_t max_nodes;
@@ -164,7 +177,6 @@ typedef struct draw_cmd_arguments
     uint16_t num_tile_height;
     float aa_width;
     float2 screen_div;
-    float2 font_size;
     float font_scale;
     draw_color outline_color;
     float outline_width;

@@ -12,7 +12,6 @@
 #include "../system/PushArray.h"
 #include "../system/log.h"
 #include "../system/ortho.h"
-#include "font9x16.h"
 #include "commitmono_21_31.h"
 
 #ifdef SHADERS_IN_EXECUTABLE
@@ -50,7 +49,6 @@ struct renderer
     MTL::Buffer* m_pHead {nullptr};
     MTL::Buffer* m_pNodes {nullptr};
     MTL::Buffer* m_pTileIndices {nullptr};
-    MTL::Buffer* m_pFont {nullptr};
     MTL::IndirectCommandBuffer* m_pIndirectCommandBuffer {nullptr};
     MTL::Buffer* m_pIndirectArg {nullptr};
     DynamicBuffer m_DrawCommandsArg;
@@ -109,7 +107,6 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
     r->m_CommandsAABBBuffer.Init(r->m_pDevice, sizeof(quantized_aabb) * MAX_COMMANDS);
     r->m_pCountersBuffer = r->m_pDevice->newBuffer(sizeof(counters), MTL::ResourceStorageModePrivate);
     r->m_pNodes = r->m_pDevice->newBuffer(sizeof(tile_node) * MAX_NODES_COUNT, MTL::ResourceStorageModePrivate);
-    r->m_pFont = r->m_pDevice->newBuffer(font9x16data, sizeof(font9x16data), MTL::ResourceStorageModeShared);
     r->m_pClearBuffersFence = r->m_pDevice->newFence();
     r->m_pWriteIcbFence = r->m_pDevice->newFence();
 
@@ -296,20 +293,18 @@ void renderer_build_pso(struct renderer* r)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-const uint32_t font_width = 256;
-const uint32_t font_height = 256;
 void renderer_build_font_texture(struct renderer* r)
 {
     MTL::TextureDescriptor* pTextureDesc = MTL::TextureDescriptor::alloc()->init();
-    pTextureDesc->setWidth(font_width);
-    pTextureDesc->setHeight(font_height);
+    pTextureDesc->setWidth(FONT_TEXTURE_WIDTH);
+    pTextureDesc->setHeight(FONT_TEXTURE_HEIGHT);
     pTextureDesc->setPixelFormat(MTL::PixelFormatBC4_RUnorm);
     pTextureDesc->setTextureType(MTL::TextureType2D);
     pTextureDesc->setMipmapLevelCount(1);
     pTextureDesc->setUsage( MTL::ResourceUsageSample | MTL::ResourceUsageRead );
 
     r->m_pFontTexture = r->m_pDevice->newTexture(pTextureDesc);
-    r->m_pFontTexture->replaceRegion( MTL::Region( 0, 0, 0, font_width, font_height, 1 ), 0, commitmono_21_31, (font_width/4) * 8);
+    r->m_pFontTexture->replaceRegion( MTL::Region( 0, 0, 0, FONT_TEXTURE_WIDTH, FONT_TEXTURE_HEIGHT, 1 ), 0, commitmono_21_31, (FONT_TEXTURE_WIDTH/4) * 8);
     pTextureDesc->release();
 }
 
@@ -364,7 +359,7 @@ void renderer_bin_commands(struct renderer* r)
     args->commands_aabb = (quantized_aabb*) r->m_CommandsAABBBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
     args->commands = (draw_command*) r->m_DrawCommandsBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
     args->draw_data = (float*) r->m_DrawDataBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
-    args->font = (uint16_t*) r->m_pFont->gpuAddress();
+    args->font = (texture_half) r->m_pFontTexture->gpuResourceID()._impl;
     memcpy(args->clips, r->m_Clips, sizeof(r->m_Clips));
     args->max_nodes = MAX_NODES_COUNT;
     args->num_commands = r->m_NumDrawCommands;
@@ -372,7 +367,6 @@ void renderer_bin_commands(struct renderer* r)
     args->num_tile_width = r->m_NumTilesWidth;
     args->screen_div = (float2) {.x = 1.f / (float)r->m_WindowWidth, .y = 1.f / (float) r->m_WindowHeight};
     args->font_scale = r->m_FontScale;
-    args->font_size = (float2) {FONT_WIDTH, FONT_HEIGHT};
     args->outline_width = r->m_OutlineWidth;
     args->outline_color = draw_color(0xff000000);
     args->culling_debug = r->m_CullingDebug;
@@ -445,7 +439,7 @@ void renderer_flush(struct renderer* r, void* drawable)
         pRenderEncoder->useResource(r->m_pNodes, MTL::ResourceUsageRead);
         pRenderEncoder->useResource(r->m_pTileIndices, MTL::ResourceUsageRead);
         pRenderEncoder->useResource(r->m_pIndirectCommandBuffer, MTL::ResourceUsageRead);
-        pRenderEncoder->useResource(r->m_pFont, MTL::ResourceUsageRead);
+        pRenderEncoder->useResource(r->m_pFontTexture, MTL::ResourceUsageRead);
         pRenderEncoder->setRenderPipelineState(r->m_pDrawPSO);
         pRenderEncoder->executeCommandsInBuffer(r->m_pIndirectCommandBuffer, NS::Range(0, 1));
         pRenderEncoder->endEncoding();
@@ -491,7 +485,6 @@ void renderer_terminate(struct renderer* r)
     r->m_CommandsAABBBuffer.Terminate();
     r->m_DrawCommandsArg.Terminate();
     r->m_BinOutputArg.Terminate();
-    SAFE_RELEASE(r->m_pFont);
     SAFE_RELEASE(r->m_pDepthStencilState);
     SAFE_RELEASE(r->m_pCountersBuffer);
     SAFE_RELEASE(r->m_pClearBuffersFence);
@@ -1025,7 +1018,7 @@ void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color
 void renderer_draw_text(struct renderer* r, float x, float y, const char* text, draw_color color)
 {
     vec2 p = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, vec2_set(x, y));
-    const float font_spacing = (FONT_WIDTH + FONT_SPACING) * r->m_FontScale;
+    const float font_spacing = FONT_WIDTH * r->m_FontScale;
     for(const char *c = text; *c != 0; c++)
     {
         renderer_draw_char(r, p.x, p.y, *c, color);

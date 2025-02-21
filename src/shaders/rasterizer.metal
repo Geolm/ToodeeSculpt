@@ -138,13 +138,18 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 case primitive_char:
                 {
                     float2 top_left = float2(data[0], data[1]);
-                    float2 pos = (in.pos.xy - top_left) / input.font_scale;
-                    if (all(pos >= 0.f && pos <= input.font_size))
+                    float2 uv = (in.pos.xy - top_left) / float2(FONT_WIDTH, FONT_HEIGHT);
+
+                    if (all(uv >= 0.f && uv <= 1.f))
                     {
-                        ushort2 pixel_pos = (ushort2) pos;
-                        ushort bitfield = input.font[cmd.custom_data * (ushort) input.font_size.x + pixel_pos.x];
-                        if (bitfield&(1<<pixel_pos.y))
-                            distance = 0.f;
+                        float2 char_uv = float2(float(FONT_CHAR_WIDTH) / float(FONT_TEXTURE_WIDTH),
+                                                float(FONT_CHAR_HEIGHT) / float(FONT_TEXTURE_HEIGHT));
+                        uv *= char_uv;
+                        uv += float2(float(cmd.custom_data%12), float(cmd.custom_data/12)) * char_uv;
+
+                        constexpr sampler s(address::clamp_to_zero, filter::linear );
+                        half texel = 1.h - input.font.sample(s, uv).r;
+                        distance = texel * input.aa_width;
                     }
                     break;
                 }

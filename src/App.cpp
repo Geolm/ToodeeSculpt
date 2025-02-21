@@ -16,7 +16,6 @@
 #include "editor/Editor.h"
 #include "MouseCursors.h"
 #include "icons.h"
-#include "renderer/font9x16.h"
 #include "renderer/renderer.h"
 
 #define UNUSED_VARIABLE(a) (void)(a)
@@ -114,7 +113,7 @@ void App::InitGui()
         UNUSED_VARIABLE(font);
         if (len == -1)
             len = (int)strlen(text);
-        return len * (FONT_WIDTH + FONT_SPACING);
+        return len * FONT_WIDTH;
     };
 
     m_pGuiContext->text_height = [] (mu_Font font) -> int { UNUSED_VARIABLE(font); return FONT_HEIGHT; };
