@@ -492,7 +492,7 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 
     int res = 0;
     int window_options = MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE;
-    if (mu_begin_window_ex(gui_context, "global control", mu_rect(50, 200, 400, 200), window_options))
+    if (mu_begin_window_ex(gui_context, "Global control", mu_rect(50, 200, 400, 200), window_options))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_label(gui_context,"smooth blend");
@@ -507,7 +507,7 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
     }
 
     primitive* selected = (SelectedPrimitiveValid()) ? plist_get(m_SelectedPrimitiveIndex) : nullptr;
-    if (mu_begin_window_ex(gui_context, "primitive inspector", mu_rect(50, 400, 400, 600), window_options))
+    if (mu_begin_window_ex(gui_context, "Primitive inspector", mu_rect(50, 400, 400, 600), window_options))
     {
         if (selected)
             res |= primitive_property_grid(selected, gui_context);
