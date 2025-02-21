@@ -55,7 +55,7 @@ struct renderer
     MTL::Buffer* m_pIndirectArg {nullptr};
     DynamicBuffer m_DrawCommandsArg;
     DynamicBuffer m_BinOutputArg;
-    MTL::Texture *m_pFontTexture;
+    MTL::Texture *m_pFontTexture {nullptr};
     
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;
@@ -505,6 +505,7 @@ void renderer_terminate(struct renderer* r)
     SAFE_RELEASE(r->m_pIndirectArg);
     SAFE_RELEASE(r->m_pIndirectCommandBuffer);
     SAFE_RELEASE(r->m_pCommandQueue);
+    SAFE_RELEASE(r->m_pFontTexture);
     delete r;
 }
 
