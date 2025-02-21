@@ -2,22 +2,19 @@
 
 Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) with smooth operator to sculpt your shape
 
-![2024-11 screenshot](/images/Screenshot%202024-12-18%20at%2011.24.02.png)
+![2024-11 screenshot](/images/Screenshot%202025-02-21%20at%2011.13.46.png)
 
-###### Work in progress
-* only available on macOS Apple Silicon
-* bugs, missing features
 
-## Why
+## Why SDF?
 * analytical shape, can adapt any resolution
-* can produce smooth shapes without tesselation
+* can produce smooth shapes without generating a ton of triangles
 * lightweight vs PNG image
 * fast to render on GPU compared to bezier curves
 * out of the box anti-aliasing
 
 ## Features
 * Primitives : disc, triangle, oriented box, ellipse, pie, arc
-* Primitive can be rounded
+* Primitive can be rounded, outline
 * Boolean operator : union, substraction, [smooth blend](https://iquilezles.org/articles/smin/)
 * Intuitive editor, undo support, grid snapping, copy/paste, rotation
 * Save/load
@@ -32,12 +29,6 @@ This editor renders everything with a gpu-driven pipeline
 * uses the metal API (until sokol_graphics supports gpu-driven features, nudge nudge)
 
 More details to come in the documentation.
-
-## Planned Dev
-
-* more primitives : capsule
-* export to PNG, shadertoy shader
-* editor : multiple selection, zoom
 
 ## How to build
 ### Prerequisite
