@@ -7,6 +7,7 @@
 #include "../system/format.h"
 #include "PrimitiveEditor.h"
 #include "tds.h"
+#include "../icons.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -522,6 +523,27 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
             primitive_update_aabb(selected);
 
         UndoSnapshot();
+    }
+
+    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 215, 600), MU_OPT_NOCLOSE|MU_OPT_NORESIZE))//MU_OPT_FORCE_SIZE|MU_OPT_NOCLOSE))
+    {
+        
+        mu_layout_row(gui_context, 2, (int[]) { 100, 100}, 0);
+        mu_layout_height(gui_context, 100);
+        
+        if (mu_button_ex(gui_context, NULL, ICON_DISC, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_disc;
+            SetState(state::ADDING_POINTS);
+        }
+
+        if (mu_button_ex(gui_context, NULL, ICON_ORIENTEDBOX, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_oriented_box;
+            SetState(state::ADDING_POINTS);
+        }
+
+        mu_end_window(gui_context);
     }
 
     ContextualMenu(gui_context);

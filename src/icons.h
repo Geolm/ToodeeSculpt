@@ -7,10 +7,17 @@
 
 enum icon_type
 {
-    ICON_CLOSE,
+    ICON_CLOSE = 1,     // in sync with microui
     ICON_CHECK,
     ICON_COLLAPSED,
-    ICON_EXPANDED
+    ICON_EXPANDED,
+    ICON_DISC,
+    ICON_ORIENTEDBOX,
+    ICON_ELLIPSE,
+    ICON_TRIANGLE,
+    ICON_PIE,
+    ICON_ARC,
+    ICON_SPLINE,
 };
 
 #ifdef __cplusplus
