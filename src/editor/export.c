@@ -11,7 +11,7 @@
 //----------------------------------------------------------------------------------------------------------------------------
 void shadertoy_start(struct string_buffer* b)
 {
-    const char* boiler_plate = shadertoy_boilerplate_shader;
+    const uint8_t* boiler_plate = shadertoy_boilerplate_shader;
     while (*boiler_plate != 0 && b->remaining > 0)
     {
         *(b->current++) = *(boiler_plate++);

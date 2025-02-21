@@ -9,6 +9,7 @@ project(ToodeeSculpt)
 
 # --- Build the binarize ---
 add_executable(binarize 
+./src/tools/bc4_encoder.c
 ./src/tools/binarize.c
 ./src/system/bin2h.c
 ./src/system/file_buffer.c

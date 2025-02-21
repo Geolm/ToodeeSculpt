@@ -3,12 +3,14 @@
 #include "../system/file_buffer.h"
 #include "../system/format.h"
 #include "../system/spng.h"
+#include "bc4_encoder.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
 #define UNUSED_VARIABLE(a) (void)(a)
 #define SHADERS_PATH "../src/shaders/"
+#define IMAGES_PATH "../images/"
 
 // ---------------------------------------------------------------------------------------------------------------------------
 bool bin_shader(const char* shader_name, const char* extension)
@@ -38,12 +40,12 @@ bool bin_shader(const char* shader_name, const char* extension)
 // ---------------------------------------------------------------------------------------------------------------------------
 bool bin_font(const char* font_filename)
 {
-    size_t file_size, compressed_image_size;
-    void* buffer = read_file(font_filename, &file_size);
+    size_t file_size, raw_image_size;
+    void* buffer = read_file(format("%s%s.png", IMAGES_PATH, font_filename), &file_size);
 
     if (buffer != NULL)
     {
-        fprintf(stdout, "opening ""%s"" size : %d bytes\n", font_filename, file_size);
+        fprintf(stdout, "opening \"%s%s\" size : %zu bytes\n", IMAGES_PATH, font_filename, file_size);
         spng_ctx *ctx = spng_ctx_new(0);
 
         if (spng_set_png_buffer(ctx, buffer, file_size))
@@ -56,7 +58,7 @@ bool bin_font(const char* font_filename)
             return false;
         }
 
-        fprintf(stdout, "\t%dx%d %d bit depth image\n", ihdr.width, ihdr.height, ihdr.bit_depth);
+        fprintf(stdout, "\t%ux%u %u bit depth image\n", ihdr.width, ihdr.height, ihdr.bit_depth);
 
         if (ihdr.color_type != SPNG_COLOR_TYPE_GRAYSCALE || ihdr.bit_depth != 8)
         {
@@ -64,23 +66,42 @@ bool bin_font(const char* font_filename)
             return false;
         }
 
-        if (spng_decoded_image_size(ctx, SPNG_FMT_G8, &compressed_image_size))
+        if (ihdr.width%4 || ihdr.height%4)
+        {
+            fprintf(stdout, "not supported image dimensions\n");
+            return false;
+        }
+
+        if (spng_decoded_image_size(ctx, SPNG_FMT_G8, &raw_image_size))
         {
             fprintf(stdout, "can't get image size\n");
             return false;
         }
 
-        uint8_t* compressed_image = (uint8_t*) malloc(compressed_image_size);
-        if (spng_decode_image(ctx, compressed_image, compressed_image_size, SPNG_FMT_G8, 0))
+        uint8_t* raw_image = (uint8_t*) malloc(raw_image_size);
+        if (spng_decode_image(ctx, raw_image, raw_image_size, SPNG_FMT_G8, 0))
         {
             fprintf(stdout, "error while decoding image\n");
-            free(compressed_image);
+            free(raw_image);
             return false;
         }
 
-        
+        fprintf(stdout, "\tcompressing image in BC4\n");
 
-        return true;
+        size_t bc4_image_size = (ihdr.width * ihdr.height) / 2;
+        uint8_t* bc4_image = malloc(bc4_image_size);
+
+        bc4_encode(raw_image, bc4_image, ihdr.width, ihdr.height);
+
+        fprintf(stdout, "%s", format("writting \"../src/renderer/%s.h\"", font_filename));
+
+        bool result = bin2h(format("../src/renderer/%s.h", font_filename), font_filename, bc4_image, bc4_image_size);
+
+        free(bc4_image);
+        free(raw_image);
+        spng_ctx_free(ctx);
+
+        return result;
     }
     return false;
 }
@@ -104,8 +125,8 @@ int main(int argc, const char * argv[])
 
     fprintf(stdout, "\nimporting and compressing font\n\n");
 
-    if (!bin_font("../images/commitmono_21_31.png"))
-        return -1;
+    if (!bin_font("commitmono_21_31"))
+        return false;
 
     fprintf(stdout, "\n\nall good");
 
