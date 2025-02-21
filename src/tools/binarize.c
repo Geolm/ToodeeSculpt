@@ -88,7 +88,7 @@ bool bin_font(const char* font_filename)
 
         fprintf(stdout, "\tcompressing image in BC4\n");
 
-        size_t bc4_image_size = (ihdr.width * ihdr.height) / 2;
+        size_t bc4_image_size = (ihdr.width/4 * ihdr.height/4) * 8;
         uint8_t* bc4_image = malloc(bc4_image_size);
 
         bc4_encode(raw_image, bc4_image, ihdr.width, ihdr.height);

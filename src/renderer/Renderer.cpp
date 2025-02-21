@@ -13,6 +13,7 @@
 #include "../system/log.h"
 #include "../system/ortho.h"
 #include "font9x16.h"
+#include "commitmono_21_31.h"
 
 #ifdef SHADERS_IN_EXECUTABLE
 #include "../shaders/binning.h"
@@ -54,6 +55,7 @@ struct renderer
     MTL::Buffer* m_pIndirectArg {nullptr};
     DynamicBuffer m_DrawCommandsArg;
     DynamicBuffer m_BinOutputArg;
+    MTL::Texture *m_pFontTexture;
     
     PushArray<draw_command> m_Commands;
     PushArray<float> m_DrawData;
@@ -83,6 +85,7 @@ struct renderer
 
 
 void renderer_build_pso(struct renderer* r);
+void renderer_build_font_texture(struct renderer* r);
 void renderer_reload_shaders(struct renderer* r);
 void renderer_build_depthstencil_state(struct renderer* r);
 
@@ -122,6 +125,7 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
     r->m_Semaphore = dispatch_semaphore_create(DynamicBuffer::MaxInflightBuffers);
 
     renderer_build_pso(r);
+    renderer_build_font_texture(r);
     renderer_build_depthstencil_state(r);
     renderer_resize(r, width, height);
 
@@ -289,6 +293,24 @@ void renderer_build_pso(struct renderer* r)
         pFragmentFunction->release();
         pDesc->release();
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+const uint32_t font_width = 256;
+const uint32_t font_height = 256;
+void renderer_build_font_texture(struct renderer* r)
+{
+    MTL::TextureDescriptor* pTextureDesc = MTL::TextureDescriptor::alloc()->init();
+    pTextureDesc->setWidth(font_width);
+    pTextureDesc->setHeight(font_height);
+    pTextureDesc->setPixelFormat(MTL::PixelFormatBC4_RUnorm);
+    pTextureDesc->setTextureType(MTL::TextureType2D);
+    pTextureDesc->setMipmapLevelCount(1);
+    pTextureDesc->setUsage( MTL::ResourceUsageSample | MTL::ResourceUsageRead );
+
+    r->m_pFontTexture = r->m_pDevice->newTexture(pTextureDesc);
+    r->m_pFontTexture->replaceRegion( MTL::Region( 0, 0, 0, font_width, font_height, 1 ), 0, commitmono_21_31, (font_width/4) * 8);
+    pTextureDesc->release();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
