@@ -70,7 +70,7 @@ struct renderer
     float m_AAWidth {1.41421356237f};
     float m_FontScale {1.f};
     float m_SmoothValue {0.f};
-    float m_OutlineWidth {0.f};
+    float m_OutlineWidth {1.f};
     bool m_CullingDebug {false};
     struct view_proj m_ViewProj;
     float m_CameraScale {1.f};
@@ -1048,12 +1048,6 @@ void renderer_set_cliprect(struct renderer* r, uint16_t min_x, uint16_t min_y, u
 void renderer_set_culling_debug(struct renderer* r, bool b)
 {
     r->m_CullingDebug = b;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void renderer_set_outline_width(struct renderer* r, float value)
-{
-    r->m_OutlineWidth = value;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

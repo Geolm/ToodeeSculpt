@@ -77,7 +77,6 @@ private:
     float m_SmoothBlend;
     float m_AlphaValue;
     uint32_t m_SelectedPrimitiveIndex;
-    float m_OutlineWidth;
 
     // ui
     aabb m_EditionZone;

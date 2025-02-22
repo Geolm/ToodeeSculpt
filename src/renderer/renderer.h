@@ -26,7 +26,6 @@ void renderer_set_cliprect(struct renderer* r, uint16_t min_x, uint16_t min_y, u
 void renderer_set_culling_debug(struct renderer* r, bool b);
 void renderer_set_viewport(struct renderer* r, float width, float height);
 void renderer_set_camera(struct renderer* r, vec2 position, float scale);
-void renderer_set_outline_width(struct renderer* r, float value);
 
 void renderer_begin_combination(struct renderer* r, float smooth_value);
 void renderer_end_combination(struct renderer* r, bool outline);

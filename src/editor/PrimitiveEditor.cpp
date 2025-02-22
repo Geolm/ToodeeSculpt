@@ -39,7 +39,6 @@ void PrimitiveEditor::Init(aabb zone, struct undo_context* undo)
     m_PointColor = draw_color(0x10e010, 128);
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
-    m_OutlineWidth = 1.f;
     m_GlobalOutline = 0;
     palette_default(&primitive_palette);
     New();
@@ -320,7 +319,6 @@ void PrimitiveEditor::Draw(struct renderer* context)
     renderer_set_cliprect(context, (int)m_EditionZone.min.x, (int)m_EditionZone.min.y, (int)m_EditionZone.max.x, (int)m_EditionZone.max.y);
 
     // drawing *the* primitives
-    renderer_set_outline_width(context, m_OutlineWidth);
     renderer_begin_combination(context, m_SmoothBlend);
 
     for(uint32_t i=0; i<plist_size(); ++i)
@@ -502,8 +500,6 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
         res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
         mu_label(gui_context, "global outline");
         res |= mu_checkbox(gui_context, "", &m_GlobalOutline);
-        mu_label(gui_context, "outline width");
-        res |= mu_slider_ex(gui_context, &m_OutlineWidth, 0.f, 20.f, 0.1f, "%2.2f", 0);
         mu_end_window(gui_context);
     }
 
@@ -559,6 +555,24 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
             if (mu_button_ex(gui_context, NULL, ICON_ARC, 0) && GetState() == state::IDLE)
             {
                 m_PrimitiveShape = shape_arc;
+                SetState(state::ADDING_POINTS);
+            }
+
+            if (mu_button_ex(gui_context, NULL, ICON_TRIANGLE, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_triangle;
+                SetState(state::ADDING_POINTS);
+            }
+
+            if (mu_button_ex(gui_context, NULL, ICON_CAPSULE, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_uneven_capsule;
+                SetState(state::ADDING_POINTS);
+            }
+
+            if (mu_button_ex(gui_context, NULL, ICON_SPLINE, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_spline;
                 SetState(state::ADDING_POINTS);
             }
         }
@@ -709,7 +723,6 @@ void PrimitiveEditor::Serialize(serializer_context* context, bool normalization)
     serializer_write_float(context, m_AlphaValue);
     serializer_write_float(context, m_SmoothBlend);
     serializer_write_uint32_t(context, m_SelectedPrimitiveIndex);
-    serializer_write_float(context, m_OutlineWidth);
     plist_serialize(context, normalization, &m_EditionZone);
 }
 
@@ -720,8 +733,8 @@ void PrimitiveEditor::Deserialize(serializer_context* context, uint16_t major, u
     m_SmoothBlend = serializer_read_float(context);
     m_SelectedPrimitiveIndex = serializer_read_uint32_t(context);
 
-    if (minor>=5)
-        m_OutlineWidth = serializer_read_float(context);
+    if (minor==5)
+        serializer_read_float(context); //skip outline width
 
     plist_deserialize(context, major, minor, normalization, &m_EditionZone);
 }

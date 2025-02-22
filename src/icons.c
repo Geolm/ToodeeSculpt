@@ -76,11 +76,33 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
             break;
         }
     case ICON_ARC:
-    {
-        renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.8f, .7f)), aabb_bilinear(&box, vec2_set(.3f, .2f)),
-                                      aabb_bilinear(&box, vec2_set(.8f, .2f)), max_radius * 0.25f, fill_outline, primary_color, op_add);
-        break;
-    }
+        {
+            renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.8f, .7f)), aabb_bilinear(&box, vec2_set(.3f, .2f)),
+                                        aabb_bilinear(&box, vec2_set(.8f, .2f)), max_radius * 0.25f, fill_outline, primary_color, op_add);
+            break;
+        }
+    case ICON_TRIANGLE:
+        {
+            renderer_draw_triangle(gfx_context, aabb_bilinear(&box, vec2_set(.9f, .8f)), aabb_bilinear(&box, vec2_set(.4f, .2f)),
+                                   aabb_bilinear(&box, vec2_set(.3f, .5f)), max_radius * 0.05f, 0.f, fill_outline, primary_color, op_add);
+            break;
+        }
+    case ICON_CAPSULE:
+        {
+            renderer_draw_unevencapsule(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.2f, .2f)), 
+                                        max_radius*0.35f, max_radius*0.15f, 0.f, fill_outline, primary_color, op_add);
+            break;
+        }
+    case ICON_SPLINE:
+        {
+            renderer_begin_combination(gfx_context, 1.f);
+            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.090986f, 1.135268f)), aabb_bilinear(&box, vec2_set(0.604739, -0.796424)),
+                              0.29814512f, 0.500505f * max_radius, 0.025374f * max_radius, fill_solid, primary_color, op_union);
+            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.328089, 0.407449)), aabb_bilinear(&box, vec2_set(-0.947630, 0.319371)),
+                              0.894439532f, 0.188525 * max_radius, 0.025374 * max_radius, fill_solid, primary_color, op_union);
+            renderer_end_combination(gfx_context, false);
+            break;
+        }
     default: break;
     }
 }
