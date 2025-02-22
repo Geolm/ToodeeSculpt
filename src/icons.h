@@ -26,7 +26,7 @@ extern "C" {
 
 struct renderer;
 
-void DrawIcon(struct renderer* r, aabb box, enum icon_type icon, draw_color primaray_color, draw_color secondary_color, float time_in_second);
+void DrawIcon(struct renderer* r, aabb box, enum icon_type icon, draw_color primary_color, draw_color secondary_color, float time_in_second);
 
 #ifdef __cplusplus
 }

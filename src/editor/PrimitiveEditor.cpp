@@ -555,6 +555,12 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
                 m_PrimitiveShape = shape_pie;
                 SetState(state::ADDING_POINTS);
             }
+
+            if (mu_button_ex(gui_context, NULL, ICON_ARC, 0) && GetState() == state::IDLE)
+            {
+                m_PrimitiveShape = shape_arc;
+                SetState(state::ADDING_POINTS);
+            }
         }
 
         mu_end_window(gui_context);
