@@ -47,7 +47,6 @@ void PrimitiveEditor::Init(aabb zone, struct undo_context* undo)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::New()
 {
-    m_NewPrimitiveContextualMenuOpen = false;
     m_SelectedPrimitiveContextualMenuOpen = false;
     m_CurrentState = state::IDLE;
     m_CurrentPoint = 0;
@@ -133,7 +132,7 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
     if (!IsActive())
         return;
 
-    bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) && !m_NewPrimitiveContextualMenuOpen && !m_SelectedPrimitiveContextualMenuOpen;
+    bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) && !m_SelectedPrimitiveContextualMenuOpen;
 
     if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
@@ -142,11 +141,6 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
             if (SelectedPrimitiveValid() && primitive_test_mouse_cursor(plist_get(m_SelectedPrimitiveIndex), m_MousePosition, false))
             {
                 m_SelectedPrimitiveContextualMenuOpen = !m_SelectedPrimitiveContextualMenuOpen;
-            }
-            else
-            {
-                m_NewPrimitiveContextualMenuOpen = !m_NewPrimitiveContextualMenuOpen;
-                SetSelectedPrimitive(INVALID_INDEX);
             }
             m_ContextualMenuPosition = m_MousePosition;
         }
@@ -422,7 +416,7 @@ void PrimitiveEditor::Draw(struct renderer* context)
     {
         renderer_draw_pie(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Aperture, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
     }
-    else if (GetState() == state::IDLE && !m_NewPrimitiveContextualMenuOpen)
+    else if (GetState() == state::IDLE)
     {
         MouseCursors::GetInstance().Default();
         for(uint32_t i=0; i<plist_size(); ++i)
@@ -586,78 +580,7 @@ void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
 {
-    if (m_NewPrimitiveContextualMenuOpen)
-    {
-        mu_Rect window_rect;
-        window_rect.h = gui_context->style->title_height * 10;
-        window_rect.w = gui_context->text_width(0, "ellipseell", -1);
-        window_rect.x = (int)m_ContextualMenuPosition.x - window_rect.w/2;
-        window_rect.y = (int)m_ContextualMenuPosition.y - window_rect.h/2;
-
-        aabb window_aabb =
-        {
-            .min = vec2_set(window_rect.x, window_rect.y),
-            .max = vec2_set(window_rect.x + window_rect.w, window_rect.y + window_rect.h)
-        };
-
-        if (mu_begin_window_ex(gui_context, "new", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
-        {
-            mu_layout_row(gui_context, 1, (int[]) {90}, 0);
-            if (mu_button_ex(gui_context, "disc", 0, 0))
-            {
-                m_PrimitiveShape = shape_disc;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, "ellipse", 0, 0))
-            {
-                m_PrimitiveShape = shape_oriented_ellipse;
-                SetState(state::ADDING_POINTS);
-            }
-            
-            if (mu_button_ex(gui_context, "box", 0, 0))
-            {
-                m_PrimitiveShape = shape_oriented_box;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, "triangle", 0, 0))
-            {
-                m_PrimitiveShape = shape_triangle;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, "pie", 0, 0))
-            {
-                m_PrimitiveShape = shape_pie;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, "arc", 0, 0))
-            {
-                m_PrimitiveShape = shape_arc;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, "spline", 0, 0))
-            {
-                m_PrimitiveShape = shape_spline;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, "capsule", 0, 0))
-            {
-                m_PrimitiveShape = shape_uneven_capsule;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (!aabb_test_point(&window_aabb, m_MousePosition))
-                m_NewPrimitiveContextualMenuOpen = false;
-
-            mu_end_window(gui_context);
-        }
-    }
-    else if (m_SelectedPrimitiveContextualMenuOpen && SelectedPrimitiveValid())
+    if (m_SelectedPrimitiveContextualMenuOpen && SelectedPrimitiveValid())
     {
         mu_Rect window_rect;
         window_rect.h = gui_context->style->title_height * 8;
@@ -843,7 +766,6 @@ void PrimitiveEditor::SetState(enum state new_state)
     if (GetState() == state::IDLE && new_state == state::ADDING_POINTS)
     {
         m_CurrentPoint = 0;
-        m_NewPrimitiveContextualMenuOpen = false;
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
     }
 
