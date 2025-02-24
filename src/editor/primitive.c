@@ -410,7 +410,8 @@ void primitive_scale(struct primitive* p, float scale)
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_normalize(struct primitive* p, const aabb* box)
 {
-    float normalization_factor = 1.f / aabb_get_size(box).x;
+    vec2 box_size = aabb_get_size(box);
+    float normalization_factor = 1.f / float_min(box_size.x, box_size.y);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         p->m_Points[i] = aabb_get_uv(box, p->m_Points[i]);
@@ -431,7 +432,8 @@ void primitive_normalize(struct primitive* p, const aabb* box)
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_expand(struct primitive* p, const aabb* box)
 {
-    float expand_factor = aabb_get_size(box).x;
+    vec2 box_size = aabb_get_size(box);
+    float expand_factor = float_min(box_size.x, box_size.y);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
         p->m_Points[i] = aabb_bilinear(box, p->m_Points[i]);
