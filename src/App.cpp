@@ -170,12 +170,14 @@ void App::DrawGui()
         }
         case MU_COMMAND_ICON :
         {
+            draw_color primary_color = from_mu_color(cmd->icon.color);
+            draw_color secondary_color = from_mu_color(m_pGuiContext->style->colors[MU_COLOR_BASE]);
             aabb box = (aabb){.min = (vec2) {(float)cmd->icon.rect.x, (float)cmd->icon.rect.y},
                               .max = (vec2) {(float)(cmd->icon.rect.x + cmd->icon.rect.w), (float)(cmd->icon.rect.y + cmd->icon.rect.h)}};
             switch(cmd->icon.id)
             {
                 case MU_ICON_CLOSE : DrawIcon(m_pRenderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
-                default: DrawIcon(m_pRenderer, box, (enum icon_type) cmd->icon.id, from_mu_color(cmd->icon.color), draw_color(0), 0.f);break;
+                default: DrawIcon(m_pRenderer, box, (enum icon_type) cmd->icon.id, primary_color, secondary_color, 0.f);break;
             }
             break;
         }

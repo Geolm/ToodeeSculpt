@@ -55,42 +55,42 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_DISC:
         {
-            renderer_draw_disc(gfx_context, center, max_radius * .8f, 0.f, fill_outline, primary_color, op_add);
+            renderer_draw_disc(gfx_context, center, max_radius * .7f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_ORIENTEDBOX:
         {
             renderer_draw_orientedbox(gfx_context, aabb_bilinear(&box, vec2_set(.8f, .2f)), aabb_bilinear(&box, vec2_set(.2f, .8f)),
-                                      max_radius * 0.3f, max_radius * 0.05f, 0.f, fill_outline, primary_color, op_add);
+                                      max_radius * 0.3f, max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_ELLIPSE:
         {
             renderer_draw_ellipse(gfx_context, aabb_bilinear(&box, vec2_set(.3f, .2f)), aabb_bilinear(&box, vec2_set(.7f, .8f)), 
-                                  max_radius * 0.5f, 0.f, fill_outline, primary_color, op_add);
+                                  max_radius * 0.5f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_PIE:
         {
-            renderer_draw_pie(gfx_context, center, aabb_bilinear(&box, vec2_set(.8f, .7f)), VEC2_PI * .75f, 0.f, fill_outline, primary_color, op_add);
+            renderer_draw_pie(gfx_context, center, aabb_bilinear(&box, vec2_set(.8f, .7f)), VEC2_PI * .75f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_ARC:
         {
-            renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.8f, .7f)), aabb_bilinear(&box, vec2_set(.3f, .2f)),
-                                        aabb_bilinear(&box, vec2_set(.8f, .2f)), max_radius * 0.25f, fill_outline, primary_color, op_add);
+            renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.8f, .5f)),
+                                        aabb_bilinear(&box, vec2_set(.3f, .2f)), max_radius * 0.15f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_TRIANGLE:
         {
             renderer_draw_triangle(gfx_context, aabb_bilinear(&box, vec2_set(.9f, .8f)), aabb_bilinear(&box, vec2_set(.4f, .2f)),
-                                   aabb_bilinear(&box, vec2_set(.3f, .5f)), max_radius * 0.05f, 0.f, fill_outline, primary_color, op_add);
+                                   aabb_bilinear(&box, vec2_set(.3f, .5f)), max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_CAPSULE:
         {
             renderer_draw_unevencapsule(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.2f, .2f)), 
-                                        max_radius*0.35f, max_radius*0.15f, 0.f, fill_outline, primary_color, op_add);
+                                        max_radius*0.35f, max_radius*0.15f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_SPLINE:
@@ -103,7 +103,19 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
                                         aabb_bilinear(&box, vec2_set(.5f, .5f)), thickness, fill_solid, primary_color, op_union);
             renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.9f, .8f)),
                                           aabb_bilinear(&box, vec2_set(.7f, .9f)), thickness, fill_solid, primary_color, op_union);
-            renderer_end_combination(gfx_context, true);
+            renderer_end_combination(gfx_context, false);
+            break;
+        }
+
+    case ICON_SCALE:
+        {
+            vec2 box_min = aabb_bilinear(&box, vec2_set(.1f, .5f));
+            vec2 box_max = aabb_bilinear(&box, vec2_set(.5f, .9f));
+            renderer_begin_combination(gfx_context, 1.f);
+            renderer_draw_box(gfx_context, box_min.x, box_min.y, box_max.x, box_max.y, secondary_color);
+            renderer_draw_double_arrow(gfx_context, aabb_bilinear(&box, vec2_set(.55f, .45f)), aabb_bilinear(&box, vec2_set(.9f, .1f)),
+                               0.05f * max_radius, 0.2f, primary_color);
+            renderer_end_combination(gfx_context, false);
             break;
         }
     default: break;
