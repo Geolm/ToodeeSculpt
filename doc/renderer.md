@@ -3,7 +3,7 @@
 We built our renderer to draw 2d primitive based on signed distance field (SDF). It's a GPU based renderer where most of the job is done on the GPU via indirect calls. The renderer consists in 4 parts
 
 * creation of the global draw commands list (CPU)
-* primitives transform and animation (GPU)
+* primitives transform and animation (CPU for now but planned to be on GPU)
 * tile binning and linked list generation (GPU)
 * rasterization (GPU)
 
@@ -57,3 +57,7 @@ Prepare the command for the tile binning and rasterization.
 
 * bounding box : to accelerate the binning phase, we precompute a bounding box quantized to the tile size. A little math is involved to get a fit aabb for any primitive.
 * primitive data : the intuitive data for some primitive needs to be transformed for the rasterization algorithm. For example : we define an arc with 3 points but the rasterization algorithm needs a direction vector, the cosinus and sinus of the aperture, the radius and the center of the arc.
+
+## 3 - Tile binning
+
+## 4 - Rasterization
