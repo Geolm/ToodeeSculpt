@@ -704,6 +704,35 @@ void renderer_draw_line(struct renderer* r, vec2 p0, vec2 p1, float width, draw_
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void renderer_draw_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color)
+{
+    vec2 delta = vec2_scale(vec2_sub(p0, p1), arrow_length_percentage);
+    vec2 arrow_edge0 = vec2_add(p1, vec2_add(delta, vec2_skew(delta)));
+    vec2 arrow_edge1 = vec2_add(p1, vec2_sub(delta, vec2_skew(delta)));
+
+    renderer_draw_line(r, p0, p1, width, color, op_union);
+    renderer_draw_line(r, p1, arrow_edge0, width, color, op_union);
+    renderer_draw_line(r, p1, arrow_edge1, width, color, op_union);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_draw_double_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color)
+{
+    vec2 delta = vec2_scale(vec2_sub(p0, p1), arrow_length_percentage);
+    vec2 arrow_edge0 = vec2_add(p1, vec2_add(delta, vec2_skew(delta)));
+    vec2 arrow_edge1 = vec2_add(p1, vec2_sub(delta, vec2_skew(delta)));
+
+    renderer_draw_line(r, p0, p1, width, color, op_union);
+    renderer_draw_line(r, p1, arrow_edge0, width, color, op_union);
+    renderer_draw_line(r, p1, arrow_edge1, width, color, op_union);
+
+    arrow_edge0 = vec2_sub(p0, vec2_add(delta, vec2_skew(delta)));
+    arrow_edge1 = vec2_sub(p0, vec2_sub(delta, vec2_skew(delta)));
+    renderer_draw_line(r, p0, arrow_edge0, width, color, op_union);
+    renderer_draw_line(r, p0, arrow_edge1, width, color, op_union);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void renderer_draw_ellipse(struct renderer* r, vec2 p0, vec2 p1, float width, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     if (vec2_similar(p0, p1, small_float))
