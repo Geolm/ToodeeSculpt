@@ -86,7 +86,7 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     RetrieveFolderPath();
 
     m_pEditor = new Editor;
-    m_pEditor->Init(m_Window, (aabb) {.min = (vec2) {510.f, 100.f}, .max = (vec2) {1410.f, 900.f}}, m_pFolderPath);
+    m_pEditor->Init(m_Window, (aabb) {.min = (vec2) {510.f, 100.f}, .max = (vec2) {1410.f, 1000.f}}, m_pFolderPath);
 
     glfwGetWindowContentScale(window, &m_ScaleX, &m_ScaleY);
 }
