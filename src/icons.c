@@ -97,18 +97,12 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         {
             float thickness = 0.025374f * max_radius;
             renderer_begin_combination(gfx_context, 1.f);
-            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.090986f, 1.135268f)), vec2_set(0.604739, -0.796424),
-                              0.29814512f, 0.500505f * max_radius, thickness, fill_solid, primary_color, op_union);
-            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.328089, 0.407449)), vec2_set(-0.947630, 0.319371),
-                              0.894439532f, 0.188525 * max_radius, thickness, fill_solid, primary_color, op_union);
-            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.343645f, 0.418652f)), vec2_set(-0.177659f, -0.984092f),
-                              0.822815452f, 0.206995 * max_radius, thickness, fill_solid, primary_color, op_union);
-            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.871793f, -0.372403f)), vec2_set(-0.404640f, 0.914476f),
-                              0.227625421f, 0.672421 * max_radius, thickness, fill_solid, primary_color, op_union);
-            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.721959f, 0.509005f)), vec2_set(0.646806f, 0.762654f),
-                              2.24924372f, 0.125251 * max_radius, thickness, fill_solid, primary_color, op_union);
-            renderer_draw_arc(gfx_context, aabb_bilinear(&box, vec2_set(0.453694f, 0.516534f)), vec2_set(0.714638f, -0.699495f),
-                              0.74974744f, 0.143097f * max_radius, thickness, fill_solid, primary_color, op_union);
+            renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.3f, .3f)), aabb_bilinear(&box, vec2_set(.5f, .4f)), 
+                                        aabb_bilinear(&box, vec2_set(.5f, .5f)), thickness, fill_solid, primary_color, op_union);
+            renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.5f, .6f)), 
+                                        aabb_bilinear(&box, vec2_set(.5f, .5f)), thickness, fill_solid, primary_color, op_union);
+            renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.9f, .8f)),
+                                          aabb_bilinear(&box, vec2_set(.7f, .8f)), thickness, fill_solid, primary_color, op_union);
             renderer_end_combination(gfx_context, false);
             break;
         }
