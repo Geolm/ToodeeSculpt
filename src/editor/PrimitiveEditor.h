@@ -10,7 +10,7 @@
 #include "primitive.h"
 #include "primitive_list.h"
 
-#include "BaseEditor.h"
+#include "EditorInterface.h"
 
 struct mu_Context;
 struct renderer;
@@ -19,15 +19,21 @@ struct GLFWwindow;
 enum {PRIMITIVES_STACK_RESERVATION = 100};
 
 //----------------------------------------------------------------------------------------------------------------------------
-class PrimitiveEditor : public BaseEditor
+class PrimitiveEditor : public EditorInterface
 {
 public:
     PrimitiveEditor();
     ~PrimitiveEditor();
 
+    virtual void OnKeyEvent(int key, int scancode, int action, int mods) {}
     virtual void OnMouseMove(vec2 pos);
     virtual void OnMouseButton(int button, int action, int mods);
     virtual void Draw(struct renderer* context);
+    virtual void DebugInterface(struct mu_Context* gui_context) {}
+
+    virtual void PropertyGrid(struct mu_Context* gui_context);
+    virtual void Toolbar(struct mu_Context* gui_context);
+    virtual void GlobalControl(struct mu_Context* gui_context);
     virtual void UserInterface(struct mu_Context* gui_context);
 
     virtual void Copy();

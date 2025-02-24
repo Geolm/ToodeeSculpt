@@ -15,7 +15,7 @@
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
-PrimitiveEditor::PrimitiveEditor() : BaseEditor()
+PrimitiveEditor::PrimitiveEditor() : EditorInterface()
 {
 }
 
@@ -64,9 +64,6 @@ void PrimitiveEditor::New()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::OnMouseMove(vec2 pos) 
 {
-    if (!IsActive())
-        return;
-
     if ((GetState() == state::ADDING_POINTS || GetState() == state::MOVING_POINT) && m_SnapToGrid)
     {
         pos = vec2_div(pos - m_EditionZone.min, aabb_get_size(&m_EditionZone));
@@ -129,9 +126,6 @@ void PrimitiveEditor::OnMouseMove(vec2 pos)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
 {
-    if (!IsActive())
-        return;
-
     bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) && !m_SelectedPrimitiveContextualMenuOpen;
 
     if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
@@ -307,9 +301,6 @@ bool PrimitiveEditor::SelectPrimitive()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Draw(struct renderer* context)
 {
-    if (!IsActive())
-        return;
-
     renderer_set_cliprect(context, (int)m_EditionZone.min.x, (int)m_EditionZone.min.y, (int)m_EditionZone.max.x, (int)m_EditionZone.max.y);
 
     // drawing *the* primitives
@@ -478,102 +469,93 @@ void PrimitiveEditor::DuplicateSelected()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
+void PrimitiveEditor::PropertyGrid(struct mu_Context* gui_context)
 {
-    if (!IsActive())
-        return;
-
-    int res = 0;
-    int window_options = MU_OPT_NOCLOSE|MU_OPT_NORESIZE;
-    if (mu_begin_window_ex(gui_context, "Global control", mu_rect(50, 100, 400, 200), window_options))
-    {
-        mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
-        mu_label(gui_context,"smooth blend");
-        res |= mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
-        mu_label(gui_context, "alpha");
-        res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
-        mu_label(gui_context, "global outline");
-        res |= mu_checkbox(gui_context, "", &m_GlobalOutline);
-        mu_end_window(gui_context);
-    }
-
     primitive* selected = (SelectedPrimitiveValid()) ? plist_get(m_SelectedPrimitiveIndex) : nullptr;
-    if (mu_begin_window_ex(gui_context, "Primitive inspector", mu_rect(50, 400, 400, 600), window_options))
+    if (selected && primitive_property_grid(selected, gui_context)& MU_RES_SUBMIT)
     {
-        if (selected)
-            res |= primitive_property_grid(selected, gui_context);
-
-        mu_end_window(gui_context);
-    }
-
-    // if something has changed, handle undo
-    if (res & MU_RES_SUBMIT)
-    {
-        if (selected)
-            primitive_update_aabb(selected);
-
+        primitive_update_aabb(selected);
         UndoSnapshot();
     }
+    
+}
 
-    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 200), window_options))
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
+{
+    if (mu_header_ex(gui_context, "new", MU_OPT_EXPANDED))
     {
-        if (mu_header_ex(gui_context, "new primitive", MU_OPT_EXPANDED))
+        mu_layout_row(gui_context, 4, (int[]) { 50, 50, 50, 50}, 0);
+        mu_layout_height(gui_context, 50);
+        
+        if (mu_button_ex(gui_context, NULL, ICON_DISC, 0) && GetState() == state::IDLE)
         {
-            mu_layout_row(gui_context, 4, (int[]) { 50, 50, 50, 50}, 0);
-            mu_layout_height(gui_context, 50);
-            
-            if (mu_button_ex(gui_context, NULL, ICON_DISC, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_disc;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, NULL, ICON_ORIENTEDBOX, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_oriented_box;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, NULL, ICON_ELLIPSE, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_oriented_ellipse;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, NULL, ICON_PIE, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_pie;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, NULL, ICON_ARC, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_arc;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, NULL, ICON_TRIANGLE, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_triangle;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, NULL, ICON_CAPSULE, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_uneven_capsule;
-                SetState(state::ADDING_POINTS);
-            }
-
-            if (mu_button_ex(gui_context, NULL, ICON_SPLINE, 0) && GetState() == state::IDLE)
-            {
-                m_PrimitiveShape = shape_spline;
-                SetState(state::ADDING_POINTS);
-            }
+            m_PrimitiveShape = shape_disc;
+            SetState(state::ADDING_POINTS);
         }
 
-        mu_end_window(gui_context);
-    }
+        if (mu_button_ex(gui_context, NULL, ICON_ORIENTEDBOX, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_oriented_box;
+            SetState(state::ADDING_POINTS);
+        }
 
+        if (mu_button_ex(gui_context, NULL, ICON_ELLIPSE, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_oriented_ellipse;
+            SetState(state::ADDING_POINTS);
+        }
+
+        if (mu_button_ex(gui_context, NULL, ICON_PIE, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_pie;
+            SetState(state::ADDING_POINTS);
+        }
+
+        if (mu_button_ex(gui_context, NULL, ICON_ARC, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_arc;
+            SetState(state::ADDING_POINTS);
+        }
+
+        if (mu_button_ex(gui_context, NULL, ICON_TRIANGLE, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_triangle;
+            SetState(state::ADDING_POINTS);
+        }
+
+        if (mu_button_ex(gui_context, NULL, ICON_CAPSULE, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_uneven_capsule;
+            SetState(state::ADDING_POINTS);
+        }
+
+        if (mu_button_ex(gui_context, NULL, ICON_SPLINE, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_spline;
+            SetState(state::ADDING_POINTS);
+        }
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitiveEditor::GlobalControl(struct mu_Context* gui_context)
+{
+    mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
+    mu_label(gui_context,"smooth blend");
+    int res = mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
+    mu_label(gui_context, "alpha");
+    res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
+    mu_label(gui_context, "global outline");
+    res |= mu_checkbox(gui_context, "", &m_GlobalOutline);
+
+    if (res&MU_RES_SUBMIT)
+        UndoSnapshot();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
+{
     ContextualMenu(gui_context);
 }
 
@@ -684,9 +666,6 @@ void PrimitiveEditor::UndoSnapshot()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Undo()
 {
-    if (!IsActive())
-        return;
-
     // cancel primitive creation
     if (GetState() == state::ADDING_POINTS || GetState() == state::SET_ROUNDNESS)
         SetState(state::IDLE);
@@ -711,9 +690,6 @@ void PrimitiveEditor::Undo()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Copy()
 {
-    if (!IsActive())
-        return;
-
     if (SelectedPrimitiveValid())
     {
         m_CopiedPrimitive = *plist_get(m_SelectedPrimitiveIndex);
@@ -724,9 +700,6 @@ void PrimitiveEditor::Copy()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Paste()
 {
-    if (!IsActive())
-        return;
-
     if (primitive_is_valid(&m_CopiedPrimitive))
     {
         vec2 center = primitive_compute_center(&m_CopiedPrimitive);
@@ -742,9 +715,6 @@ void PrimitiveEditor::Paste()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Delete()
 {
-    if (!IsActive())
-        return;
-
     if (GetState() == state::IDLE && SelectedPrimitiveValid())
     {
         plist_erase(m_SelectedPrimitiveIndex);

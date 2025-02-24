@@ -12,18 +12,6 @@
 #define UNUSED_VARIABLE(a) (void)(a)
 
 //----------------------------------------------------------------------------------------------------------------------------
-Editor::Editor() : BaseEditor()
-{
-    SetActive(true);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-Editor::~Editor()
-{
-
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
 void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
 {
     m_ExternalZone = m_Zone = zone;
@@ -32,7 +20,6 @@ void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
     m_PopupCoord = vec2_sub(aabb_get_center(&m_Zone), m_PopupHalfSize);
     m_pUndoContext = undo_init(1<<18, 1<<10);
     m_PrimitiveEditor.Init(zone, m_pUndoContext);
-    m_PrimitiveEditor.SetActive(true);
     m_MenuBarState = MenuBar_None;
     m_SnapToGrid = 0;
     m_ShowGrid = 0;
@@ -45,6 +32,7 @@ void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
     m_LogLevelCombo = 0;
     m_WindowDebugOpen = 0;
     m_Window = window;
+    m_pActiveEditor = &m_PrimitiveEditor;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -72,7 +60,7 @@ void Editor::OnMouseMove(vec2 pos)
 {
     if (!m_PopupOpen)
     {
-        m_PrimitiveEditor.OnMouseMove(pos);
+        m_pActiveEditor->OnMouseMove(pos);
         if (aabb_test_point(&m_ExternalZone, pos))
             m_MenuBarState = MenuBar_None;
     }
@@ -82,7 +70,7 @@ void Editor::OnMouseMove(vec2 pos)
 void Editor::OnMouseButton(int button, int action, int mods)
 {
     if (!m_PopupOpen)
-        m_PrimitiveEditor.OnMouseButton(button, action, mods);
+        m_pActiveEditor->OnMouseButton(button, action, mods);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -108,7 +96,7 @@ void Editor::Draw(struct renderer* context)
             renderer_draw_box(context, m_Zone.min.x, y, m_Zone.max.x, y+1, draw_color(na16_light_grey, 128));
     }
 
-    m_PrimitiveEditor.Draw(context);
+    m_pActiveEditor->Draw(context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +120,34 @@ void Editor::DebugInterface(struct mu_Context* gui_context)
 void Editor::UserInterface(struct mu_Context* gui_context)
 {
     MenuBar(gui_context);
-    m_PrimitiveEditor.UserInterface(gui_context);
+
+    int window_options = MU_OPT_NOCLOSE|MU_OPT_NORESIZE;
+    if (mu_begin_window_ex(gui_context, "Global control", mu_rect(10, 100, 400, 200), window_options))
+    {
+        if (m_pActiveEditor != nullptr)
+            m_pActiveEditor->GlobalControl(gui_context);
+
+        mu_end_window(gui_context);
+    }
+
+    if (mu_begin_window_ex(gui_context, "PropertyGrid", mu_rect(10, 400, 400, 600), window_options))
+    {
+        if (m_pActiveEditor != nullptr)
+            m_pActiveEditor->PropertyGrid(gui_context);
+
+        mu_end_window(gui_context);
+    }
+
+    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 200), window_options))
+    {
+        if (m_pActiveEditor != nullptr)
+            m_pActiveEditor->Toolbar(gui_context);
+
+        mu_end_window(gui_context);
+    }
+
+    if (m_pActiveEditor != nullptr)
+        m_pActiveEditor->UserInterface(gui_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -388,13 +403,13 @@ void Editor::Load()
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Undo()
 {
-    m_PrimitiveEditor.Undo();
+    m_pActiveEditor->Undo();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Delete()
 {
-    m_PrimitiveEditor.Delete();
+    m_pActiveEditor->Delete();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -406,13 +421,13 @@ void Editor::New()
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Copy()
 {
-    m_PrimitiveEditor.Copy();
+    m_pActiveEditor->Copy();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::Paste()
 {
-    m_PrimitiveEditor.Paste();
+    m_pActiveEditor->Paste();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

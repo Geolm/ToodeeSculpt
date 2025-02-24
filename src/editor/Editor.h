@@ -1,6 +1,5 @@
 #pragma once
 
-#include "BaseEditor.h"
 #include "PrimitiveEditor.h"
 
 struct undo_context;
@@ -8,28 +7,24 @@ struct GLFWwindow;
 
 #define POPUP_STRING_LENGTH (2048)
 
-class Editor : public BaseEditor
+class Editor
 {
 public:
-    Editor();
-    virtual ~Editor();
-
-    virtual void OnKeyEvent(int key, int scancode, int action, int mods);
-    virtual void OnMouseMove(vec2 pos);
-    virtual void OnMouseButton(int button, int action, int mods);
-    virtual void Draw(struct renderer* context);
-    virtual void DebugInterface(struct mu_Context* gui_context);
-    virtual void UserInterface(struct mu_Context* gui_context);
-
-    virtual void Copy();
-    virtual void Paste();
-    virtual void Undo();
-    virtual void Delete();
+    void OnKeyEvent(int key, int scancode, int action, int mods);
+    void OnMouseMove(vec2 pos);
+    void OnMouseButton(int button, int action, int mods);
+    void Draw(struct renderer* context);
+    void DebugInterface(struct mu_Context* gui_context);
+    void UserInterface(struct mu_Context* gui_context);
 
     void Init(struct GLFWwindow* window, aabb zone, const char* folder_path);
     void New();
     void Load();
     void Save();
+    void Copy();
+    void Paste();
+    void Undo();
+    void Delete();
     void Terminate();
 
     bool IsDebugWindowOpen() const {return m_WindowDebugOpen == 1;}
@@ -52,6 +47,7 @@ private:
     aabb m_ExternalZone;
     vec2 m_PopupCoord;
     vec2 m_PopupHalfSize;
+    EditorInterface* m_pActiveEditor {nullptr};
     struct undo_context* m_pUndoContext;
     struct GLFWwindow* m_Window;
 
