@@ -187,12 +187,18 @@ static inline float range(float theta)
     return theta;
 }
 
+/*
+    For now the function is in comment to avoid a compilation warning
+    This function should be used for other methods to find tangents
+
 static inline float sinc(float x) 
 {
     if (fabsf(x) < 0.002f)
         return 1.f + (float_square(x) / 6.f) * (1.f - (float_square(x) / 20.f));
     return sinf(x) / x;
 }
+
+*/
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------
 // based on Interpolating Splines of Biarcs from a Sequence of Planar Points

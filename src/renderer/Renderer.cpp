@@ -150,6 +150,8 @@ void renderer_reload_shaders(struct renderer* r)
 #ifndef SHADERS_IN_EXECUTABLE
     log_info("reloading shaders");
     renderer_build_pso(r);
+#else
+    UNUSED_VARIABLE(r);
 #endif
 }
 
@@ -168,10 +170,10 @@ void renderer_build_depthstencil_state(struct renderer* r)
 
 //----------------------------------------------------------------------------------------------------------------------------
 #ifdef SHADERS_IN_EXECUTABLE
-MTL::Library* renderer_build_shader(struct renderer* r, const char* path, const char* name)
+MTL::Library* renderer_build_shader(struct renderer* r, const uint8_t* shader_buffer, const char* name)
 {
     NS::Error* pError = nullptr;
-    MTL::Library* pLibrary = r->m_pDevice->newLibrary( NS::String::string(shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
+    MTL::Library* pLibrary = r->m_pDevice->newLibrary( NS::String::string((const char*)shader_buffer, NS::UTF8StringEncoding), nullptr, &pError );
 
     if (pLibrary == nullptr)
     {
@@ -795,7 +797,6 @@ void renderer_draw_pie(struct renderer* r, vec2 center, vec2 point, float apertu
     if (aperture <= small_float)
         return;
     
-    bool filled = thickness < 0.f;
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness * .5f, 0.f);
 

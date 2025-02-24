@@ -25,11 +25,11 @@ public:
     PrimitiveEditor();
     ~PrimitiveEditor();
 
-    virtual void OnKeyEvent(int key, int scancode, int action, int mods) {}
+    virtual void OnKeyEvent(int key, int scancode, int action, int mods);
     virtual void OnMouseMove(vec2 pos);
     virtual void OnMouseButton(int button, int action, int mods);
     virtual void Draw(struct renderer* context);
-    virtual void DebugInterface(struct mu_Context* gui_context) {}
+    virtual void DebugInterface(struct mu_Context* gui_context);
 
     virtual void PropertyGrid(struct mu_Context* gui_context);
     virtual void Toolbar(struct mu_Context* gui_context);

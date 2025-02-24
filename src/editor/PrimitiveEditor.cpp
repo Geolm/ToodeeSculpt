@@ -12,6 +12,8 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#define UNUSED_VARIABLE(a) (void)(a)
+
 struct palette primitive_palette;
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -59,6 +61,15 @@ void PrimitiveEditor::New()
     plist_clear();
     cc_clear(&m_MultipleSelection);
     UndoSnapshot();
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitiveEditor::OnKeyEvent(int key, int scancode, int action, int mods)
+{
+    UNUSED_VARIABLE(key);
+    UNUSED_VARIABLE(scancode);
+    UNUSED_VARIABLE(action);
+    UNUSED_VARIABLE(mods);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -466,6 +477,12 @@ void PrimitiveEditor::DuplicateSelected()
         SetSelectedPrimitive(plist_last());
         log_debug("primitive duplicated");
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void PrimitiveEditor::DebugInterface(struct mu_Context* gui_context)
+{
+    UNUSED_VARIABLE(gui_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

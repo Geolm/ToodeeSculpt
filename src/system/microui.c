@@ -1319,7 +1319,7 @@ int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, c
 
   if (mu_begin_popup(ctx, button_name))
   {
-    for(uint32_t i=0; i<num_entries; ++i)
+    for(int i=0; i<num_entries; ++i)
     {
       if (mu_button_ex(ctx, entries[i], 0, 0))
       {
