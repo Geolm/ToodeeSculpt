@@ -31,7 +31,7 @@ bool palette_load_from_hex(const char* filename, struct palette* output)
 {
     FILE* f = fopen(filename, "r");
 
-    log_debug("try to open '%s'", filename);
+    log_debug("trying to open '%s'", filename);
 
     if (f == NULL)
     {

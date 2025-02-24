@@ -125,9 +125,9 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
             nfdchar_t *load_path = NULL;
             nfdresult_t result = NFD_OpenDialog( "hex", NULL, &load_path);
 
-            if (result == NFD_OKAY)
-                palette_load_from_hex(load_path, context->palette);
-                
+            if (result == NFD_OKAY && palette_load_from_hex(load_path, context->palette))
+                res |= MU_RES_SUBMIT;
+
             free(load_path);
         }
 
