@@ -102,8 +102,8 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
             renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.5f, .6f)), 
                                         aabb_bilinear(&box, vec2_set(.5f, .5f)), thickness, fill_solid, primary_color, op_union);
             renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.9f, .8f)),
-                                          aabb_bilinear(&box, vec2_set(.7f, .8f)), thickness, fill_solid, primary_color, op_union);
-            renderer_end_combination(gfx_context, false);
+                                          aabb_bilinear(&box, vec2_set(.7f, .9f)), thickness, fill_solid, primary_color, op_union);
+            renderer_end_combination(gfx_context, true);
             break;
         }
     default: break;
