@@ -19,7 +19,7 @@ void Editor::Init(struct GLFWwindow* window, aabb zone, const char* folder_path)
     m_PopupHalfSize = (vec2) {250.f, 50.f};
     m_PopupCoord = vec2_sub(aabb_get_center(&m_Zone), m_PopupHalfSize);
     m_pUndoContext = undo_init(1<<18, 1<<10);
-    m_PrimitiveEditor.Init(zone, m_pUndoContext);
+    m_PrimitiveEditor.Init(window, zone, m_pUndoContext);
     m_MenuBarState = MenuBar_None;
     m_SnapToGrid = 0;
     m_ShowGrid = 0;
@@ -138,7 +138,7 @@ void Editor::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
-    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 200), window_options))
+    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 400), window_options))
     {
         if (m_pActiveEditor != nullptr)
             m_pActiveEditor->Toolbar(gui_context);
@@ -206,7 +206,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 }
                 if (mu_button_ex(gui_context, "Export", 0, 0))
                 {
-                    m_PrimitiveEditor.Export(m_Window);
+                    m_PrimitiveEditor.Export();
                     m_MenuBarState = MenuBar_None;
                 }
                 mu_end_window(gui_context);

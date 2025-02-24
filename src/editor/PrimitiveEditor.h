@@ -41,12 +41,12 @@ public:
     virtual void Undo();
     virtual void Delete();
 
-    void Init(aabb zone, struct undo_context* undo);
+    void Init(struct GLFWwindow* window, aabb zone, struct undo_context* undo);
     void UndoSnapshot();
     void Serialize(serializer_context* context, bool normalization);
     void Deserialize(serializer_context* context, uint16_t major, uint16_t minor, bool normalization);
     void New();
-    void Export(struct GLFWwindow* window);
+    void Export();
     void Terminate();
 
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
@@ -85,6 +85,7 @@ private:
     uint32_t m_SelectedPrimitiveIndex;
 
     // ui
+    struct GLFWwindow* m_pWindow {nullptr};
     aabb m_EditionZone;
     vec2 m_ContextualMenuPosition;
     bool m_SelectedPrimitiveContextualMenuOpen;

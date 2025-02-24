@@ -27,7 +27,7 @@ PrimitiveEditor::~PrimitiveEditor()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::Init(aabb zone, struct undo_context* undo)
+void PrimitiveEditor::Init(struct GLFWwindow* window, aabb zone, struct undo_context* undo)
 {
     plist_init(PRIMITIVES_STACK_RESERVATION);
     cc_init(&m_MultipleSelection);
@@ -42,6 +42,7 @@ void PrimitiveEditor::Init(aabb zone, struct undo_context* undo)
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
     m_HoveredPrimitiveColor = draw_color(0x101020, 64);
     m_GlobalOutline = 0;
+    m_pWindow = window;
     palette_default(&primitive_palette);
     New();
 }
@@ -451,7 +452,6 @@ void PrimitiveEditor::Draw(struct renderer* context)
     }
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
-        renderer_draw_disc(context, m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
         primitive_draw_gizmo(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
     }
 
@@ -553,6 +553,20 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             SetState(state::ADDING_POINTS);
         }
     }
+
+    if (mu_header_ex(gui_context, "manipulation", MU_OPT_EXPANDED))
+    {
+        primitive* selected = (SelectedPrimitiveValid()) ? plist_get(m_SelectedPrimitiveIndex) : nullptr;
+        mu_layout_row(gui_context, 4, (int[]) { 50, 50, 50, 50}, 0);
+        mu_layout_height(gui_context, 50);
+
+        if (mu_button_ex(gui_context, NULL, ICON_SCALE, 0) && selected && GetState() == state::IDLE)
+        {
+            m_Reference = selected->m_AABB.max;
+            glfwSetCursorPos(m_pWindow, m_Reference.x, m_Reference.y);
+            SetState(state::SCALING_PRIMITIVE);
+        }
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -599,11 +613,6 @@ void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
             if (mu_button_ex(gui_context, "rotate", 0, 0))
             {
                 SetState(state::ROTATING_PRIMITIVE);
-                m_SelectedPrimitiveContextualMenuOpen = false;
-            }
-            else if (mu_button_ex(gui_context, "scale", 0, 0))
-            {
-                SetState(state::SCALING_PRIMITIVE);
                 m_SelectedPrimitiveContextualMenuOpen = false;
             }
             else if (mu_button_ex(gui_context, "front", 0, 0))
@@ -742,9 +751,9 @@ void PrimitiveEditor::Delete()
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::Export(struct GLFWwindow* window)
+void PrimitiveEditor::Export()
 {
-    plist_export(window, m_SmoothBlend, &m_EditionZone);
+    plist_export(m_pWindow, m_SmoothBlend, &m_EditionZone);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -758,7 +767,6 @@ void PrimitiveEditor::SetState(enum state new_state)
 
     if (new_state == state::SCALING_PRIMITIVE)
     {
-        m_Reference = m_MousePosition;
         m_CopiedPrimitive = *(plist_get(m_SelectedPrimitiveIndex));
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
