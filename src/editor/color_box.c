@@ -96,6 +96,7 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
             {
                 if (gui_context->mouse_pressed&MU_MOUSE_LEFT)
                 {
+                    // select palette entry
                     *context->rgba_output = unpacked_color(entry);
                     res |= MU_RES_SUBMIT;
 
@@ -104,7 +105,9 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
                 }
                 else if ((gui_context->mouse_pressed&MU_MOUSE_RIGHT))
                 {
+                    // overwrite palette entry
                     context->palette->entries[i] = color4f_to_packed_color(*context->rgba_output);
+                    res |= MU_RES_SUBMIT;
                 }
                 else
                 {

@@ -5,7 +5,7 @@
 
 static constexpr const uint32_t TDS_FOURCC = 0x32534446;    // 2SDF
 static constexpr const uint16_t TDS_MAJOR = 2;
-static constexpr const uint16_t TDS_MINOR = 6;
+static constexpr const uint16_t TDS_MINOR = 7;
 static constexpr const long TDS_FILE_MAXSIZE = (1<<16);
 
 static inline bool tds_normalizion_support(uint16_t major, uint16_t minor) {return (major>=2) && (minor>=2);}
@@ -21,6 +21,7 @@ File version history
 2.004 : enum for fillmode, introducing outline (filled + contour)
 2.005 : outline width serialization
 2.006 : removed outline width
+2.007 : save/load palette
 
 
 */

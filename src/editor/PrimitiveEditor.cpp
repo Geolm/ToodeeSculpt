@@ -724,6 +724,7 @@ void PrimitiveEditor::Serialize(serializer_context* context, bool normalization)
     serializer_write_float(context, m_SmoothBlend);
     serializer_write_uint32_t(context, m_SelectedPrimitiveIndex);
     plist_serialize(context, normalization, &m_EditionZone);
+    palette_serialize(context, &primitive_palette);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -737,6 +738,9 @@ void PrimitiveEditor::Deserialize(serializer_context* context, uint16_t major, u
         serializer_read_float(context); //skip outline width
 
     plist_deserialize(context, major, minor, normalization, &m_EditionZone);
+
+    if (minor >= 7)
+        palette_deserialize(context, &primitive_palette);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

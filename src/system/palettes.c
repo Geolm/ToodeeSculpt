@@ -77,6 +77,26 @@ bool palette_load_from_hex(const char* filename, struct palette* output)
 }
 
 //-----------------------------------------------------------------------------
+void palette_serialize(serializer_context* context, struct palette* p)
+{
+    serializer_write_uint32_t(context, p->num_entries);
+    serializer_write_blob(context, p->entries, sizeof(uint32_t) * p->num_entries);
+}
+
+//-----------------------------------------------------------------------------
+void palette_deserialize(serializer_context* context, struct palette* p)
+{
+    uint32_t num_entries = serializer_read_uint32_t(context);
+    if (num_entries != p->num_entries)
+    {
+        free(p->entries);
+        p->num_entries = num_entries;
+        p->entries = (uint32_t*) malloc(sizeof(uint32_t) * num_entries);
+    }
+    serializer_read_blob(context, p->entries, sizeof(uint32_t) * num_entries);
+}
+
+//-----------------------------------------------------------------------------
 void palette_free(struct palette* p)
 {
     p->num_entries = 0;

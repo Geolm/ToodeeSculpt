@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "serializer.h"
 
 // https://lospec.com/palette-list/na16
 static const uint32_t na16_light_grey = 0xffae8f8c;
@@ -42,6 +43,9 @@ void palette_default(struct palette* output);
 
 // returns false on error
 bool palette_load_from_hex(const char* filename, struct palette* output);
+
+void palette_serialize(serializer_context* context, struct palette* p);
+void palette_deserialize(serializer_context* context, struct palette* p);
 
 void palette_free(struct palette* p);
 
