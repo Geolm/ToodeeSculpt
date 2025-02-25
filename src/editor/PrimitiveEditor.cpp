@@ -554,7 +554,7 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
         }
     }
 
-    if (mu_header_ex(gui_context, "manipulation", MU_OPT_EXPANDED))
+    if (mu_header_ex(gui_context, "edit", MU_OPT_EXPANDED))
     {
         primitive* selected = (SelectedPrimitiveValid()) ? plist_get(m_SelectedPrimitiveIndex) : nullptr;
         mu_layout_row(gui_context, 4, (int[]) { 50, 50, 50, 50}, 0);
