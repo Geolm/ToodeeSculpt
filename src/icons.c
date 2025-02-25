@@ -12,8 +12,10 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
     vec2 extent = vec2_scale(vec2_sub(box.max, box.min), .5f);
     float max_radius = float_min(extent.x, extent.y);
 
+    aabb unit_box = (aabb) {.min = vec2_splat(-1.f), vec2_splat(1.f)};
     float loop_1s = sl_loop(time_in_second, 1.f);
     float loop_2s = sl_loop(time_in_second, 2.f);
+    float loop_5s = sl_loop(time_in_second, 5.f);
 
     switch(icon)
     {
@@ -64,8 +66,10 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_ORIENTEDBOX:
         {
-            renderer_draw_orientedbox(gfx_context, aabb_bilinear(&box, vec2_set(.8f, .2f)), aabb_bilinear(&box, vec2_set(.2f, .8f)),
-                                      max_radius * 0.3f, max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
+            vec2 p0 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(.7f, 0.f), vec2_angle(time_in_second)));
+            vec2 p1 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(-.7f, 0.f), vec2_angle(time_in_second)));
+            float width = sl_wave_base(loop_2s, .2f, .3f) * max_radius;
+            renderer_draw_orientedbox(gfx_context, p0, p1, width, max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_ELLIPSE:
@@ -76,22 +80,23 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_PIE:
         {
-            renderer_draw_pie(gfx_context, center, aabb_bilinear(&box, vec2_set(.8f, .7f)), VEC2_PI * .75f, 0.f, fill_solid, primary_color, op_add);
+            vec2 point = vec2_scale(vec2_angle(time_in_second * 1.3f), sl_wave_base(loop_5s, 0.4f, 0.2f));
+            renderer_draw_pie(gfx_context, center, aabb_project(&unit_box, &box, point), sl_wave_base(loop_2s, VEC2_PI_4, VEC2_PI_2),
+                              0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_ARC:
         {
-            renderer_draw_arc_from_circle(gfx_context, aabb_bilinear(&box, vec2_set(.7f, .7f)), aabb_bilinear(&box, vec2_set(.8f, .5f)),
-                                        aabb_bilinear(&box, vec2_set(.3f, .2f)), max_radius * 0.15f, fill_solid, primary_color, op_add);
+            renderer_draw_arc(gfx_context, center, vec2_angle(-time_in_second), sl_wave_base(loop_2s + VEC2_PI, VEC2_PI_2, VEC2_PI_4),
+                             max_radius * 0.5f, max_radius * 0.1f, fill_solid,primary_color, op_add);
             break;
         }
     case ICON_TRIANGLE:
         {
-            vec2 p0 = vec2_add(vec2_rotate(vec2_set(.3f, .3f), vec2_angle(time_in_second)), vec2_splat(.5f));
-            vec2 p1 = vec2_add(vec2_rotate(vec2_set(-.1f, -.3f), vec2_angle(time_in_second * -.5f)), vec2_splat(.5f));
-            vec2 p2 = vec2_add(vec2_rotate(vec2_set(-.2f, .1f), vec2_angle(time_in_second * 1.6f)), vec2_splat(.5f));
-            renderer_draw_triangle(gfx_context, aabb_bilinear(&box, p0), aabb_bilinear(&box, p1), aabb_bilinear(&box, p2),
-                                   max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
+            vec2 p0 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(.4f, .4f), vec2_angle(time_in_second)));
+            vec2 p1 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(-.1f, -.4f), vec2_angle(time_in_second * -.5f)));
+            vec2 p2 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(-.2f, .1f), vec2_angle(time_in_second * 1.6f)));
+            renderer_draw_triangle(gfx_context, p0, p1, p2, max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_CAPSULE:

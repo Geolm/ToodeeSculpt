@@ -130,7 +130,7 @@ void Editor::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
-    if (mu_begin_window_ex(gui_context, "PropertyGrid", mu_rect(10, 400, 400, 600), window_options))
+    if (mu_begin_window_ex(gui_context, "Property grid", mu_rect(10, 400, 400, 600), window_options))
     {
         if (m_pActiveEditor != nullptr)
             m_pActiveEditor->PropertyGrid(gui_context);

@@ -33,6 +33,7 @@ static aabb aabb_from_circle(vec2 center, float radius);
 static aabb aabb_from_triangle(vec2 v0, vec2 v1, vec2 v2);
 static aabb aabb_from_center(vec2 center, vec2 half_extent);
 static bool aabb_test_point(const aabb* box, vec2 point);
+static vec2 aabb_project(const aabb* from, const aabb* to, vec2 point);
 
 //-----------------------------------------------------------------------------
 static inline bool aabb_is_valid(aabb box)
@@ -116,6 +117,13 @@ static inline vec2 aabb_get_uv_clamped(const aabb* box, vec2 pos)
 static inline vec2 aabb_bilinear(const aabb* box, vec2 uv)
 {
     return vec2_add(vec2_mul(box->min, vec2_sub(vec2_splat(1.f), uv)), vec2_mul(box->max, uv));
+}
+
+//-----------------------------------------------------------------------------
+static inline vec2 aabb_project(const aabb* from, const aabb* to, vec2 point)
+{
+    vec2 uv = aabb_get_uv(from, point);
+    return aabb_bilinear(to, uv);
 }
 
 //-----------------------------------------------------------------------------
