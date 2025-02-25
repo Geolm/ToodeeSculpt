@@ -15,7 +15,7 @@ static inline float sl_loop(float time_in_second, float loop_in_second)
 
 static inline float sl_wave(float pos_in_loop)
 {
-    return .5f + .5f * sinf(pos_in_loop * SL_TAU);
+    return .5f + .5f * cosf(pos_in_loop * SL_TAU);
 }
 
 static inline float sl_wave_base(float pos_in_loop, float base_value, float amplitude)
