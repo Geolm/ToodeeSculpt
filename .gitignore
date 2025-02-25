@@ -75,3 +75,4 @@ _deps
 
 # ToodeeSculpt specific
 /build
+/src/renderer/commitmono_21_31.h
