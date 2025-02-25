@@ -95,9 +95,9 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_TRIANGLE:
         {
-            vec2 p0 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(.6f, .6f), vec2_angle(time_in_second)));
-            vec2 p1 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(-.2f, -.5f), vec2_angle(time_in_second * -.5f)));
-            vec2 p2 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(-.4f, .3f), vec2_angle(time_in_second * 1.6f)));
+            vec2 p0 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(.6f, .6f), vec2_angle(-time_in_second)));
+            vec2 p1 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(-.2f, -.5f), vec2_angle(-time_in_second)));
+            vec2 p2 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(-.4f, .3f), vec2_angle(-time_in_second)));
             renderer_draw_triangle(gfx_context, p0, p1, p2, 0.f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
@@ -126,12 +126,15 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
 
     case ICON_SCALE:
         {
-            vec2 box_min = aabb_bilinear(&box, vec2_set(.1f, .5f));
-            vec2 box_max = aabb_bilinear(&box, vec2_set(.5f, .9f));
+            float t = sl_wave_base(loop_2s, 0.2f, 0.8f);
+            vec2 box_min = aabb_bilinear(&box, vec2_set(.1f, .5f - (1.f - t) * .2f));
+            vec2 box_max = aabb_bilinear(&box, vec2_set(.5f + (1.f - t) * .2f, .9f));
+            vec2 p0 = vec2_lerp( vec2_set(.5f, -.5f), vec2_set(0.9f, -0.9f), t);
+            vec2 p1 = vec2_lerp( vec2_set(.5f, -.5f), vec2_set(.1f, -.1f), t);
             renderer_begin_combination(gfx_context, 1.f);
             renderer_draw_box(gfx_context, box_min.x, box_min.y, box_max.x, box_max.y, secondary_color);
-            renderer_draw_double_arrow(gfx_context, aabb_bilinear(&box, vec2_set(.55f, .45f)), aabb_bilinear(&box, vec2_set(.9f, .1f)),
-                               0.05f * max_radius, 0.2f, primary_color);
+            renderer_draw_double_arrow(gfx_context, aabb_project(&unit_box, &box, p0), aabb_project(&unit_box, &box, p1),
+                               0.025f * max_radius, 0.2f, primary_color);
             renderer_end_combination(gfx_context, false);
             break;
         }
