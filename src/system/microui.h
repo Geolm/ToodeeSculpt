@@ -272,6 +272,7 @@ mu_Rect mu_layout_next(mu_Context *ctx);
 void mu_draw_control_frame(mu_Context *ctx, mu_Id id, mu_Rect rect, int colorid, int opt);
 void mu_draw_control_text(mu_Context *ctx, const char *str, mu_Rect rect, int colorid, int opt);
 int mu_mouse_over(mu_Context *ctx, mu_Rect rect);
+int rect_overlaps_vec2(mu_Rect r, mu_Vec2 p);
 void mu_update_control(mu_Context *ctx, mu_Id id, mu_Rect rect, int opt);
 
 #define mu_button(ctx, label)             mu_button_ex(ctx, label, 0, MU_OPT_ALIGNCENTER)

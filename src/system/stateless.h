@@ -18,6 +18,11 @@ static inline float sl_wave(float pos_in_loop)
     return .5f + .5f * sinf(pos_in_loop * SL_TAU);
 }
 
+static inline float sl_wave_base(float pos_in_loop, float base_value, float amplitude)
+{
+    return base_value + sl_wave(pos_in_loop) * amplitude;
+}
+
 // value in [0; 1]
 static inline float sl_impulse(float value)
 {

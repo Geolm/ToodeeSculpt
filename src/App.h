@@ -37,6 +37,7 @@ private:
     uint64_t m_LastTime;
     float m_Time;
     float m_DeltaTime;
+    float m_AnimationTime;
     char* m_pFolderPath {nullptr};
 
     Editor* m_pEditor;

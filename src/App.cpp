@@ -82,6 +82,7 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 
     stm_setup();
     m_LastTime = m_StartTime = stm_now();
+    m_AnimationTime = 0.f;
 
     RetrieveFolderPath();
 
@@ -174,10 +175,14 @@ void App::DrawGui()
             draw_color secondary_color = from_mu_color(m_pGuiContext->style->colors[MU_COLOR_BASE]);
             aabb box = (aabb){.min = (vec2) {(float)cmd->icon.rect.x, (float)cmd->icon.rect.y},
                               .max = (vec2) {(float)(cmd->icon.rect.x + cmd->icon.rect.w), (float)(cmd->icon.rect.y + cmd->icon.rect.h)}};
+
+            bool mouse_over = rect_overlaps_vec2(cmd->icon.rect, m_pGuiContext->mouse_pos);
+
+            if (m_pGuiContext->mouse_pos.x)
             switch(cmd->icon.id)
             {
                 case MU_ICON_CLOSE : DrawIcon(m_pRenderer, box, ICON_CLOSE, draw_color(na16_red), draw_color(na16_dark_brown), 0.f);break;
-                default: DrawIcon(m_pRenderer, box, (enum icon_type) cmd->icon.id, primary_color, secondary_color, 0.f);break;
+                default: DrawIcon(m_pRenderer, box, (enum icon_type) cmd->icon.id, primary_color, secondary_color, mouse_over ? m_AnimationTime : 0.f);break;
             }
             break;
         }
@@ -190,6 +195,10 @@ void App::Update(CA::MetalDrawable* drawable)
 {
     m_Time = (float)stm_sec(stm_since(m_StartTime));
     m_DeltaTime = (float) stm_sec(stm_laptime(&m_LastTime));
+    m_AnimationTime += m_DeltaTime;
+
+    while (m_AnimationTime>60.f)    // no animation lasts more than 60 seconds, so reset so we can keep float precision
+        m_AnimationTime -= 60.f;
 
     mu_begin(m_pGuiContext);
     renderer_begin_frame(m_pRenderer);

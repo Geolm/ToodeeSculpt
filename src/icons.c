@@ -12,6 +12,9 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
     vec2 extent = vec2_scale(vec2_sub(box.max, box.min), .5f);
     float max_radius = float_min(extent.x, extent.y);
 
+    float loop_1s = sl_loop(time_in_second, 1.f);
+    float loop_2s = sl_loop(time_in_second, 2.f);
+
     switch(icon)
     {
     case ICON_CLOSE:    // a disc with a cross
@@ -55,7 +58,8 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_DISC:
         {
-            renderer_draw_disc(gfx_context, center, max_radius * .7f, 0.f, fill_solid, primary_color, op_add);
+            float radius = sl_wave_base(loop_2s, .4f, .3f) * max_radius;
+            renderer_draw_disc(gfx_context, center, radius, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_ORIENTEDBOX:
@@ -83,8 +87,11 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_TRIANGLE:
         {
-            renderer_draw_triangle(gfx_context, aabb_bilinear(&box, vec2_set(.9f, .8f)), aabb_bilinear(&box, vec2_set(.4f, .2f)),
-                                   aabb_bilinear(&box, vec2_set(.3f, .5f)), max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
+            vec2 p0 = vec2_add(vec2_rotate(vec2_set(.3f, .3f), vec2_angle(time_in_second)), vec2_splat(.5f));
+            vec2 p1 = vec2_add(vec2_rotate(vec2_set(-.1f, -.3f), vec2_angle(time_in_second * -.5f)), vec2_splat(.5f));
+            vec2 p2 = vec2_add(vec2_rotate(vec2_set(-.2f, .1f), vec2_angle(time_in_second * 1.6f)), vec2_splat(.5f));
+            renderer_draw_triangle(gfx_context, aabb_bilinear(&box, p0), aabb_bilinear(&box, p1), aabb_bilinear(&box, p2),
+                                   max_radius * 0.05f, 0.f, fill_solid, primary_color, op_add);
             break;
         }
     case ICON_CAPSULE:
