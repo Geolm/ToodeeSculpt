@@ -138,6 +138,31 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
             renderer_end_combination(gfx_context, false);
             break;
         }
+    case ICON_ROTATE:
+        {
+            vec2 rotation = vec2_angle(time_in_second);
+            vec2 p0 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(0.f, -.4f), rotation));
+            vec2 p1 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(0.f, .4f), rotation));
+            renderer_draw_orientedbox(gfx_context, p0, p1, extent.x * .8f, 0.f, 0.f, fill_solid, secondary_color, op_add);
+
+            rotation = vec2_angle(sl_wave_base(loop_2s, -VEC2_PI_4, VEC2_PI_2));
+            p0 = aabb_project(&unit_box, &box, vec2_set(-0.8f, 0.f));
+            p1 = aabb_project(&unit_box, &box, vec2_set(0.f, -.8f));
+            vec2 p2 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(0.8f, .0f), rotation));
+
+            renderer_begin_combination(gfx_context, 1.f);
+            renderer_draw_arc_from_circle(gfx_context, p0, p1, p2, .05f * max_radius, fill_solid, primary_color, op_union);
+
+            rotation = vec2_angle(sl_wave_base(loop_2s, -VEC2_PI_4 - 0.3f, VEC2_PI_2));
+            p0 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(0.55f, .0f), rotation));
+            p1 = aabb_project(&unit_box, &box, vec2_rotate(vec2_set(1.0f, .0f), rotation));
+
+            renderer_draw_triangle(gfx_context, p0, p1, p2, 0.f, 0.f, fill_solid, primary_color, op_union);
+
+            renderer_end_combination(gfx_context, false);
+
+            break;
+        }
     default: break;
     }
 }

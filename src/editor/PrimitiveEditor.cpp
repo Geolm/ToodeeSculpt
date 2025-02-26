@@ -566,6 +566,13 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             glfwSetCursorPos(m_pWindow, m_Reference.x, m_Reference.y);
             SetState(state::SCALING_PRIMITIVE);
         }
+
+        if (mu_button_ex(gui_context, NULL, ICON_ROTATE, 0) && selected && GetState() == state::IDLE)
+        {
+            SetState(state::ROTATING_PRIMITIVE);
+            m_Reference = primitive_compute_center(&m_CopiedPrimitive);
+            glfwSetCursorPos(m_pWindow, selected->m_AABB.max.x, m_Reference.y);
+        }
     }
 }
 
@@ -610,12 +617,8 @@ void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
         if (mu_begin_window_ex(gui_context, "edit", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
         {
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
-            if (mu_button_ex(gui_context, "rotate", 0, 0))
-            {
-                SetState(state::ROTATING_PRIMITIVE);
-                m_SelectedPrimitiveContextualMenuOpen = false;
-            }
-            else if (mu_button_ex(gui_context, "front", 0, 0))
+
+            if (mu_button_ex(gui_context, "front", 0, 0))
             {
                 primitive temp = *plist_get(m_SelectedPrimitiveIndex);
                 plist_erase(m_SelectedPrimitiveIndex);
@@ -774,7 +777,7 @@ void PrimitiveEditor::SetState(enum state new_state)
     if (new_state == state::ROTATING_PRIMITIVE)
     {
         m_CopiedPrimitive = *(plist_get(m_SelectedPrimitiveIndex));
-        m_Reference = primitive_compute_center(&m_CopiedPrimitive);
+
         m_Angle = 0.f;
         MouseCursors::GetInstance().Set(MouseCursors::CrossHair);
     }
