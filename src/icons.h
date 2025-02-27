@@ -20,7 +20,8 @@ enum icon_type
     ICON_SPLINE,
     ICON_CAPSULE,
     ICON_SCALE,
-    ICON_ROTATE
+    ICON_ROTATE,
+    ICON_LAYERUP
 };
 
 #ifdef __cplusplus

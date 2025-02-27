@@ -573,6 +573,15 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             m_Reference = primitive_compute_center(&m_CopiedPrimitive);
             glfwSetCursorPos(m_pWindow, selected->m_AABB.max.x, m_Reference.y);
         }
+
+        if (mu_button_ex(gui_context, NULL, ICON_LAYERUP, 0) && selected && GetState() == state::IDLE)
+        {
+            primitive temp = *plist_get(m_SelectedPrimitiveIndex);
+            plist_erase(m_SelectedPrimitiveIndex);
+            plist_push(&temp);
+            SetSelectedPrimitive(INVALID_INDEX);
+            UndoSnapshot();
+        }
     }
 }
 
@@ -618,16 +627,7 @@ void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
         {
             mu_layout_row(gui_context, 1, (int[]) {90}, 0);
 
-            if (mu_button_ex(gui_context, "front", 0, 0))
-            {
-                primitive temp = *plist_get(m_SelectedPrimitiveIndex);
-                plist_erase(m_SelectedPrimitiveIndex);
-                plist_push(&temp);
-                SetSelectedPrimitive(INVALID_INDEX);
-                UndoSnapshot();
-                m_SelectedPrimitiveContextualMenuOpen = false;
-            }
-            else if (mu_button_ex(gui_context, "back", 0, 0))
+            if (mu_button_ex(gui_context, "back", 0, 0))
             {
                 primitive temp = *plist_get(m_SelectedPrimitiveIndex);
                 plist_erase(m_SelectedPrimitiveIndex);

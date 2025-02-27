@@ -33,6 +33,7 @@ void renderer_draw_disc(struct renderer* r, vec2 center, float radius, float thi
 void renderer_draw_orientedbox(struct renderer* r, vec2 p0, vec2 p1, float width, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draw_line(struct renderer* r, vec2 p0, vec2 p1, float width, draw_color color, enum sdf_operator op);
 void renderer_draw_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color);
+void renderer_draw_arrow_filled(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color);
 void renderer_draw_double_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color);
 void renderer_draw_ellipse(struct renderer* r, vec2 p0, vec2 p1, float width, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draw_triangle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
