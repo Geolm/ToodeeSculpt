@@ -14,6 +14,9 @@
 #include "../system/ortho.h"
 #include "commitmono_21_31.h"
 
+// needed for GPU Time
+#include <stdatomic.h>
+
 #ifdef SHADERS_IN_EXECUTABLE
 #include "../shaders/binning.h"
 #include "../shaders/rasterizer.h"
@@ -79,6 +82,7 @@ struct renderer
 
     // stats
     uint32_t m_PeakNumDrawCommands {0};
+    _Atomic(float) m_GPUTime;
 };
 
 
@@ -451,6 +455,8 @@ void renderer_flush(struct renderer* r, void* drawable)
     {
         UNUSED_VARIABLE(pCmd);
         dispatch_semaphore_signal( r->m_Semaphore );
+
+        atomic_store(&r->m_GPUTime, (float)(pCmd->GPUEndTime() - pCmd->GPUStartTime()));
     });
 
     r->m_pCommandBuffer->presentDrawable((CA::MetalDrawable*)drawable);
@@ -474,6 +480,8 @@ void renderer_debug_interface(struct renderer* r, struct mu_Context* gui_context
         mu_text(gui_context, format("%6d", r->m_PeakNumDrawCommands));
         mu_text(gui_context, "draw data buffer");
         mu_text(gui_context, format("%6d/%d", r->m_DrawData.GetNumElements(), r->m_DrawData.GetMaxElements()));
+        mu_text(gui_context, "gpu time");
+        mu_text(gui_context, format("%f ms", atomic_load(&r->m_GPUTime) * 1000.f));
         mu_text(gui_context, "aa width");
         mu_slider(gui_context, &r->m_AAWidth, 0.f, 4.f);
     }
