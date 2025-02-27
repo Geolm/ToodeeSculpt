@@ -129,7 +129,6 @@ inline bool PrimitiveEditor::SetSelectedPrimitive(uint32_t index)
     assert(index == INVALID_INDEX || index < plist_size());
     bool different = (m_SelectedPrimitiveIndex != index);
     m_SelectedPrimitiveIndex = index;
-    log_debug("selected primitive : %d", m_SelectedPrimitiveIndex);
     return different;
 }
 
