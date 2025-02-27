@@ -16,6 +16,7 @@
 
 // needed for GPU Time
 #include <stdatomic.h>
+#include "../system/psmooth.h"
 
 #ifdef SHADERS_IN_EXECUTABLE
 #include "../shaders/binning.h"
@@ -82,7 +83,9 @@ struct renderer
 
     // stats
     uint32_t m_PeakNumDrawCommands {0};
+    uint32_t m_NumDrawData {0};
     _Atomic(float) m_GPUTime;
+    struct psmooth m_AverageGPUTime;
 };
 
 
@@ -124,6 +127,7 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
     pIcbDesc->release();
 
     r->m_Semaphore = dispatch_semaphore_create(DynamicBuffer::MaxInflightBuffers);
+    psmooth_init(&r->m_AverageGPUTime);
 
     renderer_build_pso(r);
     renderer_build_font_texture(r);
@@ -339,6 +343,8 @@ void renderer_end_frame(struct renderer* r)
     r->m_DrawDataBuffer.Unmap(r->m_FrameIndex, 0, r->m_DrawData.GetNumElements() * sizeof(float));
     r->m_NumDrawCommands = r->m_Commands.GetNumElements();
     r->m_PeakNumDrawCommands = max(r->m_PeakNumDrawCommands, r->m_NumDrawCommands);
+    r->m_NumDrawData = r->m_DrawData.GetNumElements();
+    psmooth_push(&r->m_AverageGPUTime, atomic_load(&r->m_GPUTime));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -474,14 +480,14 @@ void renderer_debug_interface(struct renderer* r, struct mu_Context* gui_context
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_text(gui_context, "frame count");
         mu_text(gui_context, format("%6d", r->m_FrameIndex));
-        mu_text(gui_context, "draw cmd count");
-        mu_text(gui_context, format("%6d/%d", r->m_Commands.GetNumElements(), r->m_Commands.GetMaxElements()));
-        mu_text(gui_context, "peak cmd count");
+        mu_text(gui_context, "draw cmd");
+        mu_text(gui_context, format("%6d/%d", r->m_NumDrawCommands, r->m_Commands.GetMaxElements()));
+        mu_text(gui_context, "peak cmd");
         mu_text(gui_context, format("%6d", r->m_PeakNumDrawCommands));
-        mu_text(gui_context, "draw data buffer");
-        mu_text(gui_context, format("%6d/%d", r->m_DrawData.GetNumElements(), r->m_DrawData.GetMaxElements()));
+        mu_text(gui_context, "draw data");
+        mu_text(gui_context, format("%6d/%d", r->m_NumDrawData, r->m_DrawData.GetMaxElements()));
         mu_text(gui_context, "gpu time");
-        mu_text(gui_context, format("%f ms", atomic_load(&r->m_GPUTime) * 1000.f));
+        mu_text(gui_context, format("%2.2f ms",  psmooth_average(&r->m_AverageGPUTime) * 1000.f));
         mu_text(gui_context, "aa width");
         mu_slider(gui_context, &r->m_AAWidth, 0.f, 4.f);
     }

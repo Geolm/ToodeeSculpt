@@ -138,7 +138,7 @@ void Editor::UserInterface(struct mu_Context* gui_context)
         mu_end_window(gui_context);
     }
 
-    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 200, 225, 400), window_options))
+    if (mu_begin_window_ex(gui_context, "Toolbar", mu_rect(1500, 50, 225, 400), window_options))
     {
         if (m_pActiveEditor != nullptr)
             m_pActiveEditor->Toolbar(gui_context);

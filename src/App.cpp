@@ -204,7 +204,7 @@ void App::Update(CA::MetalDrawable* drawable)
     m_pEditor->UserInterface(m_pGuiContext);
 
     // debug interface
-    if (m_pEditor->IsDebugWindowOpen() && mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 0, 300, 600), MU_OPT_NOCLOSE))
+    if (m_pEditor->IsDebugWindowOpen() && mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 500, 300, 400), MU_OPT_NOCLOSE))
     {
         if (mu_header(m_pGuiContext, "Time"))
         {
@@ -212,7 +212,7 @@ void App::Update(CA::MetalDrawable* drawable)
             mu_text(m_pGuiContext, "deltatime");
             mu_text(m_pGuiContext, format("%3.2f ms", m_DeltaTime*1000.f));
             mu_text(m_pGuiContext, "time");
-            mu_text(m_pGuiContext, format("%3.2f seconds", m_Time));
+            mu_text(m_pGuiContext, format("%3.2f s", m_Time));
         }
 
         renderer_debug_interface(m_pRenderer, m_pGuiContext);

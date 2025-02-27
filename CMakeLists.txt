@@ -54,6 +54,7 @@ add_executable(ToodeeSculpt
 ./src/system/ortho.c
 ./src/system/palettes.c
 ./src/system/point_in.c
+./src/system/psmooth.c
 ./src/system/sokol_time.c
 ./src/system/undo.c
 ./src/system/whereami.c
