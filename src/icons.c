@@ -182,6 +182,25 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
 
             break;
         }
+    case ICON_LAYERDOWN:
+        {
+            renderer_draw_orientedbox(gfx_context, aabb_project(&unit_box, &box, vec2_set(-0.6f, .5f)),
+                                      aabb_project(&unit_box, &box, vec2_set(0.f, 0.f)),
+                                      0.8f * extent.x, 0.f, 0.f, fill_solid, secondary_color, op_add);
+
+            renderer_draw_orientedbox(gfx_context, aabb_project(&unit_box, &box, vec2_set(-.6f, .1f)),
+                                      aabb_project(&unit_box, &box, vec2_set(0.f, -.4f)),
+                                      0.8f * extent.x, 0.f, 0.f, fill_solid, primary_color, op_add);
+
+            vec2 target = vec2_lerp( vec2_set(.65f, 0.f), vec2_set(.65f, .8f), sl_impulse(sl_wave(loop_1s)));
+
+            renderer_begin_combination(gfx_context, 1.f);
+            renderer_draw_arrow_filled(gfx_context, aabb_project(&unit_box, &box, vec2_set(0.65f, -.8f)),
+                                    aabb_project(&unit_box, &box, target), 0.025f * extent.x, .15f, primary_color);
+            renderer_end_combination(gfx_context, false);
+
+            break;
+        }
     default: break;
     }
 }

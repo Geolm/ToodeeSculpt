@@ -21,7 +21,8 @@ enum icon_type
     ICON_CAPSULE,
     ICON_SCALE,
     ICON_ROTATE,
-    ICON_LAYERUP
+    ICON_LAYERUP,
+    ICON_LAYERDOWN
 };
 
 #ifdef __cplusplus
