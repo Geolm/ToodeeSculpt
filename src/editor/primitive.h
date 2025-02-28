@@ -64,7 +64,7 @@ float primitive_distance_to_nearest_point(struct primitive const* primitive, vec
 void primitive_update_aabb(struct primitive* primitive);
 int primitive_property_grid(struct primitive* primitive, struct mu_Context* gui_context);
 vec2 primitive_compute_center(struct primitive const* primitive);
-int primitive_contextual_property_grid(struct primitive* primitive, struct mu_Context* gui_context, aabb* window_aabb);
+int primitive_contextual_property_grid(struct primitive* primitive, struct mu_Context* gui_context);
 void primitive_deserialize(struct primitive* primitive, serializer_context* context, uint16_t major, uint16_t minor);
 void primitive_serialize(struct primitive const* primitive, serializer_context* context);
 void primitive_translate(struct primitive* p, vec2 translation);

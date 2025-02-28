@@ -620,33 +620,18 @@ void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
 {
     if (m_SelectedPrimitiveContextualMenuOpen && SelectedPrimitiveValid())
     {
-        mu_Rect window_rect;
-        window_rect.h = gui_context->style->title_height * 8;
-        window_rect.w = gui_context->text_width(0, "rotaterota", -1);
-        window_rect.x = (int)m_ContextualMenuPosition.x - window_rect.w/2;
-        window_rect.y = (int)m_ContextualMenuPosition.y - window_rect.h/2;
-
-        aabb window_aabb =
+        if (mu_begin_window_ex(gui_context, "edit", mu_rect((int)m_ContextualMenuPosition.x, (int)m_ContextualMenuPosition.y, 110, 80),
+            MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE|MU_OPT_AUTOSIZE))
         {
-            .min = vec2_set(window_rect.x, window_rect.y),
-            .max = vec2_set(window_rect.x + window_rect.w, window_rect.y + window_rect.h)
-        };
-
-        if (mu_begin_window_ex(gui_context, "edit", window_rect, MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE))
-        {
-            mu_layout_row(gui_context, 1, (int[]) {90}, 0);
-
-            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(plist_get(m_SelectedPrimitiveIndex), gui_context, &window_aabb))
+            if (SelectedPrimitiveValid() && primitive_contextual_property_grid(plist_get(m_SelectedPrimitiveIndex), gui_context))
             {
                 m_SelectedPrimitiveContextualMenuOpen = false;
                 UndoSnapshot();
             }
-
-            if (!aabb_test_point(&window_aabb, m_MousePosition))
-                m_SelectedPrimitiveContextualMenuOpen = false;
-
             mu_end_window(gui_context);
         }
+        
+        
     }
 }
 
