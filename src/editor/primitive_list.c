@@ -37,13 +37,13 @@ void plist_clear(void)
 // ---------------------------------------------------------------------------------------------------------------------------
 uint32_t plist_last(void)
 {
-    return cc_size(&list) - 1;
+    return plist_size() - 1;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
 uint32_t plist_size(void)
 {
-    return cc_size(&list);
+    return (uint32_t)(cc_size(&list));
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ void plist_deserialize(serializer_context* context, uint16_t major, uint16_t min
     size_t array_size = serializer_read_size_t(context);
     log_debug("%d primitives found", array_size);
 
-    plist_resize(array_size);
+    plist_resize((uint32_t)array_size);
     for(uint32_t i=0; i<array_size; ++i)
     {
         struct primitive* p = plist_get(i);
