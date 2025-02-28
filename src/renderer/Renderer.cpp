@@ -143,7 +143,7 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
 //----------------------------------------------------------------------------------------------------------------------------
 void renderer_resize(struct renderer* r, uint32_t width, uint32_t height)
 {
-    log_info("resizing the viewport to %dx%d", width, height);
+    log_info("resizing the framebuffer to %dx%d", width, height);
     r->m_WindowWidth = width;
     r->m_WindowHeight = height;
     r->m_NumTilesWidth = (width + TILE_SIZE - 1) / TILE_SIZE;
@@ -476,7 +476,7 @@ void renderer_flush(struct renderer* r, void* drawable)
 //----------------------------------------------------------------------------------------------------------------------------
 void renderer_debug_interface(struct renderer* r, struct mu_Context* gui_context)
 {
-    if (mu_header(gui_context, "Renderer"))
+    if (mu_header_ex(gui_context, "Renderer", MU_OPT_EXPANDED))
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_text(gui_context, "frame count");

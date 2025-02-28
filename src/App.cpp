@@ -213,7 +213,7 @@ void App::Update(CA::MetalDrawable* drawable)
     // debug interface
     if (m_pEditor->IsDebugWindowOpen() && mu_begin_window_ex(m_pGuiContext, "Debug", mu_rect(1550, 500, 300, 400), MU_OPT_NOCLOSE))
     {
-        if (mu_header(m_pGuiContext, "Time"))
+        if (mu_header_ex(m_pGuiContext, "Time", MU_OPT_EXPANDED))
         {
             mu_layout_row(m_pGuiContext, 2, (int[]) { 150, -1 }, 0);
             mu_text(m_pGuiContext, "deltatime");

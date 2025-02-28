@@ -2,6 +2,8 @@
 #include "MetalLayerHelper.h"
 #include "App.h"
 
+#include "system/log.h"
+
 #define UNUSED_VARIABLE(a) (void)(a)
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -13,10 +15,12 @@ int main(int argc, const char * argv[])
     MetalLayerHelper helper;
     App app;
 
+    helper.Init();
+
     const GLFWvidmode* videomode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    UNUSED_VARIABLE(videomode);
-    
-    helper.Init("ToodeeSculpt", 1920, 1080);
+    log_info("screen resolution is %dx%d", videomode->width, videomode->height);
+
+    helper.InitWindow("ToodeeSculpt", (videomode->width * 2) / 3, (videomode->height * 2) / 3);
 
     app.Init(helper.GetDevice(), helper.GetGLFWWindow(), 1920, 1080);
 

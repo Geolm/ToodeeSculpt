@@ -12,15 +12,13 @@
 class MetalLayerHelper
 {
 public:
-    void Init(const char* windowName, unsigned int window_width, unsigned int window_height);
+    void Init();
+    void InitWindow(const char* windowName, unsigned int window_width, unsigned int window_height);
     void Terminate();
 
     MTL::Device* GetDevice() {return m_Device;}
     GLFWwindow* GetGLFWWindow() {return m_Window;}
     CA::MetalDrawable* GetDrawble();
-
-private:
-    void InitWindow(const char* windowName, unsigned int window_width, unsigned int window_height);
 
 private:
     MTL::Device* m_Device;

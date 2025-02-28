@@ -102,7 +102,7 @@ void Editor::Draw(struct renderer* context)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::DebugInterface(struct mu_Context* gui_context)
 {
-    if (mu_header(gui_context, "Undo"))
+    if (mu_header_ex(gui_context, "Undo", MU_OPT_EXPANDED))
     {
         float undo_buffer_stat, undo_states_stat;
         undo_stats(m_pUndoContext, &undo_buffer_stat, &undo_states_stat);

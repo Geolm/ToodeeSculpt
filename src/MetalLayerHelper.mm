@@ -1,10 +1,10 @@
 #include "MetalLayerHelper.h"
 
 //----------------------------------------------------------------------------------------------------------------------------
-void MetalLayerHelper::Init(const char* windowName, unsigned int window_width, unsigned int window_height)
+void MetalLayerHelper::Init()
 {
     m_Device = MTL::CreateSystemDefaultDevice();
-    InitWindow(windowName, window_width, window_height);
+    glfwInit();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ void MetalLayerHelper::Terminate()
 //----------------------------------------------------------------------------------------------------------------------------
 void MetalLayerHelper::InitWindow(const char* windowName, unsigned int window_width, unsigned int window_height)
 {
-    glfwInit();
+    
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_FALSE);
