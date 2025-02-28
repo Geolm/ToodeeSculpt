@@ -119,8 +119,6 @@ void Editor::DebugInterface(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void Editor::UserInterface(struct mu_Context* gui_context)
 {
-    MenuBar(gui_context);
-
     int window_options = MU_OPT_NOCLOSE|MU_OPT_NORESIZE;
     if (mu_begin_window_ex(gui_context, "Global control", mu_rect(10, 100, 400, 200), window_options))
     {
@@ -148,6 +146,8 @@ void Editor::UserInterface(struct mu_Context* gui_context)
 
     if (m_pActiveEditor != nullptr)
         m_pActiveEditor->UserInterface(gui_context);
+
+    MenuBar(gui_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
