@@ -49,12 +49,12 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
         }
     case ICON_CHECK:
         {
-            vec2 a = vec2_add(center, vec2_scale((vec2){ 0.7f, -0.6f}, max_radius));
-            vec2 b = vec2_add(center, vec2_scale((vec2){-0.2f,  0.5f}, max_radius));
-            vec2 c = vec2_add(center, vec2_scale((vec2){-0.65f, 0.0f}, max_radius));
+            vec2 a = vec2_add(center, vec2_scale((vec2){ 0.7f, -0.6f}, extent.x));
+            vec2 b = vec2_add(center, vec2_scale((vec2){-0.2f,  0.5f}, extent.x));
+            vec2 c = vec2_add(center, vec2_scale((vec2){-0.65f, 0.0f}, extent.x));
             renderer_begin_combination(gfx_context, 1.f);
-            renderer_draw_orientedbox(gfx_context, a, b, 0.f, max_radius * .1f, 0.f, fill_solid, primary_color, op_union);
-            renderer_draw_orientedbox(gfx_context, b, c, 0.f, max_radius * .1f, 0.f, fill_solid, primary_color, op_union);
+            renderer_draw_orientedbox(gfx_context, a, b, 0.f, extent.x * .05f, 0.f, fill_solid, primary_color, op_union);
+            renderer_draw_orientedbox(gfx_context, b, c, 0.f, extent.x * .05f, 0.f, fill_solid, primary_color, op_union);
             renderer_end_combination(gfx_context, false);
             break;
         }
