@@ -48,6 +48,8 @@ void App::Init(MTL::Device* device, GLFWwindow* window, uint16_t viewport_width,
     m_ScaleX = (float) m_ViewportWidth / (float) m_WindowWidth;
     m_ScaleY = (float) m_ViewportHeight / (float) m_WindowHeight;
 
+    glfwGetWindowContentScale(window, &m_DPIScaleX, &m_DPIScaleY);
+
     m_pRenderer = renderer_init(m_Device, m_WindowWidth, m_WindowHeight);
     renderer_set_viewport(m_pRenderer, (float)m_ViewportWidth, (float)m_ViewportHeight);
     renderer_set_camera(m_pRenderer, vec2_zero(), 1.f);
@@ -287,8 +289,8 @@ void App::OnWindowResize(int width, int height)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnMouseMove(float x, float y)
 {
-    x *= m_ScaleX;
-    y *= m_ScaleY;
+    x *= m_ScaleX * m_DPIScaleX;
+    y *= m_ScaleY * m_DPIScaleY;
 
     mu_input_mousemove(m_pGuiContext, (int)x, (int)y);
     m_MousePos = (vec2) {x, y};

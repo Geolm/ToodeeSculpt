@@ -20,7 +20,7 @@ int main(int argc, const char * argv[])
     const GLFWvidmode* videomode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     log_info("screen resolution is %dx%d", videomode->width, videomode->height);
 
-    helper.InitWindow("ToodeeSculpt", (videomode->width * 2) / 3, (videomode->height * 2) / 3);
+    helper.InitWindow("ToodeeSculpt", 2560, 1440);
 
     app.Init(helper.GetDevice(), helper.GetGLFWWindow(), 1920, 1080);
 

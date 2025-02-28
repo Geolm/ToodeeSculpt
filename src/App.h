@@ -33,6 +33,7 @@ private:
     uint16_t m_ViewportWidth;
     uint16_t m_ViewportHeight;
     float m_ScaleX, m_ScaleY;
+    float m_DPIScaleX, m_DPIScaleY;
     mu_Context* m_pGuiContext {nullptr};
     vec2 m_MousePos;
     uint64_t m_StartTime;
