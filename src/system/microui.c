@@ -1219,6 +1219,33 @@ void mu_end_panel(mu_Context *ctx) {
 //----------------------------------------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------------------------------------
+int mu_button_icon(mu_Context *ctx, const char *label, int icon) 
+{
+  int res = 0;
+  mu_Id id = label ? mu_get_id(ctx, label, (int)strlen(label))
+                   : mu_get_id(ctx, &icon, sizeof(icon));
+  mu_Rect r = mu_layout_next(ctx);
+  r.w += r.h;
+  mu_update_control(ctx, id, r, 0);
+
+  /* handle click */
+  if (ctx->mouse_pressed == MU_MOUSE_LEFT && ctx->focus == id) {
+    res |= MU_RES_SUBMIT;
+  }
+  /* draw */
+  mu_draw_control_frame(ctx, id, r, MU_COLOR_BUTTON, 0);
+  if (label) { mu_draw_control_text(ctx, label, r, MU_COLOR_TEXT, 0); }
+  if (icon) 
+  {
+    mu_Rect icon_rect = r;
+    icon_rect.x += icon_rect.w - icon_rect.h;
+    icon_rect.w = icon_rect.h;
+    mu_draw_icon(ctx, icon, icon_rect, ctx->style->colors[MU_COLOR_TEXT]); 
+  }
+  return res;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 int mu_combo_box(mu_Context *ctx, int* expanded, int* index, int num_entries, const char** entries)
 {
     // bad parameters check
@@ -1309,31 +1336,23 @@ int mu_combo_button(mu_Context *ctx, const char* button_name, int num_entries, c
 {
   int res = 0;
 
-  if (mu_button_ex(ctx, button_name, 0, 0))
+  if (mu_button_icon(ctx, button_name, MU_ICON_COLLAPSED))
     mu_open_popup(ctx, button_name);
-
-  mu_Rect r = ctx->last_rect;
-  r.x += r.w-r.h;
-  r.w = r.h;
-  mu_draw_icon(ctx, MU_ICON_COLLAPSED, r, ctx->style->colors[MU_COLOR_TEXT]);
 
   if (mu_begin_popup(ctx, button_name))
   {
     for(int i=0; i<num_entries; ++i)
     {
-      if (mu_button_ex(ctx, entries[i], 0, 0))
+      // add a check on the right of the selected entry
+      if (mu_button_icon(ctx, entries[i], (*output == i) ? MU_ICON_CHECK : 0))
       {
+        if  (*output != i)
+        {
           *output = i;
           res |= MU_RES_SUBMIT;
-      }
-
-      // add a check on the right of the selected entry
-      if (*output == i)
-      {
-          mu_Rect check_rect = ctx->last_rect;
-          check_rect.x += check_rect.w + ctx->style->padding;
-          check_rect.w = check_rect.h;
-          mu_draw_icon(ctx, MU_ICON_CHECK, check_rect, ctx->style->colors[MU_COLOR_TEXT]);
+        }
+        else
+          res |= MU_RES_CHANGE;
       }
     }
 
