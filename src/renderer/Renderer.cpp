@@ -79,6 +79,7 @@ struct renderer
     struct view_proj m_ViewProj;
     float m_CameraScale {1.f};
     vec2 m_CameraPosition {.x = 0.f, .y = 0.f};
+    vec2 m_FontSize;
     quantized_aabb* m_CombinationAABB {nullptr};
 
     // stats
@@ -133,6 +134,8 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
     renderer_build_font_texture(r);
     renderer_build_depthstencil_state(r);
     renderer_resize(r, width, height);
+    renderer_set_viewport(r, (float)width, (float)height);
+    renderer_set_camera(r, vec2_zero(), 1.f);
 
     return r;
 }
@@ -329,8 +332,6 @@ void renderer_begin_frame(struct renderer* r)
     r->m_CommandsAABB.Set(r->m_CommandsAABBBuffer.Map(r->m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
     r->m_DrawData.Set(r->m_DrawDataBuffer.Map(r->m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
     renderer_set_cliprect(r, 0, 0, (uint16_t) r->m_WindowWidth, (uint16_t) r->m_WindowHeight);
-    renderer_set_viewport(r, (float)r->m_WindowWidth, (float)r->m_WindowHeight);
-    renderer_set_camera(r, vec2_zero(), 1.f);
     r->m_CombinationAABB = nullptr;
 }
 
@@ -378,7 +379,7 @@ void renderer_bin_commands(struct renderer* r)
     args->num_tile_height = r->m_NumTilesHeight;
     args->num_tile_width = r->m_NumTilesWidth;
     args->screen_div = (float2) {.x = 1.f / (float)r->m_WindowWidth, .y = 1.f / (float) r->m_WindowHeight};
-    args->font_scale = r->m_FontScale;
+    args->font_size = (float2) {.x = r->m_FontSize.x, .y = r->m_FontSize.y};
     args->outline_width = r->m_OutlineWidth;
     args->outline_color = draw_color(0xff000000);
     args->culling_debug = r->m_CullingDebug;
@@ -1060,7 +1061,7 @@ void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color
         if (data != nullptr && aabox != nullptr)
         {
             write_float(data, x, y);
-            write_aabb(aabox, x, y, x + FONT_WIDTH, y + FONT_HEIGHT);
+            write_aabb(aabox, x, y, x + r->m_FontSize.x, y + r->m_FontSize.y);
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
@@ -1073,7 +1074,7 @@ void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color
 void renderer_draw_text(struct renderer* r, float x, float y, const char* text, draw_color color)
 {
     vec2 p = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, vec2_set(x, y));
-    const float font_spacing = FONT_WIDTH * r->m_FontScale;
+    const float font_spacing = r->m_FontSize.x;
     for(const char *c = text; *c != 0; c++)
     {
         renderer_draw_char(r, p.x, p.y, *c, color);
@@ -1100,6 +1101,15 @@ void renderer_set_cliprect(struct renderer* r, uint16_t min_x, uint16_t min_y, u
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
+void renderer_set_cliprect_relative(struct renderer * r, aabb const* box)
+{
+    vec2 top_left = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, box->min) + vec2_splat(.5f);
+    vec2 bottom_right = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, box->max) + vec2_splat(.5f);
+
+    renderer_set_cliprect(r, (uint16_t) top_left.x, (uint16_t) top_left.y, (uint16_t) bottom_right.x, (uint16_t) bottom_right.y);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
 void renderer_set_culling_debug(struct renderer* r, bool b)
 {
     r->m_CullingDebug = b;
@@ -1109,6 +1119,7 @@ void renderer_set_culling_debug(struct renderer* r, bool b)
 void renderer_set_viewport(struct renderer* r, float width, float height)
 {
     ortho_set_viewport(&r->m_ViewProj, vec2_set(r->m_WindowWidth, r->m_WindowHeight), vec2_set(width, height));
+    r->m_FontSize = vec2_scale(vec2_set(FONT_WIDTH, FONT_HEIGHT), ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -1116,5 +1127,6 @@ void renderer_set_camera(struct renderer* r, vec2 position, float scale)
 {
     r->m_CameraPosition = position;
     r->m_CameraScale = scale;
+    r->m_FontSize = vec2_scale(vec2_set(FONT_WIDTH, FONT_HEIGHT), ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale));
 }
 

@@ -138,7 +138,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 case primitive_char:
                 {
                     float2 top_left = float2(data[0], data[1]);
-                    float2 uv = (in.pos.xy - top_left) / float2(FONT_WIDTH, FONT_HEIGHT);
+                    float2 uv = (in.pos.xy - top_left) / input.font_size;
 
                     if (all(uv >= 0.f && uv <= 1.f))
                     {

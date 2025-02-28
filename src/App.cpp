@@ -32,7 +32,7 @@ static inline mu_Color to_mu_color(uint32_t packed_color)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void App::Init(MTL::Device* device, GLFWwindow* window)
+void App::Init(MTL::Device* device, GLFWwindow* window, uint16_t viewport_width, uint16_t viewport_height)
 {
     m_Device = device;
     m_Window = window;
@@ -40,10 +40,18 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
     int width, height;
     glfwGetFramebufferSize(m_Window, &width, &height);
 
-    m_WindowHeight = (uint32_t) height;
-    m_WindowWidth = (uint32_t) width;
+    m_WindowWidth = (uint16_t) width;
+    m_WindowHeight = (uint16_t) height;
+    m_ViewportWidth = viewport_width;
+    m_ViewportHeight = viewport_height;
+
+    m_ScaleX = (float) m_ViewportWidth / (float) m_WindowWidth;
+    m_ScaleY = (float) m_ViewportHeight / (float) m_WindowHeight;
 
     m_pRenderer = renderer_init(m_Device, m_WindowWidth, m_WindowHeight);
+    renderer_set_viewport(m_pRenderer, (float)m_ViewportWidth, (float)m_ViewportHeight);
+    renderer_set_camera(m_pRenderer, vec2_zero(), 1.f);
+
     InitGui();
 
     glfwSetWindowUserPointer(window, this);
@@ -88,8 +96,6 @@ void App::Init(MTL::Device* device, GLFWwindow* window)
 
     m_pEditor = new Editor;
     m_pEditor->Init(m_Window, (aabb) {.min = (vec2) {510.f, 100.f}, .max = (vec2) {1410.f, 1000.f}}, m_pFolderPath);
-
-    glfwGetWindowContentScale(window, &m_ScaleX, &m_ScaleY);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -139,8 +145,6 @@ void App::InitGui()
 //----------------------------------------------------------------------------------------------------------------------------
 void App::DrawGui()
 {
-    renderer_set_viewport(m_pRenderer, m_WindowWidth, m_WindowHeight);
-    renderer_set_camera(m_pRenderer, vec2_zero(), 1.f);
     renderer_set_cliprect(m_pRenderer, 0, 0, UINT16_MAX, UINT16_MAX);
 
     mu_Command *cmd = NULL;
@@ -165,8 +169,11 @@ void App::DrawGui()
         }
         case MU_COMMAND_CLIP : 
         {
-            renderer_set_cliprect(m_pRenderer, (uint16_t)cmd->rect.rect.x, (uint16_t)cmd->rect.rect.y,
-                                   (uint16_t)(cmd->rect.rect.x + cmd->rect.rect.w), (uint16_t)(cmd->rect.rect.y + cmd->rect.rect.h));
+            uint16_t min_x = uint16_t(float(cmd->rect.rect.x * m_ScaleX));
+            uint16_t min_y = uint16_t(float(cmd->rect.rect.x * m_ScaleX));
+            uint16_t max_x = uint16_t(float(cmd->rect.rect.x + cmd->rect.rect.w) * m_ScaleX);
+            uint16_t max_y = uint16_t(float(cmd->rect.rect.y + cmd->rect.rect.h) * m_ScaleX);
+            renderer_set_cliprect(m_pRenderer, min_x, min_y, max_x, max_y);
             break;
         }
         case MU_COMMAND_ICON :
@@ -272,15 +279,17 @@ void App::OnKeyEvent(int key, int scancode, int action, int mods)
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnWindowResize(int width, int height)
 {
-    m_WindowWidth = (uint32_t) width;
-    m_WindowHeight = (uint32_t) height;
+    m_WindowWidth = (uint16_t) width;
+    m_WindowHeight = (uint16_t) height;
     renderer_resize(m_pRenderer, m_WindowWidth, m_WindowHeight);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void App::OnMouseMove(float x, float y)
 {
-    x *= m_ScaleX; y *= m_ScaleY;
+    x *= m_ScaleX;
+    y *= m_ScaleY;
+
     mu_input_mousemove(m_pGuiContext, (int)x, (int)y);
     m_MousePos = (vec2) {x, y};
     m_pEditor->OnMouseMove(m_MousePos);

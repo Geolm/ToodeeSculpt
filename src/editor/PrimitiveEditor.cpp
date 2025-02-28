@@ -310,7 +310,7 @@ bool PrimitiveEditor::SelectPrimitive()
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::Draw(struct renderer* context)
 {
-    renderer_set_cliprect(context, (int)m_EditionZone.min.x, (int)m_EditionZone.min.y, (int)m_EditionZone.max.x, (int)m_EditionZone.max.y);
+    renderer_set_cliprect_relative(context, &m_EditionZone);
 
     // drawing *the* primitives
     renderer_begin_combination(context, m_SmoothBlend);

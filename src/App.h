@@ -10,7 +10,7 @@ struct renderer;
 class App
 {
 public:
-    void Init(MTL::Device* device, GLFWwindow* window);
+    void Init(MTL::Device* device, GLFWwindow* window, uint16_t viewport_width, uint16_t viewport_height);
     void Update(CA::MetalDrawable* drawable);
     void Terminate();
 
@@ -28,8 +28,10 @@ private:
     MTL::Device* m_Device {nullptr};
     renderer* m_pRenderer;
     GLFWwindow* m_Window;
-    uint32_t m_WindowHeight;
-    uint32_t m_WindowWidth;
+    uint16_t m_WindowWidth;
+    uint16_t m_WindowHeight;
+    uint16_t m_ViewportWidth;
+    uint16_t m_ViewportHeight;
     float m_ScaleX, m_ScaleY;
     mu_Context* m_pGuiContext {nullptr};
     vec2 m_MousePos;

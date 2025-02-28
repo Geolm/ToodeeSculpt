@@ -23,6 +23,7 @@ void renderer_end_frame(struct renderer* r);
 void renderer_terminate(struct renderer* r);
 
 void renderer_set_cliprect(struct renderer* r, uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
+void renderer_set_cliprect_relative(struct renderer * r, aabb const* box);
 void renderer_set_culling_debug(struct renderer* r, bool b);
 void renderer_set_viewport(struct renderer* r, float width, float height);
 void renderer_set_camera(struct renderer* r, vec2 position, float scale);

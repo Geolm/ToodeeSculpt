@@ -177,7 +177,7 @@ typedef struct draw_cmd_arguments
     uint16_t num_tile_height;
     float aa_width;
     float2 screen_div;
-    float font_scale;
+    float2 font_size;
     draw_color outline_color;
     float outline_width;
     bool culling_debug;

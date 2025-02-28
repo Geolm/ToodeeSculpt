@@ -18,7 +18,7 @@ int main(int argc, const char * argv[])
     
     helper.Init("ToodeeSculpt", 1920, 1080);
 
-    app.Init(helper.GetDevice(), helper.GetGLFWWindow());
+    app.Init(helper.GetDevice(), helper.GetGLFWWindow(), 1920, 1080);
 
     while (!glfwWindowShouldClose(helper.GetGLFWWindow()))
     {
