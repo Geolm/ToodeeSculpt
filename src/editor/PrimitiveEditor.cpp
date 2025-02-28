@@ -142,12 +142,9 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
 
     if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        if (aabb_test_point(&m_EditionZone, m_MousePosition))
+        if (aabb_test_point(&m_EditionZone, m_MousePosition) && SelectedPrimitiveValid())
         {
-            if (SelectedPrimitiveValid() && primitive_test_mouse_cursor(plist_get(m_SelectedPrimitiveIndex), m_MousePosition, false))
-            {
-                m_SelectedPrimitiveContextualMenuOpen = !m_SelectedPrimitiveContextualMenuOpen;
-            }
+            m_SelectedPrimitiveContextualMenuOpen = !m_SelectedPrimitiveContextualMenuOpen;
             m_ContextualMenuPosition = m_MousePosition;
         }
     }
