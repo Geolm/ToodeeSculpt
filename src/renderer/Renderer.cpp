@@ -71,7 +71,7 @@ struct renderer
     uint32_t m_NumTilesWidth;
     uint32_t m_NumTilesHeight;
     uint32_t m_NumDrawCommands;
-    float m_AAWidth {1.41421356237f};
+    float m_AAWidth {VEC2_SQR2};
     float m_FontScale {1.f};
     float m_SmoothValue {0.f};
     float m_OutlineWidth {1.f};

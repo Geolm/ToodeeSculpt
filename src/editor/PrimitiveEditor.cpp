@@ -54,7 +54,7 @@ void PrimitiveEditor::New()
     m_CurrentState = state::IDLE;
     m_CurrentPoint = 0;
     m_SDFOperationComboBox = 0;
-    m_SmoothBlend = 1.f;
+    m_SmoothBlend = VEC2_SQR2;
     m_AlphaValue = 1.f;
     SetSelectedPrimitive(INVALID_INDEX);
     primitive_set_invalid(&m_CopiedPrimitive);
@@ -596,7 +596,7 @@ void PrimitiveEditor::GlobalControl(struct mu_Context* gui_context)
 {
     mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
     mu_label(gui_context,"smooth blend");
-    int res = mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, 1.f, "%3.0f", 0);
+    int res = mu_slider_ex(gui_context, &m_SmoothBlend, 0.f, 100.f, .01f, "%3.2f", 0);
     mu_label(gui_context, "alpha");
     res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
     mu_label(gui_context, "global outline");
