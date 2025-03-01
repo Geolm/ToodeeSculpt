@@ -9,6 +9,7 @@
  #define VEC2_PI_2   (1.57079632f)
  #define VEC2_PI_4   (0.78539816f)
  #define VEC2_TAU    (6.28318530f)
+ #define VEC2_SQR2   (1.41421356237f)
 
 //-----------------------------------------------------------------------------
 static inline float float_sign(float f) {if (f>0.f) return 1.f; if (f<0.f) return -1.f; return 0.f;}
