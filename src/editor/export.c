@@ -51,7 +51,8 @@ void shadertoy_export_primitive(struct string_buffer* b, struct primitive * cons
                                       p->m_Points[0].x, p->m_Points[0].y, p->m_Points[1].x, p->m_Points[1].y, p->m_Points[2].x, p->m_Points[2].y);break;
 
         case shape_oriented_ellipse : bprintf(b, "sd_oriented_ellipse(p, vec2(%f, %f), vec2(%f, %f), %f);\n",
-                                             p->m_Points[0].x, p->m_Points[0].y, p->m_Points[1].x, p->m_Points[1].y, p->m_Width);break;
+                                             p->m_Points[0].x, p->m_Points[0].y, p->m_Points[1].x, p->m_Points[1].y, p->m_Width);
+                                      break;
 
         case shape_pie : 
         {
@@ -78,6 +79,12 @@ void shadertoy_export_primitive(struct string_buffer* b, struct primitive * cons
 
         default: log_error("shape type %d cannot be exported", p->m_Shape); break;
     }
+
+    if (p->m_Fillmode == fill_hollow)
+        bprintf(b, "\td%d = abs(d);\n", index);
+
+    if (p->m_Shape == shape_oriented_box || p->m_Shape == shape_triangle)
+        bprintf(b, "\td%d -= %f;\n", index, p->m_Roundness);
 
     switch(p->m_Operator)
     {
@@ -109,6 +116,7 @@ void shadertoy_finalize(struct string_buffer* b)
     bprintf(b, "void mainImage( out vec4 fragColor, in vec2 fragCoord)\n");
     bprintf(b, "{\n\tvec2 p = fragCoord/iResolution.y;\n");
     bprintf(b, "\tp.y = 1.0 - p.y;\n");
+    bprintf(b, "p.x -= (iResolution.y / iResolution.x) * 0.5;\n");
     bprintf(b, "\tvec4 color_distance = map(p);\n");
     bprintf(b, "\tvec3 col = mix(vec3(1.0), vec3(color_distance.rgb), 1.0-smoothstep(0.0,length(dFdx(p) + dFdy(p)), color_distance.a));\n");
     bprintf(b, "\tfragColor = vec4(pow(col, vec3(1.0/ 2.2)),1.0);\n}\n");
