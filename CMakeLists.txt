@@ -35,7 +35,7 @@ add_executable(ToodeeSculpt
 ./src/App.cpp
 ./src/Icons.c
 ./src/main.mm
-./src/MetalLayerHelper.mm
+./src/renderer/MetalLayerHelper.mm
 ./src/MouseCursors.cpp
 ./src/editor/color_box.c
 ./src/editor/Editor.cpp

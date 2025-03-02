@@ -1,7 +1,7 @@
 #define NS_PRIVATE_IMPLEMENTATION
 #define MTL_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
-#include "../Metal.hpp"
+#include "Metal.hpp"
 
 #include "renderer.h"
 #include "shader_reader.h"
