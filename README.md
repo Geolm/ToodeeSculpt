@@ -8,19 +8,13 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 * same shader exported in shadertoy
 ![alt text](images/shader_toy_export.png)
 
-## Why SDF?
-* analytical shape, can adapt any resolution
-* can produce smooth shapes without generating a ton of triangles
-* lightweight vs PNG image
-* fast to render on GPU compared to bezier curves
-* out of the box anti-aliasing
 
 ## Features
-* Primitives : disc, triangle, oriented box, ellipse, pie, arc
-* Primitive can be rounded, outline
+* Primitives : disc, triangle, oriented box, ellipse, pie, arc, spline, capsule
+* Primitive can be rounded, rendered with outline
 * Boolean operator : union, substraction, [smooth blend](https://iquilezles.org/articles/smin/)
-* Intuitive editor, undo support, grid snapping, copy/paste, rotation
-* Save/load
+* Intuitive editor, undo support, grid snapping, copy/paste, rotation, scaling
+* Load/save, export to shadertoy
 
 ## GPU driven SDF renderer
 
@@ -29,14 +23,13 @@ This editor renders everything with a gpu-driven pipeline
 * binning, rasterization, blending is all done on GPU (i.e Compute shader + Draw Indirect)
 * pixels are rendered once, all [blending](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles) is done in the shader (a.k.a free alpha blending)
 * anti-aliasing based on sdf
-* uses the metal API (until sokol_graphics supports gpu-driven features, nudge nudge)
 
-More details to come in the documentation.
+Find more details in the the [documentation of the renderer](/doc/renderer.md)
 
 ## How to build
 ### Prerequisite
 * a macOS dev environment (xcode tools)
-* glfw installed via homebrew
+* brew install glfw
 * cmake
 ### Compilation
 * open a terminal in the folder

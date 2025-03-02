@@ -7,7 +7,7 @@ We built our renderer to draw 2d primitive based on signed distance field (SDF).
 * tile binning and linked list generation (GPU)
 * rasterization (GPU)
 
-You can find below more details about the implementation but here are some specific features of this renderer :
+Here are some specific features of this renderer :
 
 * **anti-aliasing** : all primitives are anti-aliased without additionnal rendertarget or a fullscreen effect. It's almost free
 * **alpha-blending** : all blending is done in the shader, you can stack as much alpha blended primitive you want. You pay only once the cost of alpha blending
@@ -45,8 +45,6 @@ This compute shader works on the draw commmand lists, each thread works on a sin
 
 Animate the primitive points/distances using analytical animation track.
 
-![alt text](animation.png)
-
 ### Projection
 
 Transform the coordinates and distance from the viewport space to screen space.
@@ -59,5 +57,6 @@ Prepare the command for the tile binning and rasterization.
 * primitive data : the intuitive data for some primitive needs to be transformed for the rasterization algorithm. For example : we define an arc with 3 points but the rasterization algorithm needs a direction vector, the cosinus and sinus of the aperture, the radius and the center of the arc.
 
 ## 3 - Tile binning
+
 
 ## 4 - Rasterization
