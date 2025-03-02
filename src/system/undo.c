@@ -36,9 +36,26 @@ struct undo_context* undo_init(size_t buffer_size, uint32_t max_states)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
+void undo_increase_buffer(struct undo_context* context)
+{
+    context->buffer_size *= 2;
+    context->buffer = (uint8_t*) realloc(context->buffer, context->buffer_size);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------
 void* undo_begin_snapshot(struct undo_context* context, size_t* max_size)
 {
-    assert(context->num_states < context->max_states && context->current_position < context->buffer_size);
+    assert(context->current_position <= context->buffer_size);
+
+    if (context->num_states >= context->max_states)
+    {
+        context->max_states *= 2;
+        context->states = (struct undo_state*) realloc(context->states, context->max_states * sizeof(struct undo_state));
+    }
+
+    if (context->current_position == context->buffer_size)
+        undo_increase_buffer(context);
+
     *max_size = context->buffer_size - context->current_position;
     return &context->buffer[context->current_position];
 }
@@ -76,8 +93,8 @@ void* undo_undo(struct undo_context* context, size_t* output_size)
 //-----------------------------------------------------------------------------------------------------------------------------
 void undo_stats(struct undo_context* context, float* buffer_usage_percentage, float* states_usage_percentage)
 {
-    *buffer_usage_percentage = (float) context->current_position / (float) context->buffer_size;
-    *states_usage_percentage = (float) context->num_states / (float) context->max_states;
+    *buffer_usage_percentage = (100.f * (float) context->current_position) / (float) context->buffer_size;
+    *states_usage_percentage = (100.f * (float) context->num_states) / (float) context->max_states;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------

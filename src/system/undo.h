@@ -19,6 +19,9 @@ extern "C" {
 // allocate structures and buffer
 struct undo_context* undo_init(size_t buffer_size, uint32_t max_states_count);
 
+// realloc the undo buffer (x2)
+void undo_increase_buffer(struct undo_context* context);
+
 // request memory for an undo snapshot
 void* undo_begin_snapshot(struct undo_context* context, size_t* max_size); 
 void undo_end_snapshot(struct undo_context* context, void* data, size_t size);

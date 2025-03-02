@@ -621,15 +621,12 @@ void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
             MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE|MU_OPT_AUTOSIZE))
         {
             int res = primitive_contextual_property_grid(plist_get(m_SelectedPrimitiveIndex), gui_context);
-
             m_SelectedPrimitiveContextualMenuOpen = (res == 0);
             if (res&MU_RES_SUBMIT)
                 UndoSnapshot();
             
             mu_end_window(gui_context);
         }
-        
-        
     }
 }
 
@@ -668,10 +665,17 @@ void PrimitiveEditor::UndoSnapshot()
     void* buffer = undo_begin_snapshot(m_pUndoContext, &max_size);
     serializer_init(&serializer, buffer, max_size);
     Serialize(&serializer, false);
-    undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
 
     if (serializer_get_status(&serializer) == serializer_write_error)
-        log_error("undo buffer is full");
+    {
+        log_debug("undo buffer is full, increasing size");
+        undo_increase_buffer(m_pUndoContext);
+        UndoSnapshot();
+    }
+    else
+    {
+        undo_end_snapshot(m_pUndoContext, buffer, serializer_get_position(&serializer));
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
