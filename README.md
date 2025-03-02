@@ -2,7 +2,7 @@
 
 Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) with smooth operator to sculpt your shape
 
-![2024-11 screenshot](/images/Screenshot%202025-02-25%20at%2020.01.08.png)
+![2024-11 screenshot](/images/Screenshot%202025-03-02%20at%2016.23.08.png)
 
 
 ## Why SDF?
