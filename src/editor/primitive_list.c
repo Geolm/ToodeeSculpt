@@ -11,7 +11,7 @@
 #include "../system/log.h"
 #include "../system/format.h"
 
-const size_t clipboard_buffer_size = (1<<18);
+const size_t clipboard_buffer_size = (1<<20);
 static cc_vec(struct primitive) list;
 
 // ---------------------------------------------------------------------------------------------------------------------------
