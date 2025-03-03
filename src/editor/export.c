@@ -90,16 +90,16 @@ void shadertoy_export_primitive(struct string_buffer* b, struct primitive * cons
     {
         case op_add : 
         {
-            bprintf(b, "\tblend = smooth_minimum(max(d, 0.0), d%d, pixel_size);\n", index);
+            bprintf(b, "\tblend = smooth_minimum(d%d, d, pixel_size);\n", index);
             bprintf(b, "\td = blend.x;\n");
-            bprintf(b, "\tcolor = mix(color, vec3(%f, %f, %f), blend.y);\n", p->m_Color.red, p->m_Color.green, p->m_Color.blue);
+            bprintf(b, "\tcolor = mix(vec3(%f, %f, %f), color, blend.y);\n", p->m_Color.red, p->m_Color.green, p->m_Color.blue);
             break;
         }
         case op_union : 
         {
-            bprintf(b, "\tblend = smooth_minimum(max(d, 0.0), d%d, %f);\n", index, smooth_value);
+            bprintf(b, "\tblend = smooth_minimum(d%d, d, %f);\n", index, smooth_value);
             bprintf(b, "\td = blend.x;\n");
-            bprintf(b, "\tcolor = mix(color, vec3(%f, %f, %f), blend.y);\n", p->m_Color.red, p->m_Color.green, p->m_Color.blue);
+            bprintf(b, "\tcolor = mix(vec3(%f, %f, %f), color, blend.y);\n", p->m_Color.red, p->m_Color.green, p->m_Color.blue);
             break;
         }
         
@@ -116,7 +116,7 @@ void shadertoy_finalize(struct string_buffer* b)
     bprintf(b, "void mainImage( out vec4 fragColor, in vec2 fragCoord)\n");
     bprintf(b, "{\n\tvec2 p = fragCoord/iResolution.y;\n");
     bprintf(b, "\tp.y = 1.0 - p.y;\n");
-    bprintf(b, "p.x -= (iResolution.y / iResolution.x) * 0.5;\n");
+    bprintf(b, "\tp.x -= (iResolution.y / iResolution.x) * 0.5;\n");
     bprintf(b, "\tvec4 color_distance = map(p);\n");
     bprintf(b, "\tvec3 col = mix(vec3(1.0), vec3(color_distance.rgb), 1.0-smoothstep(0.0,length(dFdx(p) + dFdy(p)), color_distance.a));\n");
     bprintf(b, "\tfragColor = vec4(pow(col, vec3(1.0/ 2.2)),1.0);\n}\n");

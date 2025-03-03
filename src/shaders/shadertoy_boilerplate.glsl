@@ -164,12 +164,13 @@ float sd_uneven_capsule(vec2 p, vec2 pa, vec2 pb, float ra, float rb)
 
 vec2 smooth_minimum(float a, float b, float k)
 {
+    b = max(b, 0.f);    // a is always on top
     if (k>0.f)
     {
         float h = max( k-abs(a-b), 0.0 )/k;
         float m = h*h*h*0.5;
-        float s = m*k*(1.0/3.0); 
-        return (a<b) ? vec2(a-s,m) : vec2(b-s,1.0-m);
+        float s = m*k*(1.0/3.0);
+        return (a<b) ? vec2(a-s, 0.f) : vec2(b-s, 1.f - smoothstep(-k, 0.f, b-a));
     }
     else
     {
