@@ -48,12 +48,6 @@ half4 accumulate_color(half4 color, half4 backbuffer)
     return output;
 }
 
-template<typename T>
-T linearstep(T edge0, T edge1, T x)
-{
-    return clamp((x - edge0) / (edge1 - edge0), T(0), T(1));
-}
-
 #define LARGE_DISTANCE (100000000.f)
 #define BLACK_COLOR (half4(0.h, 0.h, 0.h, 1.h))
 
@@ -236,7 +230,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                     case op_add :
                     case op_union :
                     {
-                        float2 smooth = smooth_minimum(distance, max(previous_distance, 0.f), smooth_factor);
+                        float2 smooth = smooth_minimum(distance, previous_distance, smooth_factor);
                         previous_distance = smooth.x;
                         previous_color = mix(color, previous_color, smooth.y);
                         break;

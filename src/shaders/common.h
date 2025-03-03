@@ -197,6 +197,12 @@ typedef struct output_command_buffer
 
 #ifdef __METAL_VERSION__
 float2 skew(float2 v) {return float2(-v.y, v.x);}
+
+template<typename T>
+T linearstep(T edge0, T edge1, T x)
+{
+    return clamp((x - edge0) / (edge1 - edge0), T(0), T(1));
+}
 #endif
 
 // ---------------------------------------------------------------------------------------------------------------------------
