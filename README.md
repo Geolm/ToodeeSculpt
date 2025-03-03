@@ -5,7 +5,7 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 * the editor
 ![2024-11 screenshot](/images/Screenshot%202025-03-02%20at%2016.23.08.png)
 
-* same shader exported in shadertoy
+* same [shader exported in shadertoy](https://www.shadertoy.com/view/WfsXW8)
 ![alt text](images/shader_toy_export.png)
 
 
