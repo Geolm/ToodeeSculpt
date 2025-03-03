@@ -208,6 +208,7 @@ void Editor::MenuBar(struct mu_Context* gui_context)
                 {
                     m_PrimitiveEditor.Export();
                     m_MenuBarState = MenuBar_None;
+                    Popup("Export to shadertoy", "You can now paste the shader code in shadertoy");
                 }
                 mu_end_window(gui_context);
             }
