@@ -16,20 +16,25 @@ Combine [2d sdf primitives](https://iquilezles.org/articles/distfunctions2d/) wi
 * Intuitive editor, undo support, grid snapping, copy/paste, rotation, scaling
 * Load/save, export to shadertoy
 
-## GPU driven SDF renderer
+## Specialized SDF renderer
 
-This editor renders everything with a gpu-driven pipeline
-* only a list of command is uploaded to the GPU
-* binning, rasterization, blending is all done on GPU (i.e Compute shader + Draw Indirect)
-* pixels are rendered once, all [blending](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles) is done in the shader (a.k.a free alpha blending)
-* anti-aliasing based on sdf
+* Everything is rendered with just **one** drawcall
+* Primitives are binned per tile on the GPU, you don't pay the cost of far away primitives (as you do with your typical shadertoy shader)
+* Pixels are written once, alpha blending is done in the shader (a.k.a free alpha blending)
+* Anti-aliasing based on sdf
 
 Find more details in the the [documentation of the renderer](/doc/renderer.md)
+
+## Next steps
+* Primitive animation
+* More export options (PNG, sprite for in-house engine)
+* Better user experience
+* More primitives, more options
 
 ## How to build
 ### Prerequisite
 * a macOS dev environment (xcode tools)
-* brew install glfw
+* glfw (brew install glfw)
 * cmake
 ### Compilation
 * open a terminal in the folder
@@ -39,4 +44,24 @@ Find more details in the the [documentation of the renderer](/doc/renderer.md)
 * cmake --build .
 * ./ToodeeSculpt
 
-It only has been tested on a M2 Max running macOS 12.7.1
+It only has been tested on a M2 Max studio and a M1 Pro mac bookpro running macOS 14.x
+Currently, there is no plan to support another platform. 
+
+
+### Libraries used (in alphabetic particular order)
+
+* [convenient containers](https://github.com/JacksonAllan/CC)
+* [metal-cpp](https://developer.apple.com/metal/cpp/)
+* [microui](https://github.com/rxi/microui)
+* [nativefiledialog](https://github.com/mlabbe/nativefiledialog)
+* [sokol_time](https://github.com/floooh/sokol/blob/master/sokol_time.h)
+* [spng](https://github.com/randy408/libspng)
+* [whereami](https://github.com/gpakosz/whereami)
+
+## Thanks
+
+* [commit mono font](https://github.com/eigilnikolajsen/commit-mono)
+* [inigo quilez 2d sdf](https://iquilezles.org/articles/distfunctions2d/)
+* the bc4 encoder from [stb_dxt.h](https://github.com/nothings/stb/blob/master/stb_dxt.h)
+* the spline of biarcs code inspired by [this paper](https://cad-journal.net/files/vol_18/CAD_18(1)_2021_66-85.pdf)
+* color palettes from [lospec website](https://lospec.com/palette-list/)

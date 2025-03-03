@@ -1,4 +1,4 @@
-# Renderer
+# Renderer documentation (wip)
 
 We built our renderer to draw 2d primitive based on signed distance field (SDF). It's a GPU based renderer where most of the job is done on the GPU via indirect calls. The renderer consists in 4 parts
 
@@ -60,3 +60,5 @@ Prepare the command for the tile binning and rasterization.
 
 
 ## 4 - Rasterization
+
+* [blending](https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles)
