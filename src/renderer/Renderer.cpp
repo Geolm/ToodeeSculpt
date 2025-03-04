@@ -302,6 +302,7 @@ void renderer_build_pso(struct renderer* r)
         pVertexFunction->release();
         pFragmentFunction->release();
         pDesc->release();
+        pLibrary->release();
     }
 }
 
