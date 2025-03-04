@@ -424,21 +424,21 @@ void PrimitiveEditor::Draw(struct renderer* context)
             primitive *primitive = plist_get(i);
             if (primitive_test_mouse_cursor(primitive, m_MousePosition, true))
             {
-                primitive_draw_gizmo(primitive, context, m_HoveredPrimitiveColor);
+                primitive_draw_selected(primitive, context, m_HoveredPrimitiveColor);
                 if (i == m_SelectedPrimitiveIndex)
                     MouseCursors::GetInstance().Set(MouseCursors::Hand);
             }
         }
 
         if (SelectedPrimitiveValid())
-            primitive_draw_gizmo(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
+            primitive_draw_selected(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
         if (SelectedPrimitiveValid())
         {
             primitive* primitive = plist_get(m_SelectedPrimitiveIndex);
-            primitive_draw_gizmo(primitive, context, m_SelectedPrimitiveColor);
+            primitive_draw_selected(primitive, context, m_SelectedPrimitiveColor);
 
             if (m_PrimitiveIdDebug)
             {
@@ -449,7 +449,11 @@ void PrimitiveEditor::Draw(struct renderer* context)
     }
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
-        primitive_draw_gizmo(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
+        primitive_draw_selected(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
+    }
+    else if (GetState() == state::EDITING_PRIMITIVE)
+    {
+        primitive_draw_edition_gizmo(context, plist_get(m_SelectedPrimitiveIndex));
     }
 
     if (m_AABBDebug)
@@ -588,6 +592,11 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             SetSelectedPrimitive(0);
             UndoSnapshot();
         }
+
+        if (mu_button_ex(gui_context, NULL, ICON_SETTINGS, 0) && selected && (GetState() == state::IDLE || GetState() == state::EDITING_PRIMITIVE))
+        {
+            SetState( GetState() == state::IDLE ? state::EDITING_PRIMITIVE : state::IDLE);
+        }
     }
 }
 
@@ -600,7 +609,7 @@ void PrimitiveEditor::GlobalControl(struct mu_Context* gui_context)
     mu_label(gui_context, "alpha");
     res |= mu_slider_ex(gui_context, &m_AlphaValue, 0.f, 1.f, 0.01f, "%1.2f", 0);
     mu_label(gui_context, "global outline");
-    res |= mu_checkbox(gui_context, "", &m_GlobalOutline);
+    mu_checkbox(gui_context, "", &m_GlobalOutline);
 
     if (res&MU_RES_SUBMIT)
         UndoSnapshot();

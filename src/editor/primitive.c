@@ -14,6 +14,9 @@ static int g_SDFOperationComboBox = 0;
 static int g_SDFFillmodeComboBox = 0;
 static const char* g_sdf_op_names[op_last] = {"add", "blend", "sub", "overlap"};
 static const char* g_sdf_fillmode_names[fill_last] = {"solid", "outline", "hollow"};
+static draw_color gizmo_color = (draw_color){.packed_data = 0x7f10e010};
+
+#define UNUSED_VARIABLE(a) (void)(a)
 
 //----------------------------------------------------------------------------------------------------------------------------
 void primitive_init(struct primitive* p, enum primitive_shape shape, enum sdf_operator op, color4f color, float roundness, float width)
@@ -520,14 +523,14 @@ void primitive_draw_aabb(struct primitive* p, struct renderer* gfx_context, draw
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_gizmo(struct primitive* p, struct renderer* gfx_context, draw_color color)
+void primitive_draw_selected(struct primitive* p, struct renderer* gfx_context, draw_color color)
 {
     renderer_begin_combination(gfx_context, 1.f);
     primitive_draw(p, gfx_context, 0.f, color, op_add);
     renderer_end_combination(gfx_context, false);
 
     for(uint32_t i=0; i<primitive_get_num_points(p->m_Shape); ++i)
-        renderer_draw_disc(gfx_context, p->m_Points[i], primitive_point_radius, -1.f, fill_solid, (draw_color){.packed_data = 0x7f10e010}, op_add);
+        renderer_draw_disc(gfx_context, p->m_Points[i], primitive_point_radius, -1.f, fill_solid, gizmo_color, op_add);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -552,4 +555,50 @@ void primitive_draw_spline(struct renderer* gfx_context, const vec2* points, uin
             renderer_draw_line(gfx_context, arcs[i].center, arcs[i].direction, thickness, color, op_add);
 
     renderer_end_combination(gfx_context, false);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void primitive_draw_edition_gizmo(struct renderer* gfx_context, struct primitive* p)
+{
+    switch(p->m_Shape)
+    {
+    case shape_disc : 
+        {
+            renderer_draw_disc(gfx_context, p->m_Points[0], p->m_Roundness, 0.f, fill_solid, gizmo_color, op_add);
+            break;
+        }
+    case shape_uneven_capsule:
+        {
+            renderer_draw_disc(gfx_context, p->m_Points[0], p->m_Roundness, 0.f, fill_solid, gizmo_color, op_add);
+            renderer_draw_disc(gfx_context, p->m_Points[1], p->m_Radius, 0.f, fill_solid, gizmo_color, op_add);
+            break;
+        }
+    case shape_oriented_box:
+    case shape_triangle:
+        {
+            // draw a "roundness" gizmo
+            break;
+        }
+    case shape_oriented_ellipse:
+        {
+            // draw a "width" gizmo : the axis of the ellipse as double arrow
+            break;
+        }
+    default: break;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void primitive_on_mouse_button(struct primitive* p, int button, int action, int mods)
+{
+    UNUSED_VARIABLE(p);
+    UNUSED_VARIABLE(button);
+    UNUSED_VARIABLE(mods);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void primitive_on_mouse_move(struct primitive* p, vec2 pos)
+{
+    UNUSED_VARIABLE(p);
+    UNUSED_VARIABLE(pos);
 }

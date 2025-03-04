@@ -73,10 +73,13 @@ void primitive_scale(struct primitive* p, float scale);
 void primitive_normalize(struct primitive* p, const aabb* box);
 void primitive_expand(struct primitive* p, const aabb* box);
 void primitive_draw(struct primitive* p, struct renderer* gfx_context, float roundness, draw_color color, enum sdf_operator op);
-void primitive_draw_gizmo(struct primitive* p, struct renderer* gfx_context, draw_color color);
+void primitive_draw_selected(struct primitive* p, struct renderer* gfx_context, draw_color color);
 void primitive_draw_alpha(struct primitive* p, struct renderer* gfx_context, float alpha);
 void primitive_draw_aabb(struct primitive* p, struct renderer* gfx_context, draw_color color);
 void primitive_draw_spline(struct renderer* gfx_context, const vec2* points, uint32_t num_points, float thickness, draw_color color);
+void primitive_draw_edition_gizmo(struct renderer* gfx_context, struct primitive* p);
+void primitive_on_mouse_button(struct primitive* p, int button, int action, int mods);
+void primitive_on_mouse_move(struct primitive* p, vec2 pos);
 
 
 #ifdef __cplusplus
