@@ -201,6 +201,41 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
 
             break;
         }
+    case ICON_SETTINGS:
+        {
+            renderer_begin_combination(gfx_context, extent.x * 0.1f);
+            renderer_draw_disc(gfx_context, center, max_radius * .4f, 0.f, fill_solid, secondary_color, op_add);
+
+            float step = VEC2_TAU / 8.f;
+            float angle = time_in_second;
+
+            for(uint32_t i=0; i<8; ++i)
+            {
+                renderer_draw_line(gfx_context, center, aabb_project(&unit_box, &box, vec2_scale(vec2_angle(angle), 0.8f)), max_radius * .15f, secondary_color, op_union);
+                angle += step;
+            }
+
+            vec2 rotation = vec2_scale(vec2_angle(-time_in_second * 10.f), 0.1f);
+            vec2 start = aabb_project(&unit_box, &box, vec2_add(rotation, vec2_set(.7f, -.7f)));
+            vec2 end = aabb_project(&unit_box, &box, vec2_add(rotation, vec2_set(0.2f, 0.f)));
+            vec2 direction = vec2_normalized(vec2_sub(end, start));
+
+            renderer_draw_disc(gfx_context, center, max_radius * .3f, 0.f, fill_solid, primary_color, op_subtraction);
+            renderer_draw_line(gfx_context, start, end, max_radius * 0.15f, primary_color, op_add);
+            renderer_draw_line(gfx_context, start, vec2_sub(start, vec2_scale(direction, max_radius * 0.1f)),
+                               max_radius * 0.15f, secondary_color, op_add);
+
+            vec2 p0 = vec2_add(end, vec2_scale(direction, max_radius * 0.2f));
+            vec2 normal = vec2_scale(vec2_skew(direction), max_radius * 0.075f);
+            vec2 p1 = vec2_add(end, normal);
+            vec2 p2 = vec2_sub(end, normal);
+
+            renderer_draw_triangle(gfx_context, p0, p1, p2, 0.f, 0.f, fill_solid, secondary_color, op_add);
+
+            renderer_end_combination(gfx_context, false);
+
+            break;
+        }
     default: break;
     }
 }
