@@ -655,7 +655,7 @@ void renderer_draw_disc(struct renderer* r, vec2 center, float radius, float thi
             center = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, center);
             distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius, thickness);
 
-            float max_radius = radius + r->m_AAWidth + r->m_SmoothValue;
+            float max_radius = radius + max(r->m_AAWidth, r->m_SmoothValue);
 
             if (fillmode == fill_hollow)
             {
@@ -701,7 +701,7 @@ void renderer_draw_orientedbox(struct renderer* r, vec2 p0, vec2 p1, float width
             p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
             distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), width, roundness_thickness);
 
-            aabb bb = aabb_from_rounded_obb(p0, p1, width, roundness_thickness + r->m_AAWidth + r->m_SmoothValue);
+            aabb bb = aabb_from_rounded_obb(p0, p1, width, roundness_thickness + max(r->m_AAWidth, r->m_SmoothValue));
             write_float(data, p0.x, p0.y, p1.x, p1.y, width, roundness_thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(r->m_CombinationAABB, aabox);
@@ -786,7 +786,7 @@ void renderer_draw_ellipse(struct renderer* r, vec2 p0, vec2 p1, float width, fl
                 p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
                 distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), width, thickness);
 
-                aabb bb = aabb_from_rounded_obb(p0, p1, width, r->m_AAWidth + r->m_SmoothValue + thickness);
+                aabb bb = aabb_from_rounded_obb(p0, p1, width, max(r->m_AAWidth, r->m_SmoothValue) + thickness);
                 if (fillmode == fill_hollow)
                     write_float(data, p0.x, p0.y, p1.x, p1.y, width, thickness);
                 else
@@ -832,7 +832,7 @@ void renderer_draw_triangle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float
             distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), roundness_thickness);
 
             aabb bb = aabb_from_triangle(p0, p1, p2);
-            aabb_grow(&bb, vec2_splat(roundness_thickness + r->m_AAWidth + r->m_SmoothValue));
+            aabb_grow(&bb, vec2_splat(roundness_thickness + max(r->m_AAWidth, r->m_SmoothValue)));
             write_float(data, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, roundness_thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(r->m_CombinationAABB, aabox);
@@ -876,7 +876,7 @@ void renderer_draw_pie(struct renderer* r, vec2 center, vec2 point, float apertu
             float radius = vec2_normalize(&direction);
             
             aabb bb = aabb_from_circle(center, radius);
-            aabb_grow(&bb, vec2_splat(thickness + r->m_AAWidth + r->m_SmoothValue));
+            aabb_grow(&bb, vec2_splat(thickness + max(r->m_AAWidth, r->m_SmoothValue)));
 
             if (fillmode != fill_hollow)
                 write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture));
@@ -936,7 +936,7 @@ void renderer_draw_arc(struct renderer* r, vec2 center, vec2 direction, float ap
             distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius, thickness);
 
             aabb bb = aabb_from_circle(center, radius);
-            aabb_grow(&bb, vec2_splat(thickness + r->m_AAWidth + r->m_SmoothValue));
+            aabb_grow(&bb, vec2_splat(thickness + max(r->m_AAWidth, r->m_SmoothValue)));
 
             write_float(data, center.x, center.y, radius, direction.x, direction.y, sinf(aperture), cosf(aperture), thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
@@ -984,7 +984,7 @@ void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float rad
             distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1);
 
             aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
-            aabb_grow(&bb, vec2_splat(r->m_AAWidth + r->m_SmoothValue + thickness));
+            aabb_grow(&bb, vec2_splat(max(r->m_AAWidth, r->m_SmoothValue) + thickness));
 
             if (fillmode != fill_hollow)
                 write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1);
