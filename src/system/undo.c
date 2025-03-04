@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include "log.h"
 
 struct undo_state
 {
@@ -25,6 +26,7 @@ struct undo_context
 //-----------------------------------------------------------------------------------------------------------------------------
 struct undo_context* undo_init(size_t buffer_size, uint32_t max_states)
 {
+    log_info("initializaing undo context with a %u kb buffer and %u max states", buffer_size>>10, max_states);
     struct undo_context* context = (struct undo_context*) malloc(sizeof(struct undo_context));
     context->buffer = (uint8_t*) malloc(buffer_size);
     context->buffer_size = buffer_size;
@@ -40,6 +42,7 @@ void undo_increase_buffer(struct undo_context* context)
 {
     context->buffer_size *= 2;
     context->buffer = (uint8_t*) realloc(context->buffer, context->buffer_size);
+    log_info("increasing undo buffer to %u kb", context->buffer_size>>10);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -51,6 +54,7 @@ void* undo_begin_snapshot(struct undo_context* context, size_t* max_size)
     {
         context->max_states *= 2;
         context->states = (struct undo_state*) realloc(context->states, context->max_states * sizeof(struct undo_state));
+        log_info("increasing undo max states to %u", context->max_states);
     }
 
     if (context->current_position == context->buffer_size)
