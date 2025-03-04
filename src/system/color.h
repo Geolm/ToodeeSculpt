@@ -2,6 +2,7 @@
 #define __COLOR_RAMP__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // ----------------------------------------------------------------------------
 typedef struct 
@@ -31,6 +32,7 @@ typedef uint32_t packed_color;
 extern "C" {
 #endif
 
+bool color4f_similar(color4f const* a, color4f const* b, float epsilon);
 color4f unpacked_color(packed_color color);
 packed_color color4f_to_packed_color(color4f color);
 color4f hsv_to_color4f(hsv4f color);

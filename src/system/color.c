@@ -2,6 +2,14 @@
 #include <math.h>
 #include "color.h"
 
+
+// ----------------------------------------------------------------------------
+bool color4f_similar(color4f const* a, color4f const* b, float epsilon)
+{
+    return ((fabsf(a->red - b->red) < epsilon) && (fabsf(a->blue - b->blue) < epsilon) && 
+            (fabsf(a->green - b->green) < epsilon) && (fabsf(a->alpha - b->alpha) < epsilon));
+}
+
 // ----------------------------------------------------------------------------
 packed_color color4f_to_packed_color(color4f color)
 {

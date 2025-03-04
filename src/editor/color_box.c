@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #define UNUSED_VARIABLE(a) (void)(a)
+#define COLOR_EPSILON (1.f/255.f)
 
 //----------------------------------------------------------------------------------------------------------------------------
 mu_Color hue_gradient(mu_Real value, void* user_data)
@@ -73,7 +74,8 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
         if (res_hsv&MU_RES_CHANGE)
             *context->rgba_output = hsv_to_color4f(context->hsv);
         
-        res |= res_hsv;
+        if (res_hsv&MU_RES_SUBMIT)
+            res |= MU_RES_SUBMIT;
     }
 
     if (mu_header_ex(gui_context, "palette", MU_OPT_EXPANDED))
@@ -97,8 +99,13 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
                 if (gui_context->mouse_pressed&MU_MOUSE_LEFT)
                 {
                     // select palette entry
-                    *context->rgba_output = unpacked_color(entry);
-                    res |= MU_RES_SUBMIT;
+                    color4f new_color = unpacked_color(entry);
+                    
+                    if (!color4f_similar(context->rgba_output, &new_color, COLOR_EPSILON))
+                    {
+                        *context->rgba_output = new_color;
+                        res |= MU_RES_SUBMIT;
+                    }
 
                     entry_rect.w += 4; entry_rect.h += 4;
                     entry_rect.x -= 2; entry_rect.y -= 2;
@@ -130,7 +137,6 @@ int color_property_grid(struct mu_Context* gui_context, struct color_box* contex
 
             free(load_path);
         }
-
     }
 
     return res;
