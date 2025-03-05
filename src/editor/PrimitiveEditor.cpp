@@ -431,7 +431,9 @@ void PrimitiveEditor::Draw(struct renderer* context)
         }
 
         if (SelectedPrimitiveValid())
-            primitive_draw_selected(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
+        {
+            primitive_draw_edition_gizmo(plist_get(m_SelectedPrimitiveIndex), context);
+        }
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
     {
@@ -450,10 +452,6 @@ void PrimitiveEditor::Draw(struct renderer* context)
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
         primitive_draw_selected(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
-    }
-    else if (GetState() == state::EDITING_PRIMITIVE)
-    {
-        primitive_draw_edition_gizmo(context, plist_get(m_SelectedPrimitiveIndex));
     }
 
     if (m_AABBDebug)
@@ -591,11 +589,6 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             plist_insert(0, &temp);
             SetSelectedPrimitive(0);
             UndoSnapshot();
-        }
-
-        if (mu_button_ex(gui_context, NULL, ICON_SETTINGS, 0) && selected && (GetState() == state::IDLE || GetState() == state::EDITING_PRIMITIVE))
-        {
-            SetState( GetState() == state::IDLE ? state::EDITING_PRIMITIVE : state::IDLE);
         }
     }
 }
