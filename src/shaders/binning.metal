@@ -148,8 +148,14 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
 
             case primitive_trapezoid:
             {
+                float2 p0 = float2(data[0], data[1]);
+                float2 p1 = float2(data[2], data[3]);
+                float radius0 = data[4];
+                float radius1 = data[5];
+
                 // todo : aabb vs trapezoid
-                to_be_added = true;
+                aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6]);
+                to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, max(radius0, radius1) * 2.f);
                 break;
             }
 
