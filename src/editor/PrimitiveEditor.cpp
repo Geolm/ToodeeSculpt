@@ -147,8 +147,6 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
         if (SelectedPrimitiveValid())
         {
             primitive* primitive = plist_get(m_SelectedPrimitiveIndex);
-            primitive_on_mouse_button(primitive, button, action, mods);
-
             for(uint32_t i=0; i<primitive_get_num_points(primitive->m_Shape); ++i)
             {
                 if (point_in_disc(primitive_get_points(primitive, i), primitive_point_radius, m_MousePosition))
@@ -235,6 +233,10 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
         primitive_update_aabb(plist_get(m_SelectedPrimitiveIndex));
         SetState(state::IDLE);
         UndoSnapshot();
+    }
+    else if (GetState() == state::EDITING_PRIMITIVE && SelectedPrimitiveValid())
+    {
+        primitive_on_mouse_button(plist_get(m_SelectedPrimitiveIndex), m_MousePosition, button, action, mods);
     }
 
     // primitive creation
@@ -420,7 +422,7 @@ void PrimitiveEditor::Draw(struct renderer* context)
 
         if (SelectedPrimitiveValid())
         {
-            primitive_draw_edition_gizmo(plist_get(m_SelectedPrimitiveIndex), context);
+            primitive_draw_selected(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
         }
     }
     else if (GetState() == state::MOVING_POINT || GetState() == state::MOVING_PRIMITIVE)
@@ -434,6 +436,10 @@ void PrimitiveEditor::Draw(struct renderer* context)
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
     {
         primitive_draw_selected(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
+    }
+    else if (GetState() == state::EDITING_PRIMITIVE)
+    {
+        primitive_draw_edition_gizmo(plist_get(m_SelectedPrimitiveIndex), context);
     }
 
     if (m_AABBDebug)
@@ -570,6 +576,19 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             plist_insert(0, &temp);
             SetSelectedPrimitive(0);
             UndoSnapshot();
+        }
+
+        if (mu_button_ex(gui_context, NULL, ICON_SETTINGS, 0) && selected && (GetState() == state::IDLE || GetState() == state::EDITING_PRIMITIVE))
+        {
+            if (GetState() == state::IDLE)
+            {
+                SetState(state::EDITING_PRIMITIVE);
+            }
+            else
+            {
+                SetState(state::IDLE);
+                UndoSnapshot();
+            }
         }
     }
 }

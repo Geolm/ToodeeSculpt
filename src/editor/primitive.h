@@ -30,6 +30,14 @@ enum primitive_shape
     shape_uneven_capsule
 };
 
+enum primitive_edition
+{
+    edit_nothing,
+    edit_radius,
+    edit_roundness,
+    edit_width
+};
+
 struct primitive
 {
     struct arc m_Arcs[primitive_max_arcs];
@@ -47,6 +55,9 @@ struct primitive
     enum sdf_operator m_Operator;
     enum primitive_fillmode m_Fillmode;
     color4f m_Color;
+
+    // edit variable
+    enum primitive_edition m_Editmode;
 };
 
 extern struct palette primitive_palette;
@@ -78,7 +89,7 @@ void primitive_draw_alpha(struct primitive* p, struct renderer* gfx_context, flo
 void primitive_draw_aabb(struct primitive* p, struct renderer* gfx_context, draw_color color);
 void primitive_draw_spline(struct renderer* gfx_context, const vec2* points, uint32_t num_points, float thickness, draw_color color);
 void primitive_draw_edition_gizmo(struct primitive* p, struct renderer* gfx_context);
-void primitive_on_mouse_button(struct primitive* p, int button, int action, int mods);
+void primitive_on_mouse_button(struct primitive* p, vec2 mouse_position, int button, int action, int mods);
 void primitive_on_mouse_move(struct primitive* p, vec2 pos);
 
 

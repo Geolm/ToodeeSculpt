@@ -65,7 +65,8 @@ private:
         MOVING_POINT,
         MOVING_PRIMITIVE,
         ROTATING_PRIMITIVE,
-        SCALING_PRIMITIVE
+        SCALING_PRIMITIVE,
+        EDITING_PRIMITIVE
     };
 
 private:

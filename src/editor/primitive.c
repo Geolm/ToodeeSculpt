@@ -10,6 +10,9 @@
 #include "../system/biarc.h"
 #include "color_box.h"
 
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 static int g_SDFOperationComboBox = 0;
 static int g_SDFFillmodeComboBox = 0;
 static const char* g_sdf_op_names[op_last] = {"add", "blend", "sub", "overlap"};
@@ -31,6 +34,7 @@ void primitive_init(struct primitive* p, enum primitive_shape shape, enum sdf_op
     p->m_Color = color;
     p->m_AABB = aabb_invalid();
     p->m_NumArcs = 0;
+    p->m_Editmode = edit_nothing;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -598,11 +602,13 @@ void primitive_draw_edition_gizmo(struct primitive* p, struct renderer* gfx_cont
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void primitive_on_mouse_button(struct primitive* p, int button, int action, int mods)
+void primitive_on_mouse_button(struct primitive* p, vec2 mouse_position, int button, int action, int mods)
 {
     UNUSED_VARIABLE(p);
     UNUSED_VARIABLE(button);
     UNUSED_VARIABLE(mods);
+    UNUSED_VARIABLE(mouse_position);
+    UNUSED_VARIABLE(action);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
