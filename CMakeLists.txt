@@ -74,6 +74,6 @@ target_link_libraries(ToodeeSculpt
         )
 
 target_compile_options(ToodeeSculpt PRIVATE
-        $<$<CONFIG:Debug>:-g -O0 -Wall -Wextra -Wno-missing-braces -fsanitize=address>
+        $<$<CONFIG:Debug>:-g -O0 -Wall -Wextra -Wno-missing-braces>
         $<$<CONFIG:Release>:-O3 -DNDEBUG -DSHADERS_IN_EXECUTABLE -Wall -Wextra -Wno-missing-braces>
 )
