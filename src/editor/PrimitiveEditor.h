@@ -70,7 +70,6 @@ private:
 
 private:
     void DuplicateSelected();
-    void ContextualMenu(struct mu_Context* gui_context);
     void SetState(enum state new_state);
     enum state GetState() const {return m_CurrentState;}
     bool SelectPrimitive();
@@ -86,8 +85,6 @@ private:
     // ui
     struct GLFWwindow* m_pWindow {nullptr};
     aabb m_EditionZone;
-    vec2 m_ContextualMenuPosition;
-    bool m_SelectedPrimitiveContextualMenuOpen;
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
     vec2 m_MouseLastPosition;

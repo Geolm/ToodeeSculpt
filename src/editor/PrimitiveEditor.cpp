@@ -49,7 +49,6 @@ void PrimitiveEditor::Init(struct GLFWwindow* window, aabb zone, struct undo_con
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::New()
 {
-    m_SelectedPrimitiveContextualMenuOpen = false;
     m_CurrentState = state::IDLE;
     m_CurrentPoint = 0;
     m_SDFOperationComboBox = 0;
@@ -140,22 +139,16 @@ void PrimitiveEditor::OnMouseMove(vec2 pos)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
 {
-    bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) && !m_SelectedPrimitiveContextualMenuOpen;
+    bool left_button_pressed = (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS);
 
-    if (GetState() == state::IDLE && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-    {
-        if (aabb_test_point(&m_EditionZone, m_MousePosition) && SelectedPrimitiveValid())
-        {
-            m_SelectedPrimitiveContextualMenuOpen = !m_SelectedPrimitiveContextualMenuOpen;
-            m_ContextualMenuPosition = m_MousePosition;
-        }
-    }
     // selecting primitive
-    else if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition))
+    if (GetState() == state::IDLE && left_button_pressed && aabb_test_point(&m_EditionZone, m_MousePosition))
     {
         if (SelectedPrimitiveValid())
         {
-            primitive *primitive = plist_get(m_SelectedPrimitiveIndex);
+            primitive* primitive = plist_get(m_SelectedPrimitiveIndex);
+            primitive_on_mouse_button(primitive, button, action, mods);
+
             for(uint32_t i=0; i<primitive_get_num_points(primitive->m_Shape); ++i)
             {
                 if (point_in_disc(primitive_get_points(primitive, i), primitive_point_radius, m_MousePosition))
@@ -599,25 +592,6 @@ void PrimitiveEditor::GlobalControl(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 {
-    ContextualMenu(gui_context);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void PrimitiveEditor::ContextualMenu(struct mu_Context* gui_context)
-{
-    if (m_SelectedPrimitiveContextualMenuOpen && SelectedPrimitiveValid())
-    {
-        if (mu_begin_window_ex(gui_context, "edit", mu_rect((int)m_ContextualMenuPosition.x, (int)m_ContextualMenuPosition.y, 110, 80),
-            MU_OPT_FORCE_SIZE|MU_OPT_NOINTERACT|MU_OPT_NOCLOSE|MU_OPT_AUTOSIZE))
-        {
-            int res = primitive_contextual_property_grid(plist_get(m_SelectedPrimitiveIndex), gui_context);
-            m_SelectedPrimitiveContextualMenuOpen = (res == 0);
-            if (res&MU_RES_SUBMIT)
-                UndoSnapshot();
-            
-            mu_end_window(gui_context);
-        }
-    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
