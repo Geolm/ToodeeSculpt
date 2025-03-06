@@ -234,10 +234,6 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
         SetState(state::IDLE);
         UndoSnapshot();
     }
-    else if (GetState() == state::EDITING_PRIMITIVE && SelectedPrimitiveValid())
-    {
-        primitive_on_mouse_button(plist_get(m_SelectedPrimitiveIndex), m_MousePosition, button, action, mods);
-    }
 
     // primitive creation
     if (GetState() == state::CREATE_PRIMITIVE)
@@ -437,10 +433,6 @@ void PrimitiveEditor::Draw(struct renderer* context)
     {
         primitive_draw_selected(plist_get(m_SelectedPrimitiveIndex), context, m_SelectedPrimitiveColor);
     }
-    else if (GetState() == state::EDITING_PRIMITIVE)
-    {
-        primitive_draw_edition_gizmo(plist_get(m_SelectedPrimitiveIndex), context);
-    }
 
     if (m_AABBDebug)
     {
@@ -576,19 +568,6 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             plist_insert(0, &temp);
             SetSelectedPrimitive(0);
             UndoSnapshot();
-        }
-
-        if (mu_button_ex(gui_context, NULL, ICON_SETTINGS, 0) && selected && (GetState() == state::IDLE || GetState() == state::EDITING_PRIMITIVE))
-        {
-            if (GetState() == state::IDLE)
-            {
-                SetState(state::EDITING_PRIMITIVE);
-            }
-            else
-            {
-                SetState(state::IDLE);
-                UndoSnapshot();
-            }
         }
     }
 }
