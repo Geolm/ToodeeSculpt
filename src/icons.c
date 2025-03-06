@@ -133,8 +133,8 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
             vec2 p1 = vec2_lerp( vec2_set(.5f, -.5f), vec2_set(.1f, -.1f), t);
             renderer_begin_combination(gfx_context, 1.f);
             renderer_draw_box(gfx_context, box_min.x, box_min.y, box_max.x, box_max.y, secondary_color);
-            renderer_draw_double_arrow(gfx_context, aabb_project(&unit_box, &box, p0), aabb_project(&unit_box, &box, p1),
-                               0.025f * max_radius, 0.2f, primary_color);
+            renderer_draw_doublearrow(gfx_context, aabb_project(&unit_box, &box, p0), aabb_project(&unit_box, &box, p1),
+                                     .05f * max_radius, primary_color);
             renderer_end_combination(gfx_context, false);
             break;
         }
@@ -176,8 +176,8 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
             vec2 target = vec2_lerp( vec2_set(-.65f, 0.f), vec2_set(-0.65f, -.8f), sl_impulse(sl_wave(loop_1s)));
 
             renderer_begin_combination(gfx_context, 1.f);
-            renderer_draw_arrow_filled(gfx_context, aabb_project(&unit_box, &box, vec2_set(-0.65f, .8f)),
-                                      aabb_project(&unit_box, &box, target), 0.025f * extent.x, .15f, primary_color);
+            renderer_draw_arrow_solid(gfx_context, aabb_project(&unit_box, &box, vec2_set(-0.65f, .8f)),
+                                      aabb_project(&unit_box, &box, target), .05f * max_radius, primary_color);
             renderer_end_combination(gfx_context, false);
 
             break;
@@ -195,8 +195,8 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
             vec2 target = vec2_lerp( vec2_set(.65f, 0.f), vec2_set(.65f, .8f), sl_impulse(sl_wave(loop_1s)));
 
             renderer_begin_combination(gfx_context, 1.f);
-            renderer_draw_arrow_filled(gfx_context, aabb_project(&unit_box, &box, vec2_set(0.65f, -.8f)),
-                                    aabb_project(&unit_box, &box, target), 0.025f * extent.x, .15f, primary_color);
+            renderer_draw_arrow_solid(gfx_context, aabb_project(&unit_box, &box, vec2_set(0.65f, -.8f)),
+                                    aabb_project(&unit_box, &box, target), .05f * max_radius, primary_color);
             renderer_end_combination(gfx_context, false);
 
             break;

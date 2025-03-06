@@ -296,7 +296,7 @@ void Editor::Popup(const char* title, const char* message)
 {
     strncpy(m_PopupTitle, title, POPUP_STRING_LENGTH);
     strncpy(m_PopupMessage, message, POPUP_STRING_LENGTH);
-    log_debug("%s : %s", title, message);
+    log_info("%s : %s", title, message);
     m_PopupOpen = true;
 }
 
@@ -350,7 +350,7 @@ void Editor::Load()
         FILE* f = fopen(load_path, "rb");
         if (f != NULL)
         {
-            log_debug("opening file '%s'", load_path);
+            log_info("opening file '%s'", load_path);
             fseek(f, 0L, SEEK_END);
             size_t file_length = ftell(f);
             fseek(f, 0L, SEEK_SET);
@@ -373,7 +373,7 @@ void Editor::Load()
                     {
                         // discard minor version
                         uint16_t minor = serializer_read_uint16_t(&serializer);
-                        log_debug("loading file version %d.%03d", major, minor);
+                        log_info("loading file version %d.%03d", major, minor);
 
                         m_PrimitiveEditor.Deserialize(&serializer, major, minor, tds_normalizion_support(major, minor));
 

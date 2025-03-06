@@ -720,9 +720,10 @@ void renderer_draw_line(struct renderer* r, vec2 p0, vec2 p1, float width, draw_
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void renderer_draw_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color)
+void renderer_draw_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, draw_color color)
 {
-    vec2 delta = vec2_scale(vec2_sub(p0, p1), arrow_length_percentage);
+    float ratio = float_min((width * 3.f) / vec2_distance(p0, p1), 0.15f);
+    vec2 delta = vec2_scale(vec2_sub(p0, p1), ratio);
     vec2 arrow_edge0 = vec2_add(p1, vec2_add(delta, vec2_skew(delta)));
     vec2 arrow_edge1 = vec2_add(p1, vec2_sub(delta, vec2_skew(delta)));
 
@@ -732,9 +733,10 @@ void renderer_draw_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, floa
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void renderer_draw_arrow_filled(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color)
+void renderer_draw_arrow_solid(struct renderer* r, vec2 p0, vec2 p1, float width, draw_color color)
 {
-    vec2 delta = vec2_scale(vec2_sub(p0, p1), arrow_length_percentage);
+    float ratio = float_min((width * 3.f) / vec2_distance(p0, p1), 0.15f);
+    vec2 delta = vec2_scale(vec2_sub(p0, p1), ratio);
     vec2 arrow_edge0 = vec2_add(p1, vec2_add(delta, vec2_skew(delta)));
     vec2 arrow_edge1 = vec2_add(p1, vec2_sub(delta, vec2_skew(delta)));
 
@@ -743,9 +745,10 @@ void renderer_draw_arrow_filled(struct renderer* r, vec2 p0, vec2 p1, float widt
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void renderer_draw_double_arrow(struct renderer* r, vec2 p0, vec2 p1, float width, float arrow_length_percentage, draw_color color)
+void renderer_draw_doublearrow(struct renderer* r, vec2 p0, vec2 p1, float width, draw_color color)
 {
-    vec2 delta = vec2_scale(vec2_sub(p0, p1), arrow_length_percentage);
+    float ratio = float_min((width * 3.f) / vec2_distance(p0, p1), 0.15f);
+    vec2 delta = vec2_scale(vec2_sub(p0, p1), ratio);
     vec2 arrow_edge0 = vec2_add(p1, vec2_add(delta, vec2_skew(delta)));
     vec2 arrow_edge1 = vec2_add(p1, vec2_sub(delta, vec2_skew(delta)));
 
@@ -757,6 +760,22 @@ void renderer_draw_double_arrow(struct renderer* r, vec2 p0, vec2 p1, float widt
     arrow_edge1 = vec2_sub(p0, vec2_sub(delta, vec2_skew(delta)));
     renderer_draw_line(r, p0, arrow_edge0, width, color, op_union);
     renderer_draw_line(r, p0, arrow_edge1, width, color, op_union);
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_draw_doublearrow_solid(struct renderer* r, vec2 p0, vec2 p1, float width, draw_color color)
+{
+    float ratio = float_min((width * 3.f) / vec2_distance(p0, p1), 0.15f);
+    vec2 delta = vec2_scale(vec2_sub(p0, p1), ratio);
+    vec2 arrow_edge0 = vec2_add(p1, vec2_add(delta, vec2_skew(delta)));
+    vec2 arrow_edge1 = vec2_add(p1, vec2_sub(delta, vec2_skew(delta)));
+
+    renderer_draw_line(r, vec2_sub(p0, delta), vec2_add(p1, delta), width, color, op_union);
+    renderer_draw_triangle(r, p1, arrow_edge0, arrow_edge1, 0.f, 0.f, fill_solid, color, op_union);
+
+    arrow_edge0 = vec2_sub(p0, vec2_add(delta, vec2_skew(delta)));
+    arrow_edge1 = vec2_sub(p0, vec2_sub(delta, vec2_skew(delta)));
+    renderer_draw_triangle(r, p0, arrow_edge0, arrow_edge1, 0.f, 0.f, fill_solid, color, op_union);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

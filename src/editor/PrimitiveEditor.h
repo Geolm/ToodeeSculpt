@@ -51,7 +51,6 @@ public:
 
     void SetSnapToGrid(bool b) {m_SnapToGrid = b;}
     void SetGridSubdivision(float f) {m_GridSubdivision = f;}
-    void SetPrimimitiveIdDebug(bool flag) {m_PrimitiveIdDebug = flag;}
     void SetAABBDebug(bool flag) {m_AABBDebug = flag;}
 
 private:
@@ -92,7 +91,6 @@ private:
     int m_SDFOperationComboBox;
     vec2 m_MousePosition;
     vec2 m_MouseLastPosition;
-    bool m_PrimitiveIdDebug;
     bool m_AABBDebug;
     bool m_SnapToGrid;
     float m_GridSubdivision;

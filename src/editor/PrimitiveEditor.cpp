@@ -36,7 +36,6 @@ void PrimitiveEditor::Init(struct GLFWwindow* window, aabb zone, struct undo_con
     m_pUndoContext = undo;
     m_SnapToGrid = false;
     m_GridSubdivision = 20.f;
-    m_PrimitiveIdDebug = false;
     m_AABBDebug = false;
     m_PointColor = draw_color(0x10e010, 128);
     m_SelectedPrimitiveColor = draw_color(0x101020, 128);
@@ -110,9 +109,12 @@ void PrimitiveEditor::OnMouseMove(vec2 pos)
     }
     else if (GetState() == state::MOVING_PRIMITIVE)
     {
-        primitive_translate(selected, m_MousePosition - m_Reference);
-        primitive_update_aabb(selected);
-        m_Reference = m_MousePosition;
+        if (!vec2_similar(m_MousePosition, m_Reference, 0.1f))
+        {
+            primitive_translate(selected, m_MousePosition - m_Reference);
+            primitive_update_aabb(selected);
+            m_Reference = m_MousePosition;
+        }
     }
     else if (GetState() == state::ROTATING_PRIMITIVE)
     {
@@ -193,9 +195,9 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
     else if (GetState() == state::MOVING_PRIMITIVE && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
     {
         primitive_update_aabb(plist_get(m_SelectedPrimitiveIndex));
-        SetState(state::IDLE);
-        if (m_StartingPoint != m_MousePosition)
+        if (!vec2_similar(m_StartingPoint, m_MousePosition, 0.1f))
             UndoSnapshot();
+        SetState(state::IDLE);
     }
     // adding points
     else if (GetState() == state::ADDING_POINTS && left_button_pressed)
@@ -316,15 +318,8 @@ void PrimitiveEditor::Draw(struct renderer* context)
     renderer_begin_combination(context, m_SmoothBlend);
 
     for(uint32_t i=0; i<plist_size(); ++i)
-    {
-        primitive *primitive = plist_get(i);
-        primitive_draw_alpha(primitive, context, m_AlphaValue);
-        if (m_PrimitiveIdDebug)
-        {
-            vec2 center = primitive_compute_center(primitive);
-            renderer_draw_text(context, center.x, center.y, format("%d", i), draw_color(na16_black));
-        }
-    }
+        primitive_draw_alpha(plist_get(i), context, m_AlphaValue);
+
     renderer_end_combination(context, m_GlobalOutline);
 
     if (GetState() == state::ADDING_POINTS)
@@ -441,12 +436,6 @@ void PrimitiveEditor::Draw(struct renderer* context)
         {
             primitive* primitive = plist_get(m_SelectedPrimitiveIndex);
             primitive_draw_selected(primitive, context, m_SelectedPrimitiveColor);
-
-            if (m_PrimitiveIdDebug)
-            {
-                vec2 center = primitive_compute_center(primitive);
-                renderer_draw_text(context, center.x, center.y, format("%d", m_SelectedPrimitiveIndex), draw_color(0xff000000));
-            }
         }
     }
     else if (GetState() == state::ROTATING_PRIMITIVE || GetState() == state::SCALING_PRIMITIVE)
@@ -493,7 +482,6 @@ void PrimitiveEditor::PropertyGrid(struct mu_Context* gui_context)
         primitive_update_aabb(selected);
         UndoSnapshot();
     }
-    
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

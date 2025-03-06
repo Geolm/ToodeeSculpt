@@ -589,7 +589,7 @@ void primitive_draw_edition_gizmo(struct primitive* p, struct renderer* gfx_cont
             delta = vec2_scale(vec2_skew(vec2_normalized(delta)), p->m_Width * .5f);
 
             renderer_begin_combination(gfx_context, VEC2_SQR2);
-            renderer_draw_double_arrow(gfx_context, vec2_add(center, delta), vec2_sub(center, delta), primitive_point_radius, 0.2f, radius_color);
+            renderer_draw_doublearrow_solid(gfx_context, vec2_add(center, delta), vec2_sub(center, delta), primitive_point_radius, radius_color);
             renderer_end_combination(gfx_context, false);
             break;
         }
