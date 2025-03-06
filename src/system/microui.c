@@ -866,6 +866,8 @@ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
   /* handle text input mode */
   if (number_textbox(ctx, &v, base, id)) { return res; }
 
+  if (last != v) { res |= MU_RES_CHANGE|MU_RES_SUBMIT; }
+
   /* handle normal mode */
   mu_update_control(ctx, id, base, opt);
 
@@ -877,7 +879,10 @@ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
     if (step) { v = ((long long)((v + step / 2) / step)) * step; }
   }
   if (ctx->last_focus == id && (ctx->mouse_released&MU_MOUSE_LEFT))
+  {  
     res |= MU_RES_SUBMIT;
+    mu_set_focus(ctx, 0);
+  }
 
   /* clamp and store value, update res */
   *value = v = mu_clamp(v, low, high);
@@ -1377,6 +1382,8 @@ int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real hig
   /* handle text input mode */
   if (number_textbox(ctx, &v, base, id)) { return res; }
 
+  if (last != v) { res |= MU_RES_CHANGE|MU_RES_SUBMIT; }
+
   /* handle normal mode */
   mu_update_control(ctx, id, base, opt);
 
@@ -1387,8 +1394,12 @@ int mu_slider_gradient(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real hig
     v = low + (ctx->mouse_pos.x - base.x) * (high - low) / base.w;
     if (step) { v = ((long long)((v + step / 2) / step)) * step; }
   }
+
   if (ctx->last_focus == id && (ctx->mouse_released&MU_MOUSE_LEFT))
+  {  
     res |= MU_RES_SUBMIT;
+    mu_set_focus(ctx, 0);
+  }
 
   /* clamp and store value, update res */
   *value = v = mu_clamp(v, low, high);
