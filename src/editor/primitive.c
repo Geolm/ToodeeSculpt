@@ -601,19 +601,3 @@ void primitive_draw_edition_gizmo(struct primitive* p, struct renderer* gfx_cont
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------------
-void primitive_on_mouse_button(struct primitive* p, vec2 mouse_position, int button, int action, int mods)
-{
-    UNUSED_VARIABLE(p);
-    UNUSED_VARIABLE(button);
-    UNUSED_VARIABLE(mods);
-    UNUSED_VARIABLE(mouse_position);
-    UNUSED_VARIABLE(action);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void primitive_on_mouse_move(struct primitive* p, vec2 pos)
-{
-    UNUSED_VARIABLE(p);
-    UNUSED_VARIABLE(pos);
-}

@@ -43,6 +43,7 @@ void renderer_draw_pie(struct renderer* r, vec2 center, vec2 point, float apertu
 void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float radius0, float radius1, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draw_arc(struct renderer* r, vec2 center, vec2 direction, float aperture, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draw_arc_from_circle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
+void renderer_draw_trapezoid(struct renderer* r, vec2 p0, vec2 p1, float radius0, float radius1, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draw_box(struct renderer* r, float x0, float y0, float x1, float y1, draw_color color);
 void renderer_draw_aabb(struct renderer* r, aabb box, draw_color color);
 void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color color);
