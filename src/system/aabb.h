@@ -28,6 +28,7 @@ static vec2 aabb_bilinear(const aabb* box, vec2 uv);
 static vec2 aabb_get_center(const aabb* box);
 static aabb aabb_from_bezier(vec2 p0, vec2 p1, vec2 p2);
 static aabb aabb_from_capsule(vec2 p0, vec2 p1, float radius);
+static aabb aabb_from_trapezoid(vec2 p0, vec2 p1, float radius0, float radius1);
 static aabb aabb_from_obb(vec2 p0, vec2 p1, float width);
 static aabb aabb_from_circle(vec2 center, float radius);
 static aabb aabb_from_triangle(vec2 v0, vec2 v1, vec2 v2);
@@ -254,6 +255,26 @@ static inline aabb aabb_from_capsule(vec2 p0, vec2 p1, float radius)
     vertices[1] = vec2_sub(p0, normal);
     vertices[2] = vec2_sub(p1, normal);
     vertices[3] = vec2_add(p1, normal);
+
+    box.min = vec2_min4(vertices[0], vertices[1], vertices[2], vertices[3]);
+    box.max = vec2_max4(vertices[0], vertices[1], vertices[2], vertices[3]);
+
+    return box;
+}
+
+//-----------------------------------------------------------------------------
+static inline aabb aabb_from_trapezoid(vec2 p0, vec2 p1, float radius0, float radius1)
+{
+    aabb box;
+
+    vec2 dir = vec2_normalized(vec2_sub(p1, p0));
+    vec2 normal = vec2_skew(dir);
+
+    vec2 vertices[4];
+    vertices[0] = vec2_add(p0, vec2_scale(normal, radius0));
+    vertices[1] = vec2_sub(p0, vec2_scale(normal, radius0));
+    vertices[2] = vec2_add(p1, vec2_scale(normal, radius1));
+    vertices[3] = vec2_sub(p1, vec2_scale(normal, radius1));
 
     box.min = vec2_min4(vertices[0], vertices[1], vertices[2], vertices[3]);
     box.max = vec2_max4(vertices[0], vertices[1], vertices[2], vertices[3]);

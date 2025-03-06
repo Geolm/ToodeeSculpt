@@ -126,3 +126,22 @@ float sd_uneven_capsule(float2 p, float2 pa, float2 pb, float ra, float rb)
     else if( k > c.x ) return sqrt(h*(n+1.f-2.f*q.y)) - rb;
                        return m                       - ra;
 }
+
+//-----------------------------------------------------------------------------
+float sd_trapezoid(float2 p, float2 a, float2 b, float ra, float rb)
+{
+    float rba  = rb-ra;
+    float baba = dot(b-a,b-a);
+    float papa = dot(p-a,p-a);
+    float paba = dot(p-a,b-a)/baba;
+    float x = sqrt( papa - paba*paba*baba );
+    float cax = max(0.0f,x-((paba<0.5f)?ra:rb));
+    float cay = abs(paba-0.5f)-0.5f;
+    float k = rba*rba + baba;
+    float f = saturate((rba*(x-ra)+paba*baba)/k);
+    float cbx = x-ra - f*rba;
+    float cby = paba - f;
+    float s = (cbx < 0.0f && cay < 0.0f) ? -1.0f : 1.0f;
+    return s*sqrt( min(cax*cax + cay*cay*baba,
+                       cbx*cbx + cby*cby*baba) );
+}

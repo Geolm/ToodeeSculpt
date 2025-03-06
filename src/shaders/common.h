@@ -49,6 +49,7 @@ enum command_type
     primitive_pie = 6,
     primitive_ring = 7,
     primitive_uneven_capsule = 8,
+    primitive_trapezoid = 9,
     
     combination_begin = 32,
     combination_end = 33

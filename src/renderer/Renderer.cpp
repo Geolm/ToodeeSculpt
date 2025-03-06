@@ -1001,7 +1001,7 @@ void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float rad
         {
             p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
             p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1, thickness);
 
             aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
             aabb_grow(&bb, vec2_splat(max(r->m_AAWidth, r->m_SmoothValue) + thickness));
@@ -1013,6 +1013,48 @@ void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float rad
 
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
             merge_aabb(r->m_CombinationAABB, aabox);
+            return;
+        }
+        r->m_Commands.RemoveLast();
+    }
+    log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_draw_trapezoid(struct renderer* r, vec2 p0, vec2 p1, float radius0, float radius1, float roundness,
+                             float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
+{
+    if (vec2_similar(p0, p1, vec2_relative_epsilon(vec2_max(p0, p1), small_float)))
+        return;
+
+    if (radius0 < small_float && radius1 < small_float)
+        return;
+
+    draw_command* cmd = r->m_Commands.NewElement();
+    if (cmd != nullptr)
+    {
+        cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
+        cmd->color = color;
+        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->op = op;
+        cmd->type = pack_type(primitive_trapezoid, fillmode);
+
+        float* data = r->m_DrawData.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
+        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        if (data != nullptr && aabox != nullptr)
+        {
+            float roundness_thickness = (fillmode == fill_hollow) ? thickness : roundness;
+            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
+            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1, roundness_thickness);
+
+            aabb bb = aabb_from_trapezoid(p0, p1, radius0, radius1);
+            aabb_grow(&bb, vec2_splat(max(r->m_AAWidth, r->m_SmoothValue) + thickness));
+
+            write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1, roundness_thickness);
+            write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+            merge_aabb(r->m_CombinationAABB, aabox);
+
             return;
         }
         r->m_Commands.RemoveLast();
