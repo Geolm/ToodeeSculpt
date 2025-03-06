@@ -153,9 +153,8 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
                 float radius0 = data[4];
                 float radius1 = data[5];
 
-                // todo : aabb vs trapezoid
                 aabb tile_rounded = aabb_grow(tile_enlarge_aabb, data[6]);
-                to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, max(radius0, radius1) * 2.f);
+                to_be_added = intersection_aabb_obb(tile_rounded, p0, p1, radius0, radius1);
                 break;
             }
 

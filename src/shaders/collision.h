@@ -307,6 +307,43 @@ bool intersection_box_unevencapsule(aabb box, float2 p0, float2 p1, float radius
     return true;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------------
+bool intersection_aabb_obb(aabb box, float2 p0, float2 p1, float radius0, float radius1)
+{
+    float2 dir = normalize(p1 - p0);
+    float2 normal = skew(dir);
+    
+    float2 v[4];
+    v[0] = p0 + normal * radius0;
+    v[1] = p0 - normal * radius0;
+    v[2] = p1 - normal * radius1;
+    v[3] = p1 + normal * radius1;
+
+    if (v[0].x > box.max.x && v[1].x > box.max.x && v[2].x > box.max.x && v[3].x > box.max.x)
+        return false;
+
+    if (v[0].x < box.min.x && v[1].x < box.min.x && v[2].x < box.min.x && v[3].x < box.min.x)
+        return false;
+
+    if (v[0].y < box.min.y && v[1].y < box.min.y && v[2].y < box.min.y && v[3].y < box.min.y)
+        return false;
+
+    if (v[0].y > box.max.y && v[1].y > box.max.y && v[2].y > box.max.y && v[3].y > box.max.y)
+        return false;
+
+    for(uint32_t i=0; i<4; ++i)
+    {
+        float3 edge = edge_init(v[i], v[(i+1)%4]);
+        float4 vertices_distance = float4(edge_distance(edge, box.min), edge_distance(edge, float2(box.min.x, box.max.y)),
+                                          edge_distance(edge, float2(box.max.x, box.min.y)), edge_distance(edge, box.max));
+
+        if (all(vertices_distance < 0.f))
+            return false;
+    }
+
+    return true;
+}
+
 
 // ---------------------------------------------------------------------------------------------------------------------------
 bool point_in_triangle(float2 p0, float2 p1, float2 p2, float2 point)
