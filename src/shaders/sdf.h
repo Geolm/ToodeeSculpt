@@ -128,20 +128,19 @@ float sd_uneven_capsule(float2 p, float2 pa, float2 pb, float ra, float rb)
 }
 
 //-----------------------------------------------------------------------------
+// based on https://www.shadertoy.com/view/wtSyWc to avoid middle line from the iq sdf
 float sd_trapezoid(float2 p, float2 a, float2 b, float ra, float rb)
 {
-    float rba  = rb-ra;
-    float baba = dot(b-a,b-a);
-    float papa = dot(p-a,p-a);
-    float paba = dot(p-a,b-a)/baba;
-    float x = sqrt( papa - paba*paba*baba );
-    float cax = max(0.0f,x-((paba<0.5f)?ra:rb));
-    float cay = abs(paba-0.5f)-0.5f;
-    float k = rba*rba + baba;
-    float f = saturate((rba*(x-ra)+paba*baba)/k);
-    float cbx = x-ra - f*rba;
+    float2 pa = p - a;
+    float2 ba = b - a;
+    float baba = dot(ba, ba);
+    float x = abs(dot(float2(-pa.y, pa.x), ba)) / sqrt(baba);
+    float paba = dot(pa, ba) / baba;
+    float rba = rb - ra;
+    float cax = max(0., x - ((paba < 0.5) ? ra : rb));
+    float cay = abs(paba - 0.5) - 0.5;
+    float f = saturate((rba*(x - ra) + paba * baba) / (rba * rba + baba));
+    float cbx = x - ra - f * rba;
     float cby = paba - f;
-    float s = (cbx < 0.0f && cay < 0.0f) ? -1.0f : 1.0f;
-    return s*sqrt( min(cax*cax + cay*cay*baba,
-                       cbx*cbx + cby*cby*baba) );
+    return sign(max(cbx,cay)) * sqrt(min(cax*cax + cay * cay*baba, cbx*cbx + cby * cby*baba));
 }
