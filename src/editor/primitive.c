@@ -89,6 +89,11 @@ bool primitive_test_mouse_cursor(struct primitive const* p, vec2 mouse_position,
                 result = point_in_uneven_capsule(p->m_Points[0], p->m_Points[1], p->m_Roundness, p->m_Radius, mouse_position);
                 break;
             }
+        case shape_trapezoid:
+            {
+                result = point_in_trapezoid(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Radius, mouse_position);
+                break;
+            }
 
         default: 
             return false;
@@ -162,6 +167,11 @@ void primitive_update_aabb(struct primitive* p)
         p->m_AABB = aabb_from_capsule(p->m_Points[0], p->m_Points[1], float_max(p->m_Roundness, p->m_Radius));
         break;
     }
+    case shape_trapezoid :
+    {
+        p->m_AABB = aabb_from_trapezoid(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Radius);
+        break;
+    }
     default: p->m_AABB = aabb_invalid();
     }
 }
@@ -230,6 +240,15 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
             mu_label(gui_context, "radius 1");
             res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 400.f, 1.f, "%3.0f", 0);
             mu_label(gui_context, "radius 2");
+            res |= mu_slider_ex(gui_context, &p->m_Radius, 0.f, 400.f, 1.f, "%3.0f", 0);
+            break;
+        }
+    case shape_trapezoid:
+        {
+            mu_text(gui_context, "trapezoid");
+            mu_label(gui_context, "width 1");
+            res |= mu_slider_ex(gui_context, &p->m_Width, 0.f, 400.f, 1.f, "%3.0f", 0);
+            mu_label(gui_context, "width 2");
             res |= mu_slider_ex(gui_context, &p->m_Radius, 0.f, 400.f, 1.f, "%3.0f", 0);
             break;
         }
@@ -322,13 +341,13 @@ void primitive_deserialize(struct primitive* p, serializer_context* context, uin
                 serializer_read_blob(context, p->m_Points, sizeof(vec2) * primitive_get_num_points(p->m_Shape));
             }
 
-            if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
+            if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box || p->m_Shape == shape_trapezoid)
                 p->m_Width = serializer_read_float(context);
             if (p->m_Shape == shape_pie || p->m_Shape == shape_arc)
                 p->m_Aperture = serializer_read_float(context);
             if (p->m_Shape != shape_pie && p->m_Shape != shape_arc)
                 p->m_Roundness = serializer_read_float(context);
-            if (p->m_Shape == shape_uneven_capsule)
+            if (p->m_Shape == shape_uneven_capsule || p->m_Shape == shape_trapezoid)
                 p->m_Radius = serializer_read_float(context);
 
             p->m_Thickness = serializer_read_float(context);
@@ -357,13 +376,13 @@ void primitive_serialize(struct primitive const* p, serializer_context* context)
     serializer_write_struct(context, p->m_Shape);
     serializer_write_blob(context, p->m_Points, sizeof(vec2) * primitive_get_num_points(p->m_Shape));
 
-    if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box )
+    if (p->m_Shape == shape_oriented_ellipse || p->m_Shape == shape_oriented_box || p->m_Shape == shape_trapezoid)
         serializer_write_float(context, p->m_Width);
     if (p->m_Shape == shape_pie || p->m_Shape == shape_arc)
         serializer_write_float(context, p->m_Aperture);
     if (p->m_Shape != shape_pie && p->m_Shape != shape_arc)
         serializer_write_float(context, p->m_Roundness);
-    if (p->m_Shape == shape_uneven_capsule)
+    if (p->m_Shape == shape_uneven_capsule || p->m_Shape == shape_trapezoid)
         serializer_write_float(context, p->m_Radius);
 
     serializer_write_float(context, p->m_Thickness);
@@ -516,6 +535,12 @@ void primitive_draw(struct primitive* p, struct renderer* gfx_context, float rou
         break;
     }
 
+    case shape_trapezoid:
+    {
+        renderer_draw_trapezoid(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Radius, p->m_Roundness, p->m_Thickness, p->m_Fillmode, color, op);
+        break;
+    }
+
     default: 
         break;
     }
@@ -560,44 +585,5 @@ void primitive_draw_spline(struct renderer* gfx_context, const vec2* points, uin
             renderer_draw_line(gfx_context, arcs[i].center, arcs[i].direction, thickness, color, op_add);
 
     renderer_end_combination(gfx_context, false);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void primitive_draw_edition_gizmo(struct primitive* p, struct renderer* gfx_context)
-{
-    primitive_draw_selected(p, gfx_context, (draw_color){.packed_data = 0x7f101020});
-
-    switch(p->m_Shape)
-    {
-    case shape_disc : 
-        {
-            renderer_draw_disc(gfx_context, p->m_Points[0], p->m_Roundness, 0.f, fill_solid, radius_color, op_add);
-            break;
-        }
-    case shape_uneven_capsule:
-        {
-            renderer_draw_disc(gfx_context, p->m_Points[0], p->m_Roundness, 0.f, fill_solid, radius_color, op_add);
-            renderer_draw_disc(gfx_context, p->m_Points[1], p->m_Radius, 0.f, fill_solid, radius_color, op_add);
-            break;
-        }
-    case shape_oriented_box:
-    case shape_triangle:
-        {
-            // draw a "roundness" gizmo
-            break;
-        }
-    case shape_oriented_ellipse:
-        {
-            vec2 center = primitive_compute_center(p);
-            vec2 delta = vec2_sub(p->m_Points[1], p->m_Points[0]);
-            delta = vec2_scale(vec2_skew(vec2_normalized(delta)), p->m_Width * .5f);
-
-            renderer_begin_combination(gfx_context, VEC2_SQR2);
-            renderer_draw_doublearrow_solid(gfx_context, vec2_add(center, delta), vec2_sub(center, delta), primitive_point_radius, radius_color);
-            renderer_end_combination(gfx_context, false);
-            break;
-        }
-    default: break;
-    }
 }
 

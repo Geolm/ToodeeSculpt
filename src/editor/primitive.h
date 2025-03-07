@@ -27,7 +27,8 @@ enum primitive_shape
     shape_pie = 6,
     shape_arc = 7,
     shape_spline,
-    shape_uneven_capsule
+    shape_uneven_capsule,
+    shape_trapezoid
 };
 
 enum primitive_edition
@@ -102,6 +103,7 @@ static inline uint32_t primitive_get_num_points(enum primitive_shape shape)
     case shape_oriented_ellipse:
     case shape_pie:
     case shape_uneven_capsule:
+    case shape_trapezoid:
     case shape_oriented_box: return 2;
     case shape_arc:
     case shape_triangle: return 3;

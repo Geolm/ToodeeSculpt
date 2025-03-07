@@ -23,7 +23,8 @@ enum icon_type
     ICON_ROTATE,
     ICON_LAYERUP,
     ICON_LAYERDOWN,
-    ICON_SETTINGS
+    ICON_SETTINGS,
+    ICON_TRAPEZOID
 };
 
 #ifdef __cplusplus

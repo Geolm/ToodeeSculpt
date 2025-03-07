@@ -104,4 +104,21 @@ bool point_in_uneven_capsule(vec2 p0, vec2 p1, float radius0, float radius1, vec
     return vec2_sq_length(vec2_sub(pa, vec2_scale(ba, h))) < float_square(interpolated_radius);
 }
 
+//-----------------------------------------------------------------------------
+bool point_in_trapezoid(vec2 p0, vec2 p1, float radius0, float radius1, vec2 point)
+{
+    vec2 direction = vec2_normalized(vec2_sub(p1, p0));
+    vec2 normal = vec2_skew(direction);
 
+    vec2 vertices[4];
+    vertices[0] = vec2_add(p0, vec2_scale(normal, radius0));
+    vertices[1] = vec2_sub(p0, vec2_scale(normal, radius0));
+    vertices[2] = vec2_sub(p1, vec2_scale(normal, radius1));
+    vertices[3] = vec2_add(p1, vec2_scale(normal, radius1));
+
+    if (edge_sign(point, vertices[0], vertices[1]) < 0.f && edge_sign(point, vertices[1], vertices[2]) < 0.f &&
+        edge_sign(point, vertices[2], vertices[3]) < 0.f && edge_sign(point, vertices[3], vertices[0]) < 0.f)
+        return true;
+
+    return false;
+}

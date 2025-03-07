@@ -201,7 +201,7 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
 
         if (m_CurrentPoint == primitive_get_num_points(m_PrimitiveShape))
         {
-            if (m_PrimitiveShape == shape_oriented_box || m_PrimitiveShape == shape_oriented_ellipse)
+            if (m_PrimitiveShape == shape_oriented_box || m_PrimitiveShape == shape_oriented_ellipse || m_PrimitiveShape == shape_trapezoid)
                 SetState(state::SET_WIDTH);
             else if (m_PrimitiveShape == shape_pie)
             {
@@ -219,6 +219,12 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
             SetState(state::SET_ROUNDNESS);
         else if (m_PrimitiveShape == shape_oriented_ellipse)
             SetState(state::CREATE_PRIMITIVE);
+        else if (m_PrimitiveShape == shape_trapezoid)
+            SetState(state::SET_SECOND_WIDTH);
+    }
+    else if (GetState() == state::SET_SECOND_WIDTH && left_button_pressed)
+    {
+        SetState(state::SET_ROUNDNESS);
     }
     else if (GetState() == state::SET_ROUNDNESS && left_button_pressed)
     {
@@ -252,6 +258,9 @@ void PrimitiveEditor::OnMouseButton(int button, int action, int mods)
 
         if (m_PrimitiveShape == shape_pie)
             new_primitive.m_Aperture = m_Aperture;
+
+        if (m_PrimitiveShape == shape_trapezoid)
+            new_primitive.m_Radius = m_SecondWidth;
 
         primitive_update_aabb(&new_primitive);
 
@@ -530,6 +539,12 @@ void PrimitiveEditor::Toolbar(struct mu_Context* gui_context)
             m_PrimitiveShape = shape_spline;
             SetState(state::ADDING_POINTS);
         }
+
+        if (mu_button_ex(gui_context, NULL, ICON_TRAPEZOID, 0) && GetState() == state::IDLE)
+        {
+            m_PrimitiveShape = shape_trapezoid;
+            SetState(state::ADDING_POINTS);
+        }
     }
 
     if (mu_header_ex(gui_context, "edit", MU_OPT_EXPANDED))
@@ -740,6 +755,13 @@ void PrimitiveEditor::SetState(enum state new_state)
     if (new_state == state::SET_WIDTH)
     {
         m_Width = 0.f;
+        m_Reference = m_MousePosition;
+        MouseCursors::GetInstance().Set(MouseCursors::HResize);
+    }
+
+    if (new_state == state::SET_SECOND_WIDTH)
+    {
+        m_SecondWidth = 0.f;
         m_Reference = m_MousePosition;
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }

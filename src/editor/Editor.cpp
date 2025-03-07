@@ -74,29 +74,29 @@ void Editor::OnMouseButton(int button, int action, int mods)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void Editor::Draw(struct renderer* context)
+void Editor::Draw(struct renderer* gfx_context)
 {
     if (!m_CullingDebug)
     {
-        renderer_draw_aabb(context, m_ExternalZone, draw_color(0, 0, 0, 0xff));
-        renderer_draw_aabb(context, m_Zone, draw_color(0xffffffff));
-        renderer_set_culling_debug(context, false);
+        renderer_draw_aabb(gfx_context, m_ExternalZone, draw_color(0, 0, 0, 0xff));
+        renderer_draw_aabb(gfx_context, m_Zone, draw_color(0xffffffff));
+        renderer_set_culling_debug(gfx_context, false);
     }
     else
-    renderer_set_culling_debug(context, true);
+        renderer_set_culling_debug(gfx_context, true);
 
     if (m_ShowGrid)
     {
         vec2 step = vec2_scale(m_Zone.max - m_Zone.min, 1.f / m_GridSubdivision);
         
         for(float x = m_Zone.min.x; x<m_Zone.max.x; x += step.x)
-            renderer_draw_box(context, x, m_Zone.min.y, x+1, m_Zone.max.y, draw_color(na16_light_grey, 128));
+            renderer_draw_box(gfx_context, x, m_Zone.min.y, x+1, m_Zone.max.y, draw_color(na16_light_grey, 128));
 
         for(float y = m_Zone.min.y; y<m_Zone.max.y; y += step.y)
-            renderer_draw_box(context, m_Zone.min.x, y, m_Zone.max.x, y+1, draw_color(na16_light_grey, 128));
+            renderer_draw_box(gfx_context, m_Zone.min.x, y, m_Zone.max.x, y+1, draw_color(na16_light_grey, 128));
     }
 
-    m_pActiveEditor->Draw(context);
+    m_pActiveEditor->Draw(gfx_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

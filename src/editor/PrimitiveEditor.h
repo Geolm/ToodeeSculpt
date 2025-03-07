@@ -59,6 +59,7 @@ private:
         IDLE,
         ADDING_POINTS,
         SET_WIDTH,
+        SET_SECOND_WIDTH,
         SET_ROUNDNESS,
         SET_ANGLE,
         CREATE_PRIMITIVE,
@@ -105,6 +106,7 @@ private:
     vec2 m_StartingPoint;
     vec2 m_Direction;
     float m_Width;
+    float m_SecondWidth;
     float m_Roundness;
     float m_Aperture;
     float m_Angle;

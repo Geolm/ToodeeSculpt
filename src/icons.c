@@ -231,11 +231,26 @@ void DrawIcon(struct renderer* gfx_context, aabb box, enum icon_type icon, draw_
             vec2 p2 = vec2_sub(end, normal);
 
             renderer_draw_triangle(gfx_context, p0, p1, p2, 0.f, 0.f, fill_solid, secondary_color, op_add);
-
             renderer_end_combination(gfx_context, false);
+            break;
+        }
+    case ICON_TRAPEZOID:
+        {
+            vec2 p0 = vec2_set(sl_wave_base(loop_2s, 0.2f, 0.4f), 0.f);
+            vec2 p1 = vec2_set(sl_wave_base(loop_2s, -0.2f, -0.4f), 0.f);
+            vec2 rotation = vec2_angle(-time_in_second);
+
+            p0 = aabb_project(&unit_box, &box, vec2_rotate(p0, rotation));
+            p1 = aabb_project(&unit_box, &box, vec2_rotate(p1, rotation));
+
+            float radius0 = max_radius * sl_wave_base(loop_2s, 0.2f, 0.3f);
+            float radius1 = max_radius * sl_wave_base(loop_1s, 0.1f, 0.1f);
+
+            renderer_draw_trapezoid(gfx_context, p0, p1, radius0, radius1, 0.f, 0.f , fill_solid, primary_color, op_add);
 
             break;
         }
+
     default: break;
     }
 }
