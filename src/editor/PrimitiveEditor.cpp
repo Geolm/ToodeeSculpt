@@ -374,54 +374,26 @@ void PrimitiveEditor::Draw(struct renderer* context)
         renderer_draw_disc(context, m_Reference, primitive_point_radius, -1.f, fill_solid, m_PointColor, op_add);
 
         // preview primitive
-        switch(m_PrimitiveShape)
-        {
-        case shape_triangle:
-        {
+        if (m_PrimitiveShape == shape_triangle)
             renderer_draw_triangle(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
-            break;
-        }
-
-        case shape_disc:
-        {
+        else if (m_PrimitiveShape == shape_disc)
             renderer_draw_disc(context, m_PrimitivePoints[0], m_Roundness, -1.f, fill_solid, m_SelectedPrimitiveColor, op_add);
-            break;
-        }
-
-        case shape_oriented_box:
-        {
+        else if (m_PrimitiveShape == shape_oriented_box)
             renderer_draw_orientedbox(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
-            break;
-        }
-
-        case shape_arc:
+        else if (m_PrimitiveShape == shape_arc)
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
             renderer_draw_arc_from_circle(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_PrimitivePoints[2], thickness, fill_solid, m_SelectedPrimitiveColor, op_add);
-            break;
         }
-
-        case shape_spline:
+        else if (m_PrimitiveShape == shape_spline)
         {
             float thickness = float_min(m_Roundness * 2.f, primitive_max_thickness);
             primitive_draw_spline(context, m_PrimitivePoints, primitive_get_num_points(m_PrimitiveShape), thickness, m_SelectedPrimitiveColor);
-            break;
         }
-
-        case shape_uneven_capsule:
-        {
+        else if (m_PrimitiveShape == shape_uneven_capsule)
             renderer_draw_unevencapsule(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Roundness, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
-            break;
-        }
-
-        case shape_trapezoid:
-        {
+        else if (m_PrimitiveShape == shape_trapezoid)
             renderer_draw_trapezoid(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_SecondWidth, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
-            break;
-        }
-
-        default:break;
-        }
     }
     else if (GetState() == state::SET_ANGLE)
     {
