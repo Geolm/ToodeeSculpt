@@ -540,7 +540,7 @@ void primitive_draw(struct primitive* p, struct renderer* gfx_context, float rou
 
     case shape_trapezoid:
     {
-        renderer_draw_trapezoid(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Radius, p->m_Roundness, p->m_Thickness, p->m_Fillmode, color, op);
+        renderer_draw_trapezoid(gfx_context, p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Radius, roundness, p->m_Thickness, p->m_Fillmode, color, op);
         break;
     }
 
