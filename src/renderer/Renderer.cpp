@@ -1049,7 +1049,7 @@ void renderer_draw_trapezoid(struct renderer* r, vec2 p0, vec2 p1, float radius0
             distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1, roundness_thickness);
 
             aabb bb = aabb_from_trapezoid(p0, p1, radius0, radius1);
-            aabb_grow(&bb, vec2_splat(max(r->m_AAWidth, r->m_SmoothValue) + thickness));
+            aabb_grow(&bb, vec2_splat(max(r->m_AAWidth, r->m_SmoothValue) + roundness_thickness));
 
             write_float(data, p0.x, p0.y, p1.x, p1.y, radius0, radius1, roundness_thickness);
             write_aabb(aabox, bb.min.x, bb.min.y, bb.max.x, bb.max.y);

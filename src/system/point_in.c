@@ -116,8 +116,8 @@ bool point_in_trapezoid(vec2 p0, vec2 p1, float radius0, float radius1, vec2 poi
     vertices[2] = vec2_sub(p1, vec2_scale(normal, radius1));
     vertices[3] = vec2_add(p1, vec2_scale(normal, radius1));
 
-    if (edge_sign(point, vertices[0], vertices[1]) < 0.f && edge_sign(point, vertices[1], vertices[2]) < 0.f &&
-        edge_sign(point, vertices[2], vertices[3]) < 0.f && edge_sign(point, vertices[3], vertices[0]) < 0.f)
+    if (edge_sign(point, vertices[0], vertices[1]) > 0.f && edge_sign(point, vertices[1], vertices[2]) > 0.f &&
+        edge_sign(point, vertices[2], vertices[3]) > 0.f && edge_sign(point, vertices[3], vertices[0]) > 0.f)
         return true;
 
     return false;

@@ -133,7 +133,7 @@ void primitive_update_aabb(struct primitive* p)
     case shape_triangle :
     {
         p->m_AABB = aabb_from_triangle(p->m_Points[0], p->m_Points[1], p->m_Points[2]);
-        aabb_grow(&p->m_AABB, vec2_splat(p->m_Roundness));
+        aabb_grow(&p->m_AABB, p->m_Fillmode == fill_hollow ? vec2_splat(p->m_Thickness * .5f) : vec2_splat(p->m_Roundness));
         break;
     }
     case shape_oriented_box : p->m_AABB = aabb_from_rounded_obb(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Roundness); break;
@@ -170,6 +170,7 @@ void primitive_update_aabb(struct primitive* p)
     case shape_trapezoid :
     {
         p->m_AABB = aabb_from_trapezoid(p->m_Points[0], p->m_Points[1], p->m_Width, p->m_Radius);
+        aabb_grow(&p->m_AABB, p->m_Fillmode == fill_hollow ? vec2_splat(p->m_Thickness * .5f) : vec2_splat(p->m_Roundness));
         break;
     }
     default: p->m_AABB = aabb_invalid();
@@ -250,6 +251,8 @@ int primitive_property_grid(struct primitive* p, struct mu_Context* gui_context)
             res |= mu_slider_ex(gui_context, &p->m_Width, 0.f, 400.f, 1.f, "%3.0f", 0);
             mu_label(gui_context, "width 2");
             res |= mu_slider_ex(gui_context, &p->m_Radius, 0.f, 400.f, 1.f, "%3.0f", 0);
+            mu_label(gui_context, "roundness");
+            res |= mu_slider_ex(gui_context, &p->m_Roundness, 0.f, 100.f, 0.1f, "%3.2f", 0);
             break;
         }
     default : mu_text(gui_context, "unknown");break;

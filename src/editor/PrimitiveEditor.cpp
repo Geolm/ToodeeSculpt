@@ -95,6 +95,10 @@ void PrimitiveEditor::OnMouseMove(vec2 pos)
     {
         m_Width = vec2_distance(pos, m_Reference) * 2.f;
     }
+    else if (GetState() == state::SET_SECOND_WIDTH)
+    {
+        m_SecondWidth = vec2_distance(pos, m_Reference) * 2.f;
+    }
     else if (GetState() == state::SET_ANGLE)
     {
         vec2 to_mouse = m_MousePosition - m_PrimitivePoints[0];
@@ -358,6 +362,12 @@ void PrimitiveEditor::Draw(struct renderer* context)
             renderer_draw_orientedbox(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
         else if (m_PrimitiveShape == shape_oriented_ellipse)
             renderer_draw_ellipse(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
+        else if (m_PrimitiveShape == shape_trapezoid)
+            renderer_draw_trapezoid(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_Width, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
+    }
+    else if (GetState() == state::SET_SECOND_WIDTH)
+    {
+        renderer_draw_trapezoid(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_SecondWidth, 0.f, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
     }
     else if (GetState() == state::SET_ROUNDNESS)
     {
@@ -401,6 +411,12 @@ void PrimitiveEditor::Draw(struct renderer* context)
         case shape_uneven_capsule:
         {
             renderer_draw_unevencapsule(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Roundness, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
+            break;
+        }
+
+        case shape_trapezoid:
+        {
+            renderer_draw_trapezoid(context, m_PrimitivePoints[0], m_PrimitivePoints[1], m_Width, m_SecondWidth, m_Roundness, 0.f, fill_solid, m_SelectedPrimitiveColor, op_add);
             break;
         }
 
@@ -761,8 +777,8 @@ void PrimitiveEditor::SetState(enum state new_state)
 
     if (new_state == state::SET_SECOND_WIDTH)
     {
-        m_SecondWidth = 0.f;
-        m_Reference = m_MousePosition;
+        m_SecondWidth = m_Width;
+        m_Reference = m_PrimitivePoints[1];
         MouseCursors::GetInstance().Set(MouseCursors::HResize);
     }
 
