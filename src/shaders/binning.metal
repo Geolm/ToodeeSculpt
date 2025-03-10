@@ -40,7 +40,7 @@ kernel void bin(constant draw_cmd_arguments& input [[buffer(0)]],
             continue;
 
         // grow the bounding box for anti-aliasing and smooth blend
-        aabb tile_enlarge_aabb = aabb_grow(tile_aabb, max(input.aa_width, smooth_border));
+        aabb tile_enlarge_aabb = aabb_grow(tile_aabb, (input.commands[i].op == op_union) ? max(input.aa_width, smooth_border) : input.aa_width);
 
         const bool is_hollow = (primitive_get_fillmode(input.commands[i].type) == fill_hollow);
         bool to_be_added = false;
