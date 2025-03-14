@@ -172,9 +172,9 @@ void App::DrawGui()
         case MU_COMMAND_CLIP : 
         {
             uint16_t min_x = uint16_t(float(cmd->rect.rect.x * m_ScaleX));
-            uint16_t min_y = uint16_t(float(cmd->rect.rect.x * m_ScaleX));
+            uint16_t min_y = uint16_t(float(cmd->rect.rect.x * m_ScaleY));
             uint16_t max_x = uint16_t(float(cmd->rect.rect.x + cmd->rect.rect.w) * m_ScaleX);
-            uint16_t max_y = uint16_t(float(cmd->rect.rect.y + cmd->rect.rect.h) * m_ScaleX);
+            uint16_t max_y = uint16_t(float(cmd->rect.rect.y + cmd->rect.rect.h) * m_ScaleY);
             renderer_set_cliprect(m_pRenderer, min_x, min_y, max_x, max_y);
             break;
         }
