@@ -9,7 +9,7 @@
 static const uint32_t na16_light_grey = 0xffae8f8c;
 static const uint32_t na16_dark_grey = 0xff634558;
 static const uint32_t na16_dark_brown = 0xff37213e;
-static const uint32_t na16_brown = 0xff9a6348;
+static const uint32_t na16_brown = 0xff48639a;
 static const uint32_t na16_light_brown = 0xff7d9bd7;
 static const uint32_t na16_light_green = 0xffbaedf5;
 static const uint32_t na16_green = 0xff41c7c0;
