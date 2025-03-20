@@ -225,7 +225,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 }
                 else
                 {
-                    color = unpack_unorm4x8_to_half(cmd.color.packed_data);
+                    color = unpack_unorm4x8_srgb_to_half(cmd.color.packed_data);
 
                     if (fillmode == fill_outline && distance >= outline_start)
                     {

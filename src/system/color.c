@@ -2,6 +2,11 @@
 #include <math.h>
 #include "color.h"
 
+// ----------------------------------------------------------------------------
+static inline uint32_t to_srgb(float linear_value)
+{
+    return (uint32_t) (powf(linear_value, 1.f / 2.2f) * 255.f);
+}
 
 // ----------------------------------------------------------------------------
 bool color4f_similar(color4f const* a, color4f const* b, float epsilon)
@@ -14,9 +19,9 @@ bool color4f_similar(color4f const* a, color4f const* b, float epsilon)
 packed_color color4f_to_packed_color(color4f color)
 {
     uint32_t result = ((uint32_t)(color.alpha * 255.f)) << 24;
-    result |= ((uint32_t)(color.blue * 255.f)) << 16;
-    result |= ((uint32_t)(color.green * 255.f)) << 8;
-    result |= ((uint32_t)(color.red * 255.f));
+    result |= to_srgb(color.blue) << 16;
+    result |= to_srgb(color.green) << 8;
+    result |= to_srgb(color.red);
     return result;
 }
 
