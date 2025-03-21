@@ -2,12 +2,15 @@
 #define __RENDERER__H__
 
 #include <stdint.h>
+#include <stddef.h>
 #include "../system/aabb.h"
 #include "../shaders/common.h"
+#include "../shaders/font.h"
 
 
 struct renderer;
 struct mu_Context;
+struct view_proj;
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,14 +25,16 @@ void renderer_debug_interface(struct renderer* r, struct mu_Context* gui_context
 void renderer_end_frame(struct renderer* r);
 void renderer_terminate(struct renderer* r);
 
+void renderer_set_clear_color(struct renderer* r, draw_color color);
 void renderer_set_cliprect(struct renderer* r, uint16_t min_x, uint16_t min_y, uint16_t max_x, uint16_t max_y);
 void renderer_set_cliprect_relative(struct renderer * r, aabb const* box);
 void renderer_set_culling_debug(struct renderer* r, bool b);
-void renderer_set_viewport(struct renderer* r, float width, float height);
-void renderer_set_camera(struct renderer* r, vec2 position, float scale);
+void renderer_set_viewproj(struct renderer* r, const struct view_proj* vp);
 
 void renderer_begin_combination(struct renderer* r, float smooth_value);
 void renderer_end_combination(struct renderer* r, bool outline);
+
+// note : it is assumed that all colors are in sRGB and will be converted in the shader
 void renderer_draw_disc(struct renderer* r, vec2 center, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draw_orientedbox(struct renderer* r, vec2 p0, vec2 p1, float width, float roundness, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op);
 void renderer_draw_line(struct renderer* r, vec2 p0, vec2 p1, float width, draw_color color, enum sdf_operator op);

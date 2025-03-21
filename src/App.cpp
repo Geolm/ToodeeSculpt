@@ -51,9 +51,6 @@ void App::Init(MTL::Device* device, GLFWwindow* window, uint16_t viewport_width,
     glfwGetWindowContentScale(window, &m_DPIScaleX, &m_DPIScaleY);
 
     m_pRenderer = renderer_init(m_Device, m_WindowWidth, m_WindowHeight);
-    renderer_set_viewport(m_pRenderer, (float)m_ViewportWidth, (float)m_ViewportHeight);
-    renderer_set_camera(m_pRenderer, vec2_zero(), 1.f);
-
     InitGui();
 
     glfwSetWindowUserPointer(window, this);

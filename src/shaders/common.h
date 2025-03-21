@@ -7,17 +7,6 @@
 #define MAX_COMMANDS (1<<16)
 #define MAX_DRAWDATA (MAX_COMMANDS * 4)
 
-// font constants
-#define FONT_TEXTURE_WIDTH 256
-#define FONT_TEXTURE_HEIGHT 256
-#define FONT_CHAR_FIRST 33
-#define FONT_CHAR_LAST	126
-#define FONT_CHARS 95
-#define FONT_CHAR_WIDTH 21
-#define FONT_CHAR_HEIGHT 31
-#define FONT_WIDTH 10
-#define FONT_HEIGHT 15
-
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
 #ifndef __METAL_VERSION__
@@ -29,8 +18,10 @@
 #define texture_half uint64_t
 #ifdef __cplusplus
     typedef struct alignas(8) {float x, y;} float2;
+    typedef struct alignas(16) {float x, y, z, w;} float4;
 #else
     typedef struct {float x, y;} float2;
+    typedef struct {float x, y, z, w;} float4;
 #endif
 #else
 using namespace metal;
@@ -77,6 +68,7 @@ enum sdf_operator
     op_last = 4
 };
 
+// color is assumed to be sRGB
 typedef struct draw_color
 {
     uint32_t packed_data;
@@ -100,6 +92,11 @@ typedef struct draw_color
     {
         packed_data = (uint8_t(alpha * 255.f)<<24) | (uint8_t(blue * 255.f)<<16) | (uint8_t(green*255.f)<<8) | uint8_t(red*255.f);
     }
+
+    float r() const {return powf(float(packed_data&0xff) / 255.f, 2.2f);}
+    float g() const {return powf(float((packed_data>>8)&0xff) / 255.f, 2.2f);}
+    float b() const {return powf(float((packed_data>>16)&0xff) / 255.f, 2.2f);}
+    float a() const {return float((packed_data>>24)&0xff) / 255.f;}
 #endif
 } draw_color;
 
@@ -109,6 +106,7 @@ static inline draw_color draw_color_from_float(float red, float green, float blu
     color.packed_data = ((uint8_t)(alpha * 255.f)<<24) | ((uint8_t)(blue * 255.f)<<16) | ((uint8_t)(green*255.f)<<8) | (uint8_t)(red*255.f);
     return color;
 }
+
 
 typedef struct draw_command
 {
@@ -171,6 +169,7 @@ typedef struct draw_cmd_arguments
     constant quantized_aabb* commands_aabb;
     constant float* draw_data;
     texture_half font;
+    float4 clear_color;
     clip_rect clips[MAX_CLIPS];
     uint32_t num_commands;
     uint32_t max_nodes;

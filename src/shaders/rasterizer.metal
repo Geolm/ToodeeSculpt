@@ -1,5 +1,6 @@
 #include <metal_stdlib>
 #include "common.h"
+#include "font.h"
 #include "sdf.h"
 #include "operators.h"
 
@@ -36,27 +37,20 @@ vertex vs_out tile_vs(uint instance_id [[instance_id]],
     return out;
 }
 
-//-----------------------------------------------------------------------------
-// based on https://developer.nvidia.com/gpugems/gpugems3/part-iv-image-effects/chapter-23-high-speed-screen-particles
-// a specific blend equation is required
 half4 accumulate_color(half4 color, half4 backbuffer)
 {
-    half4 output;
-    half one_minus_alpha = 1.h - color.a;
-    output.rgb = (color.rgb * color.a) + (backbuffer.rgb * one_minus_alpha);
-    output.a = backbuffer.a * one_minus_alpha;
-    return output;
+    half3 rgb = mix(backbuffer.rgb, color.rgb, color.a);
+    return half4(rgb, 1.h);
 }
 
 #define LARGE_DISTANCE (100000000.f)
-#define BLACK_COLOR (half4(0.h, 0.h, 0.h, 1.h))
 
 // ---------------------------------------------------------------------------------------------------------------------------
 fragment half4 tile_fs(vs_out in [[stage_in]],
                        constant draw_cmd_arguments& input [[buffer(0)]],
                        device tiles_data& tiles [[buffer(1)]])
 {
-    half4 output = BLACK_COLOR;
+    half4 output = input.culling_debug ? half4(0.f, 0.f, 1.0f, 1.0f) : half4(input.clear_color);
     float previous_distance;
     half4 previous_color;
     float combination_smoothness;
@@ -283,14 +277,6 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
         }
 
         node = tiles.nodes[node.next];
-    }
-
-    if (all(output == BLACK_COLOR))
-    {
-        if (input.culling_debug)
-            return half4(0.f, 0.f, 1.0f, 1.0f);
-        else
-            discard_fragment();
     }
 
     return output;

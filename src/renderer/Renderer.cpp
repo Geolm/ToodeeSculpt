@@ -66,10 +66,10 @@ struct renderer
     uint32_t m_FrameIndex {0};
     uint32_t m_ClipsCount {0};
     clip_rect m_Clips[MAX_CLIPS];
-    uint32_t m_WindowWidth;
-    uint32_t m_WindowHeight;
-    uint32_t m_NumTilesWidth;
-    uint32_t m_NumTilesHeight;
+    uint16_t m_WindowWidth;
+    uint16_t m_WindowHeight;
+    uint16_t m_NumTilesWidth;
+    uint16_t m_NumTilesHeight;
     uint32_t m_NumDrawCommands;
     float m_AAWidth {VEC2_SQR2};
     float m_FontScale {1.f};
@@ -81,6 +81,7 @@ struct renderer
     vec2 m_CameraPosition {.x = 0.f, .y = 0.f};
     vec2 m_FontSize;
     quantized_aabb* m_CombinationAABB {nullptr};
+    float4 m_ClearColor {.x=41.0f/255.0f, .y= 42.0f/255.0f, .z= 48.0f/255.0f, 1.0f};
 
     // stats
     uint32_t m_PeakNumDrawCommands {0};
@@ -134,9 +135,8 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
     renderer_build_font_texture(r);
     renderer_build_depthstencil_state(r);
     renderer_resize(r, width, height);
-    renderer_set_viewport(r, (float)width, (float)height);
-    renderer_set_camera(r, vec2_zero(), 1.f);
-
+    ortho_set_viewport(&r->m_ViewProj, vec2_set((float)width, (float)height), vec2_set((float)r->m_WindowWidth, (float)r->m_WindowHeight), vec2_zero());
+    r->m_FontSize = vec2_scale(vec2_set(FONT_WIDTH, FONT_HEIGHT), ortho_get_radius_scale(&r->m_ViewProj));
     return r;
 }
 
@@ -144,10 +144,10 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
 void renderer_resize(struct renderer* r, uint32_t width, uint32_t height)
 {
     log_info("resizing the framebuffer to %dx%d", width, height);
-    r->m_WindowWidth = width;
-    r->m_WindowHeight = height;
-    r->m_NumTilesWidth = (width + TILE_SIZE - 1) / TILE_SIZE;
-    r->m_NumTilesHeight = (height + TILE_SIZE - 1) / TILE_SIZE;
+    r->m_WindowWidth = (uint16_t) width;
+    r->m_WindowHeight = (uint16_t) height;
+    r->m_NumTilesWidth = (uint16_t)((width + TILE_SIZE - 1) / TILE_SIZE);
+    r->m_NumTilesHeight = (uint16_t)((height + TILE_SIZE - 1) / TILE_SIZE);
 
     SAFE_RELEASE(r->m_pHead);
     SAFE_RELEASE(r->m_pTileIndices);
@@ -286,14 +286,7 @@ void renderer_build_pso(struct renderer* r)
 
         MTL::RenderPipelineColorAttachmentDescriptor *pRenderbufferAttachment = pDesc->colorAttachments()->object(0);
         pRenderbufferAttachment->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
-        pRenderbufferAttachment->setBlendingEnabled(true);
-        pRenderbufferAttachment->setSourceRGBBlendFactor(MTL::BlendFactorOne);
-        pRenderbufferAttachment->setDestinationRGBBlendFactor(MTL::BlendFactorSourceAlpha);
-        pRenderbufferAttachment->setRgbBlendOperation(MTL::BlendOperationAdd);
-        pRenderbufferAttachment->setSourceAlphaBlendFactor(MTL::BlendFactorOne);
-        pRenderbufferAttachment->setDestinationAlphaBlendFactor(MTL::BlendFactorZero);
-        pRenderbufferAttachment->setAlphaBlendOperation(MTL::BlendOperationAdd);
-
+        pRenderbufferAttachment->setBlendingEnabled(false);
         r->m_pDrawPSO = r->m_pDevice->newRenderPipelineState( pDesc, &pError );
 
         if (r->m_pDrawPSO == nullptr)
@@ -369,6 +362,7 @@ void renderer_bin_commands(struct renderer* r)
     pComputeEncoder->setComputePipelineState(r->m_pBinningPSO);
 
     draw_cmd_arguments* args = (draw_cmd_arguments*) r->m_DrawCommandsArg.Map(r->m_FrameIndex);
+    args->clear_color = r->m_ClearColor;
     args->aa_width = r->m_AAWidth;
     args->commands_aabb = (quantized_aabb*) r->m_CommandsAABBBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
     args->commands = (draw_command*) r->m_DrawCommandsBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
@@ -432,7 +426,7 @@ void renderer_flush(struct renderer* r, void* drawable)
     MTL::RenderPassColorAttachmentDescriptor* cd = renderPassDescriptor->colorAttachments()->object(0);
     cd->setTexture(((CA::MetalDrawable*)drawable)->texture());
     cd->setLoadAction(MTL::LoadActionClear);
-    cd->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
+    cd->setClearColor(MTL::ClearColor(r->m_ClearColor.x, r->m_ClearColor.y, r->m_ClearColor.z, r->m_ClearColor.w));
     cd->setStoreAction(MTL::StoreActionStore);
 
     MTL::RenderCommandEncoder* pRenderEncoder = r->m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
@@ -594,7 +588,7 @@ void renderer_begin_combination(struct renderer* r, float smooth_value)
         
         if (r->m_CombinationAABB != nullptr && k != nullptr)
         {
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), smooth_value);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), smooth_value);
             *k = smooth_value;
             r->m_SmoothValue = smooth_value;
 
@@ -662,8 +656,8 @@ void renderer_draw_disc(struct renderer* r, vec2 center, float radius, float thi
         quantized_aabb* aabb = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabb != nullptr)
         {
-            center = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, center);
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius, thickness);
+            center = ortho_to_screen_space(&r->m_ViewProj, center);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), radius, thickness);
 
             float max_radius = radius + draw_cmd_aabb_bump(r, op);
 
@@ -707,9 +701,9 @@ void renderer_draw_orientedbox(struct renderer* r, vec2 p0, vec2 p1, float width
         {
             float roundness_thickness = (fillmode == fill_hollow) ? thickness : roundness;
 
-            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
-            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), width, roundness_thickness);
+            p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
+            p1 = ortho_to_screen_space(&r->m_ViewProj, p1);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), width, roundness_thickness);
 
             aabb bb = aabb_from_rounded_obb(p0, p1, width, roundness_thickness + draw_cmd_aabb_bump(r, op));
             write_float(data, p0.x, p0.y, p1.x, p1.y, width, roundness_thickness);
@@ -811,9 +805,9 @@ void renderer_draw_ellipse(struct renderer* r, vec2 p0, vec2 p1, float width, fl
             quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
             if (data != nullptr && aabox != nullptr)
             {
-                p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
-                p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
-                distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), width, thickness);
+                p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
+                p1 = ortho_to_screen_space(&r->m_ViewProj, p1);
+                distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), width, thickness);
 
                 aabb bb = aabb_from_rounded_obb(p0, p1, width, draw_cmd_aabb_bump(r, op) + thickness);
                 if (fillmode == fill_hollow)
@@ -853,12 +847,12 @@ void renderer_draw_triangle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float
         quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
-            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
-            p2 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p2);
+            p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
+            p1 = ortho_to_screen_space(&r->m_ViewProj, p1);
+            p2 = ortho_to_screen_space(&r->m_ViewProj, p2);
             
             float roundness_thickness = (fillmode != fill_hollow) ? roundness : thickness;
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), roundness_thickness);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), roundness_thickness);
 
             aabb bb = aabb_from_triangle(p0, p1, p2);
             aabb_grow(&bb, vec2_splat(roundness_thickness + draw_cmd_aabb_bump(r, op)));
@@ -897,9 +891,9 @@ void renderer_draw_pie(struct renderer* r, vec2 center, vec2 point, float apertu
         quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            center = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, center);
-            point = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, point);
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale),  thickness);
+            center = ortho_to_screen_space(&r->m_ViewProj, center);
+            point = ortho_to_screen_space(&r->m_ViewProj, point);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj),  thickness);
 
             vec2 direction = point - center;
             float radius = vec2_normalize(&direction);
@@ -961,8 +955,8 @@ void renderer_draw_arc(struct renderer* r, vec2 center, vec2 direction, float ap
         quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            center = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, center);
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius, thickness);
+            center = ortho_to_screen_space(&r->m_ViewProj, center);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), radius, thickness);
 
             aabb bb = aabb_from_circle(center, radius);
             aabb_grow(&bb, vec2_splat(thickness + draw_cmd_aabb_bump(r, op)));
@@ -1008,9 +1002,9 @@ void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float rad
         quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
-            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1, thickness);
+            p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
+            p1 = ortho_to_screen_space(&r->m_ViewProj, p1);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), radius0, radius1, thickness);
 
             aabb bb = aabb_from_capsule(p0, p1, float_max(radius0, radius1));
             aabb_grow(&bb, vec2_splat(draw_cmd_aabb_bump(r, op) + thickness));
@@ -1053,9 +1047,9 @@ void renderer_draw_trapezoid(struct renderer* r, vec2 p0, vec2 p1, float radius0
         if (data != nullptr && aabox != nullptr)
         {
             float roundness_thickness = (fillmode == fill_hollow) ? thickness : roundness;
-            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
-            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
-            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale), radius0, radius1, roundness_thickness);
+            p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
+            p1 = ortho_to_screen_space(&r->m_ViewProj, p1);
+            distance_screen_space(ortho_get_radius_scale(&r->m_ViewProj), radius0, radius1, roundness_thickness);
 
             aabb bb = aabb_from_trapezoid(p0, p1, radius0, radius1);
             aabb_grow(&bb, vec2_splat(draw_cmd_aabb_bump(r, op) + roundness_thickness));
@@ -1093,8 +1087,8 @@ void renderer_draw_box(struct renderer* r, float x0, float y0, float x1, float y
         quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
-            p0 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p0);
-            p1 = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, p1);
+            p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
+            p1 = ortho_to_screen_space(&r->m_ViewProj, p1);
             write_float(data, p0.x, p0.y, p1.x, p1.y);
             write_aabb(aabox, p0.x, p0.y, p1.x, p1.y);
             merge_aabb(r->m_CombinationAABB, aabox);
@@ -1144,13 +1138,22 @@ void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color
 //----------------------------------------------------------------------------------------------------------------------------
 void renderer_draw_text(struct renderer* r, float x, float y, const char* text, draw_color color)
 {
-    vec2 p = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, vec2_set(x, y));
+    vec2 p = ortho_to_screen_space(&r->m_ViewProj, vec2_set(x, y));
     const float font_spacing = r->m_FontSize.x;
     for(const char *c = text; *c != 0; c++)
     {
         renderer_draw_char(r, p.x, p.y, *c, color);
         p.x += font_spacing;
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+void renderer_set_clear_color(struct renderer* r, draw_color color)
+{
+    r->m_ClearColor.x = color.r();
+    r->m_ClearColor.y = color.g();
+    r->m_ClearColor.z = color.b();
+    r->m_ClearColor.w = color.a();
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -1174,8 +1177,8 @@ void renderer_set_cliprect(struct renderer* r, uint16_t min_x, uint16_t min_y, u
 //----------------------------------------------------------------------------------------------------------------------------
 void renderer_set_cliprect_relative(struct renderer * r, aabb const* box)
 {
-    vec2 top_left = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, box->min) + vec2_splat(.5f);
-    vec2 bottom_right = ortho_transform_point(&r->m_ViewProj, r->m_CameraPosition, r->m_CameraScale, box->max) + vec2_splat(.5f);
+    vec2 top_left = ortho_to_screen_space(&r->m_ViewProj, box->min) + vec2_splat(.5f);
+    vec2 bottom_right = ortho_to_screen_space(&r->m_ViewProj, box->max) + vec2_splat(.5f);
 
     renderer_set_cliprect(r, (uint16_t) top_left.x, (uint16_t) top_left.y, (uint16_t) bottom_right.x, (uint16_t) bottom_right.y);
 }
@@ -1187,17 +1190,10 @@ void renderer_set_culling_debug(struct renderer* r, bool b)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void renderer_set_viewport(struct renderer* r, float width, float height)
+void renderer_set_viewproj(struct renderer* r, const struct view_proj* vp)
 {
-    ortho_set_viewport(&r->m_ViewProj, vec2_set(r->m_WindowWidth, r->m_WindowHeight), vec2_set(width, height));
-    r->m_FontSize = vec2_scale(vec2_set(FONT_WIDTH, FONT_HEIGHT), ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale));
-}
-
-//----------------------------------------------------------------------------------------------------------------------------
-void renderer_set_camera(struct renderer* r, vec2 position, float scale)
-{
-    r->m_CameraPosition = position;
-    r->m_CameraScale = scale;
-    r->m_FontSize = vec2_scale(vec2_set(FONT_WIDTH, FONT_HEIGHT), ortho_get_radius_scale(&r->m_ViewProj, r->m_CameraScale));
+    r->m_ViewProj = *vp;
+    ortho_set_window_size(&r->m_ViewProj, vec2_set((float)r->m_WindowWidth, (float)r->m_WindowHeight));
+    r->m_FontSize = vec2_scale(vec2_set(FONT_WIDTH, FONT_HEIGHT), ortho_get_radius_scale(&r->m_ViewProj));
 }
 

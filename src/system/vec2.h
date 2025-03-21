@@ -25,6 +25,7 @@ typedef struct {float x, y;} vec2;
 static inline vec2 vec2_splat(float value) {return (vec2) {value, value};}
 static inline vec2 vec2_set(float x, float y) {return (vec2) {x, y};}
 static inline vec2 vec2_zero(void) {return (vec2) {0.f, 0.f};}
+static inline vec2 vec2_one(void) {return (vec2) {1.f, 1.f};}
 static inline vec2 vec2_angle(float angle) {return (vec2) {cosf(angle), sinf(angle)};}
 static inline vec2 vec2_add(vec2 a, vec2 b) {return (vec2) {a.x + b.x, a.y + b.y};}
 static inline vec2 vec2_sub(vec2 a, vec2 b) {return (vec2) {a.x - b.x, a.y - b.y};}
@@ -105,10 +106,14 @@ static inline float vec2_relative_epsilon(vec2 a, float epsilon)
     return float_max(a.x, a.y) * epsilon;
 }
 
+static inline float vec2_signed_area(vec2 a, vec2 b, vec2 c)
+{
+    return vec2_cross(vec2_sub(b, a), vec2_sub(c, b));
+}
+
 static inline bool vec2_colinear(vec2 a, vec2 b, vec2 c, float epsilon)
 {
-    float area = vec2_cross(vec2_sub(b, a), vec2_sub(c, b));
-    return fabsf(area) < vec2_relative_epsilon(vec2_max3(a, b, c), epsilon);
+    return fabsf(vec2_signed_area(a, b, c)) < vec2_relative_epsilon(vec2_max3(a, b, c), epsilon);
 }
 
 #ifdef __cplusplus

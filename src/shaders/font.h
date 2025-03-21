@@ -1,0 +1,10 @@
+// font constants
+#define FONT_TEXTURE_WIDTH 256
+#define FONT_TEXTURE_HEIGHT 256
+#define FONT_CHAR_FIRST 33
+#define FONT_CHAR_LAST	126
+#define FONT_CHARS 95
+#define FONT_CHAR_WIDTH 21
+#define FONT_CHAR_HEIGHT 31
+#define FONT_WIDTH 10
+#define FONT_HEIGHT 15
