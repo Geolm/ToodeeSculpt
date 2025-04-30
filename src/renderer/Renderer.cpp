@@ -9,14 +9,12 @@
 #include "../system/format.h"
 #include "../system/arc.h"
 #include "DynamicBuffer.h"
-#include "../system/PushArray.h"
 #include "../system/log.h"
 #include "../system/ortho.h"
 #include "commitmono_21_31.h"
 
 // needed for GPU Time
 #include <stdatomic.h>
-#include "../system/psmooth.h"
 
 #ifdef SHADERS_IN_EXECUTABLE
 #include "../shaders/binning.h"
@@ -38,31 +36,43 @@ struct renderer
     MTL::Device* m_pDevice;
     MTL::CommandQueue* m_pCommandQueue;
     MTL::CommandBuffer* m_pCommandBuffer;
-    MTL::ComputePipelineState* m_pBinningPSO {nullptr};
+    dispatch_semaphore_t m_Semaphore;
+
+    // tile binning
+    MTL::ComputePipelineState* m_pTileBinningPSO {nullptr};
     MTL::ComputePipelineState* m_pWriteIcbPSO {nullptr};
-    MTL::RenderPipelineState* m_pDrawPSO {nullptr};
-    MTL::DepthStencilState* m_pDepthStencilState {nullptr};
-    
-    DynamicBuffer m_DrawCommandsBuffer;
-    DynamicBuffer m_CommandsAABBBuffer;
-    DynamicBuffer m_DrawDataBuffer;
+    DynamicBuffer<draw_cmd_arguments> m_DrawCommandsArg;
+    DynamicBuffer<tiles_data> m_BinOutputArg;
+    DynamicBuffer<draw_command> m_DrawCommandsBuffer;
+    DynamicBuffer<quantized_aabb> m_CommandsAABBBuffer;
+    DynamicBuffer<float> m_DrawDataBuffer;
     MTL::Buffer* m_pCountersBuffer {nullptr};
     MTL::Fence* m_pClearBuffersFence {nullptr};
     MTL::Fence* m_pWriteIcbFence {nullptr};
-    dispatch_semaphore_t m_Semaphore;
-    MTL::Buffer* m_pHead {nullptr};
-    MTL::Buffer* m_pNodes {nullptr};
     MTL::Buffer* m_pTileIndices {nullptr};
     MTL::IndirectCommandBuffer* m_pIndirectCommandBuffer {nullptr};
     MTL::Buffer* m_pIndirectArg {nullptr};
-    DynamicBuffer m_DrawCommandsArg;
-    DynamicBuffer m_BinOutputArg;
+    MTL::Buffer* m_pHead {nullptr};
+    MTL::Buffer* m_pNodes {nullptr};
+
+    // rasterizer
+    MTL::RenderPipelineState* m_pDrawPSO {nullptr};
+    MTL::DepthStencilState* m_pDepthStencilState {nullptr};
+
+    // region binning
+    MTL::ComputePipelineState* m_pPredicatePSO {nullptr};
+    MTL::ComputePipelineState* m_pExclusiveScanPSO {nullptr};
+    MTL::ComputePipelineState* m_pRegionBinningPSO {nullptr};
+    MTL::Buffer* m_pRegionsIndices {nullptr};
+    MTL::Buffer* m_pPredicate {nullptr};
+    MTL::Buffer* m_pScan {nullptr};
+    uint16_t m_NumRegionWidth;
+    uint16_t m_NumRegionHeight;
+    uint16_t m_NumRegions;
+    uint32_t m_NumGroups;
+
     MTL::Texture *m_pFontTexture {nullptr};
-    
-    PushArray<draw_command> m_Commands;
-    PushArray<float> m_DrawData;
-    PushArray<quantized_aabb> m_CommandsAABB;
-    
+
     uint32_t m_FrameIndex {0};
     uint32_t m_ClipsCount {0};
     clip_rect m_Clips[MAX_CLIPS];
@@ -70,6 +80,8 @@ struct renderer
     uint16_t m_WindowHeight;
     uint16_t m_NumTilesWidth;
     uint16_t m_NumTilesHeight;
+    uint32_t m_NumTiles;
+    
     uint32_t m_NumDrawCommands;
     float m_AAWidth {VEC2_SQR2};
     float m_FontScale {1.f};
@@ -82,12 +94,14 @@ struct renderer
     vec2 m_FontSize;
     quantized_aabb* m_CombinationAABB {nullptr};
     float4 m_ClearColor {.x=41.0f/255.0f, .y= 42.0f/255.0f, .z= 48.0f/255.0f, 1.0f};
+    float m_Time;
+    quantized_aabb* m_pDrawCommandsAABB {nullptr};
 
     // stats
     uint32_t m_PeakNumDrawCommands {0};
     uint32_t m_NumDrawData {0};
     _Atomic(float) m_GPUTime;
-    struct psmooth m_AverageGPUTime;
+    float m_AverageGPUTime;
 };
 
 
@@ -103,6 +117,7 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
 
     assert(device!=nullptr);
     r->m_pDevice = (MTL::Device*)device;
+    assert(r->m_pDevice->supportsFamily(MTL::GPUFamilyApple7));
     r->m_pCommandQueue = r->m_pDevice->newCommandQueue();
 
     if (r->m_pCommandQueue == nullptr)
@@ -128,8 +143,7 @@ struct renderer* renderer_init(void* device, uint32_t width, uint32_t height)
     r->m_pIndirectCommandBuffer = r->m_pDevice->newIndirectCommandBuffer(pIcbDesc, 1, MTL::ResourceStorageModePrivate);
     pIcbDesc->release();
 
-    r->m_Semaphore = dispatch_semaphore_create(DynamicBuffer::MaxInflightBuffers);
-    psmooth_init(&r->m_AverageGPUTime);
+    r->m_Semaphore = dispatch_semaphore_create(DynamicBuffer<float>::MaxInflightBuffers);
 
     renderer_build_pso(r);
     renderer_build_font_texture(r);
@@ -148,11 +162,26 @@ void renderer_resize(struct renderer* r, uint32_t width, uint32_t height)
     r->m_WindowHeight = (uint16_t) height;
     r->m_NumTilesWidth = (uint16_t)((width + TILE_SIZE - 1) / TILE_SIZE);
     r->m_NumTilesHeight = (uint16_t)((height + TILE_SIZE - 1) / TILE_SIZE);
+    r->m_NumTiles = r->m_NumTilesWidth * r->m_NumTilesHeight;
+    r->m_NumRegionWidth = (r->m_NumTilesWidth + REGION_SIZE - 1) / REGION_SIZE;
+    r->m_NumRegionHeight = (r->m_NumTilesHeight + REGION_SIZE - 1) / REGION_SIZE;
+    r->m_NumRegions = r->m_NumRegionWidth * r->m_NumRegionHeight;
+
+    SAFE_RELEASE(r->m_pRegionsIndices);
+    SAFE_RELEASE(r->m_pPredicate);
+    SAFE_RELEASE(r->m_pScan);
+    size_t num_indices = r->m_NumRegions * MAX_COMMANDS;
+    r->m_pRegionsIndices = r->m_pDevice->newBuffer(num_indices * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
+    r->m_pPredicate = r->m_pDevice->newBuffer(num_indices * sizeof(uint8_t), MTL::ResourceStorageModePrivate);
+    r->m_pScan = r->m_pDevice->newBuffer(num_indices * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
 
     SAFE_RELEASE(r->m_pHead);
     SAFE_RELEASE(r->m_pTileIndices);
-    r->m_pHead = r->m_pDevice->newBuffer(r->m_NumTilesWidth * r->m_NumTilesHeight * sizeof(tile_node), MTL::ResourceStorageModePrivate);
+    r->m_pHead = r->m_pDevice->newBuffer(r->m_NumTiles * sizeof(tile_node), MTL::ResourceStorageModePrivate);
     r->m_pTileIndices = r->m_pDevice->newBuffer(r->m_NumTilesWidth * r->m_NumTilesHeight * sizeof(uint16_t), MTL::ResourceStorageModePrivate);
+
+    log_info("%ux%u tiles", r->m_NumTilesWidth, r->m_NumTilesHeight);
+    log_info("%ux%u regions", r->m_NumRegionWidth, r->m_NumRegionHeight);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
@@ -217,11 +246,30 @@ MTL::Library* renderer_build_shader(struct renderer* r, const char* path, const 
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------------
+MTL::ComputePipelineState* create_pso(struct renderer* r, MTL::Library* pLibrary, const char* function_name)
+{
+    MTL::Function *pFunction = pLibrary->newFunction(NS::String::string(function_name, NS::UTF8StringEncoding));
+    NS::Error* pError = nullptr;
+
+    MTL::ComputePipelineState* pso = r->m_pDevice->newComputePipelineState(pFunction, &pError);
+
+    if (pso == nullptr)
+    {
+        log_error( "%s", pError->localizedDescription()->utf8String());
+    }
+    pFunction->release();
+    return pso;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------------
 void renderer_build_pso(struct renderer* r)
 {
-    SAFE_RELEASE(r->m_pBinningPSO);
+    SAFE_RELEASE(r->m_pRegionBinningPSO);
+    SAFE_RELEASE(r->m_pTileBinningPSO);
     SAFE_RELEASE(r->m_pDrawPSO);
     SAFE_RELEASE(r->m_pWriteIcbPSO);
+    SAFE_RELEASE(r->m_pExclusiveScanPSO);
 
 #ifdef SHADERS_IN_EXECUTABLE
     MTL::Library* pLibrary = renderer_build_shader(r, binning_shader, "binning");
@@ -230,25 +278,25 @@ void renderer_build_pso(struct renderer* r)
 #endif
     if (pLibrary != nullptr)
     {
-        MTL::Function* pBinningFunction = pLibrary->newFunction(NS::String::string("bin", NS::UTF8StringEncoding));
+        MTL::Function* pTileBinningFunction = pLibrary->newFunction(NS::String::string("tile_bin", NS::UTF8StringEncoding));
         NS::Error* pError = nullptr;
-        r->m_pBinningPSO = r->m_pDevice->newComputePipelineState(pBinningFunction, &pError);
+        r->m_pTileBinningPSO = r->m_pDevice->newComputePipelineState(pTileBinningFunction, &pError);
 
-        if (r->m_pBinningPSO == nullptr)
+        if (r->m_pTileBinningPSO == nullptr)
         {
             log_error( "%s", pError->localizedDescription()->utf8String());
             return;
         }
 
-        MTL::ArgumentEncoder* inputArgumentEncoder = pBinningFunction->newArgumentEncoder(0);
-        MTL::ArgumentEncoder* outputArgumentEncoder = pBinningFunction->newArgumentEncoder(1);
+        MTL::ArgumentEncoder* inputArgumentEncoder = pTileBinningFunction->newArgumentEncoder(0);
+        MTL::ArgumentEncoder* outputArgumentEncoder = pTileBinningFunction->newArgumentEncoder(1);
 
         r->m_DrawCommandsArg.Init(r->m_pDevice, inputArgumentEncoder->encodedLength());
         r->m_BinOutputArg.Init(r->m_pDevice, outputArgumentEncoder->encodedLength());
 
+        pTileBinningFunction->release();
         inputArgumentEncoder->release();
         outputArgumentEncoder->release();
-        pBinningFunction->release();
 
         MTL::Function* pWriteIcbFunction = pLibrary->newFunction(NS::String::string("write_icb", NS::UTF8StringEncoding));
         r->m_pWriteIcbPSO = r->m_pDevice->newComputePipelineState(pWriteIcbFunction, &pError);
@@ -265,6 +313,11 @@ void renderer_build_pso(struct renderer* r)
 
         indirectArgumentEncoder->release();
         pWriteIcbFunction->release();
+
+        r->m_pRegionBinningPSO = create_pso(r, pLibrary, "region_bin");
+        r->m_pPredicatePSO = create_pso(r, pLibrary, "predicate");
+        r->m_pExclusiveScanPSO = create_pso(r, pLibrary, "exclusive_scan");
+
         pLibrary->release();
     }
 
@@ -309,6 +362,7 @@ void renderer_build_font_texture(struct renderer* r)
     pTextureDesc->setTextureType(MTL::TextureType2D);
     pTextureDesc->setMipmapLevelCount(1);
     pTextureDesc->setUsage( MTL::ResourceUsageSample | MTL::ResourceUsageRead );
+    pTextureDesc->setStorageMode(MTL::StorageModeShared);
 
     r->m_pFontTexture = r->m_pDevice->newTexture(pTextureDesc);
     r->m_pFontTexture->replaceRegion( MTL::Region( 0, 0, 0, FONT_TEXTURE_WIDTH, FONT_TEXTURE_HEIGHT, 1 ), 0, commitmono_21_31, (FONT_TEXTURE_WIDTH/4) * 8);
@@ -316,15 +370,16 @@ void renderer_build_font_texture(struct renderer* r)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
-void renderer_begin_frame(struct renderer* r)
+void renderer_begin_frame(struct renderer* r, float time)
 {
     assert(r->m_CombinationAABB == nullptr);
     r->m_FrameIndex++;
     r->m_ClipsCount = 0;
+    r->m_Time = time;
 
-    r->m_Commands.Set(r->m_DrawCommandsBuffer.Map(r->m_FrameIndex), sizeof(draw_command) * MAX_COMMANDS);
-    r->m_CommandsAABB.Set(r->m_CommandsAABBBuffer.Map(r->m_FrameIndex), sizeof(quantized_aabb) * MAX_COMMANDS);
-    r->m_DrawData.Set(r->m_DrawDataBuffer.Map(r->m_FrameIndex), sizeof(float) * MAX_DRAWDATA);
+    r->m_DrawCommandsBuffer.Map(r->m_FrameIndex);
+    r->m_pDrawCommandsAABB = r->m_CommandsAABBBuffer.Map(r->m_FrameIndex);
+    r->m_DrawDataBuffer.Map(r->m_FrameIndex);
     renderer_set_cliprect(r, 0, 0, (uint16_t) r->m_WindowWidth, (uint16_t) r->m_WindowHeight);
     r->m_CombinationAABB = nullptr;
 }
@@ -333,35 +388,41 @@ void renderer_begin_frame(struct renderer* r)
 void renderer_end_frame(struct renderer* r)
 {
     assert(r->m_CombinationAABB == nullptr);
-    r->m_DrawCommandsBuffer.Unmap(r->m_FrameIndex, 0, r->m_Commands.GetNumElements() * sizeof(draw_command));
-    r->m_CommandsAABBBuffer.Unmap(r->m_FrameIndex, 0, r->m_CommandsAABB.GetNumElements() * sizeof(quantized_aabb));
-    r->m_DrawDataBuffer.Unmap(r->m_FrameIndex, 0, r->m_DrawData.GetNumElements() * sizeof(float));
-    r->m_NumDrawCommands = r->m_Commands.GetNumElements();
+    r->m_NumDrawCommands = (uint32_t)r->m_DrawCommandsBuffer.GetNumElements();
     r->m_PeakNumDrawCommands = max(r->m_PeakNumDrawCommands, r->m_NumDrawCommands);
-    r->m_NumDrawData = r->m_DrawData.GetNumElements();
-    psmooth_push(&r->m_AverageGPUTime, atomic_load(&r->m_GPUTime));
+    r->m_NumDrawData = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
+    r->m_AverageGPUTime = r->m_AverageGPUTime * 0.95f + atomic_load(&r->m_GPUTime) * 0.05f;
+    r->m_NumGroups = (r->m_NumDrawCommands + SIMD_GROUP_SIZE - 1) / SIMD_GROUP_SIZE;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------
+static inline uint32_t optimal_num_threads(uint32_t num_elements, uint32_t simd_group_size, uint32_t max_threads)
+{
+    uint32_t rounded = (num_elements + simd_group_size - 1) / simd_group_size;
+    rounded *= simd_group_size;
+    return min(rounded, max_threads);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------
 void renderer_bin_commands(struct renderer* r)
 {
-    if (r->m_pBinningPSO == nullptr)
+    if (r->m_pTileBinningPSO == nullptr || r->m_pRegionBinningPSO == nullptr || r->m_pExclusiveScanPSO == nullptr)
         return;
 
     // clear buffers
     MTL::BlitCommandEncoder* pBlitEncoder = r->m_pCommandBuffer->blitCommandEncoder();
     pBlitEncoder->fillBuffer(r->m_pCountersBuffer, NS::Range(0, r->m_pCountersBuffer->length()), 0);
     pBlitEncoder->fillBuffer(r->m_pHead, NS::Range(0, r->m_pHead->length()), 0xff);
-    pBlitEncoder->resetCommandsInBuffer(r->m_pIndirectCommandBuffer, NS::Range(0, 1));
+    pBlitEncoder->fillBuffer(r->m_pRegionsIndices, NS::Range(0, r->m_pRegionsIndices->length()), 0xff);
     pBlitEncoder->updateFence(r->m_pClearBuffersFence);
     pBlitEncoder->endEncoding();
 
-    // run binning shader
+    // compute wait for clears to be done
     MTL::ComputeCommandEncoder* pComputeEncoder = r->m_pCommandBuffer->computeCommandEncoder();
     pComputeEncoder->waitForFence(r->m_pClearBuffersFence);
-    pComputeEncoder->setComputePipelineState(r->m_pBinningPSO);
 
-    draw_cmd_arguments* args = (draw_cmd_arguments*) r->m_DrawCommandsArg.Map(r->m_FrameIndex);
+    // fill common structures
+    draw_cmd_arguments* args = r->m_DrawCommandsArg.Map(r->m_FrameIndex);
     args->clear_color = r->m_ClearColor;
     args->aa_width = r->m_AAWidth;
     args->commands_aabb = (quantized_aabb*) r->m_CommandsAABBBuffer.GetBuffer(r->m_FrameIndex)->gpuAddress();
@@ -373,23 +434,56 @@ void renderer_bin_commands(struct renderer* r)
     args->num_commands = r->m_NumDrawCommands;
     args->num_tile_height = r->m_NumTilesHeight;
     args->num_tile_width = r->m_NumTilesWidth;
+    args->num_region_width = r->m_NumRegionWidth;
+    args->num_region_height = r->m_NumRegionHeight;
+    args->num_groups = r->m_NumGroups;
     args->screen_div = (float2) {.x = 1.f / (float)r->m_WindowWidth, .y = 1.f / (float) r->m_WindowHeight};
     args->font_size = (float2) {.x = r->m_FontSize.x, .y = r->m_FontSize.y};
     args->outline_width = r->m_OutlineWidth;
     args->outline_color = draw_color(0xff000000);
     args->culling_debug = r->m_CullingDebug;
-    r->m_DrawCommandsArg.Unmap(r->m_FrameIndex, 0, sizeof(draw_cmd_arguments));
+    args->time = r->m_Time;
+    args->num_elements_per_thread = (r->m_NumDrawCommands + MAX_THREADS_PER_THREADGROUP-1) / MAX_THREADS_PER_THREADGROUP;
+
+    const uint32_t simd_group_count = MAX_THREADS_PER_THREADGROUP / SIMD_GROUP_SIZE;
+    const uint32_t threads_for_commands = optimal_num_threads(r->m_NumDrawCommands, SIMD_GROUP_SIZE, MAX_THREADS_PER_THREADGROUP);
+
+    const NS::UInteger w = r->m_pTileBinningPSO->threadExecutionWidth();
+    const NS::UInteger h = r->m_pTileBinningPSO->maxTotalThreadsPerThreadgroup() / w;
+    const MTL::Size default_2d_threadgroup_size(w, h, 1);
+
+    // predicate
+    pComputeEncoder->setComputePipelineState(r->m_pPredicatePSO);
+    pComputeEncoder->setBuffer(r->m_DrawCommandsArg.GetBuffer(r->m_FrameIndex), 0, 0);
+    pComputeEncoder->setBuffer(r->m_pPredicate, 0, 1);
+    pComputeEncoder->useResource(r->m_CommandsAABBBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
+    pComputeEncoder->dispatchThreads(MTL::Size(r->m_NumDrawCommands, 1, 1), MTL::Size(threads_for_commands, 1, 1));
+
+    uint32_t threads_per_region = (r->m_NumDrawCommands + args->num_elements_per_thread - 1) / args->num_elements_per_thread;
+
+    pComputeEncoder->setComputePipelineState(r->m_pExclusiveScanPSO);
+    pComputeEncoder->setBuffer(r->m_pScan, 0, 2);
+    pComputeEncoder->setThreadgroupMemoryLength(simd_group_count * sizeof(uint16_t), 0);
+    pComputeEncoder->setThreadgroupMemoryLength(simd_group_count * sizeof(uint16_t), 1);
+    pComputeEncoder->dispatchThreads(MTL::Size(threads_per_region, r->m_NumRegions, 1), MTL::Size(min(threads_per_region, (uint32_t)MAX_THREADS_PER_THREADGROUP), 1, 1));
+
+    // region binning
+    pComputeEncoder->setComputePipelineState(r->m_pRegionBinningPSO);
+    pComputeEncoder->setBuffer(r->m_pRegionsIndices, 0, 1);
+    pComputeEncoder->setBuffer(r->m_pPredicate, 0, 3);
+    pComputeEncoder->dispatchThreads(MTL::Size(r->m_NumDrawCommands, r->m_NumRegions, 1), default_2d_threadgroup_size);
+
+    // tile binning
+    pComputeEncoder->setComputePipelineState(r->m_pTileBinningPSO);
 
     tiles_data* output = (tiles_data*) r->m_BinOutputArg.Map(r->m_FrameIndex);
     output->head = (tile_node*) r->m_pHead->gpuAddress();
     output->nodes = (tile_node*) r->m_pNodes->gpuAddress();
     output->tile_indices = (uint16_t*) r->m_pTileIndices->gpuAddress();
-    r->m_BinOutputArg.Unmap(r->m_FrameIndex, 0, sizeof(tiles_data));
 
-    pComputeEncoder->setBuffer(r->m_DrawCommandsArg.GetBuffer(r->m_FrameIndex), 0, 0);
     pComputeEncoder->setBuffer(r->m_BinOutputArg.GetBuffer(r->m_FrameIndex), 0, 1);
     pComputeEncoder->setBuffer(r->m_pCountersBuffer, 0, 2);
-
+    pComputeEncoder->setBuffer(r->m_pRegionsIndices, 0, 3);
     pComputeEncoder->useResource(r->m_CommandsAABBBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(r->m_DrawCommandsBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
     pComputeEncoder->useResource(r->m_DrawDataBuffer.GetBuffer(r->m_FrameIndex), MTL::ResourceUsageRead);
@@ -397,12 +491,7 @@ void renderer_bin_commands(struct renderer* r)
     pComputeEncoder->useResource(r->m_pNodes, MTL::ResourceUsageWrite);
     pComputeEncoder->useResource(r->m_pTileIndices, MTL::ResourceUsageWrite);
 
-    MTL::Size gridSize = MTL::Size(r->m_NumTilesWidth, r->m_NumTilesHeight, 1);
-
-    NS::UInteger w = r->m_pBinningPSO->threadExecutionWidth();
-    NS::UInteger h = r->m_pBinningPSO->maxTotalThreadsPerThreadgroup() / w;
-    MTL::Size threadgroupSize(w, h, 1);
-    pComputeEncoder->dispatchThreads(gridSize, threadgroupSize);
+    pComputeEncoder->dispatchThreads(MTL::Size(r->m_NumTilesWidth, r->m_NumTilesHeight, 1), default_2d_threadgroup_size);
 
     pComputeEncoder->setComputePipelineState(r->m_pWriteIcbPSO);
     pComputeEncoder->setBuffer(r->m_pCountersBuffer, 0, 0);
@@ -431,7 +520,7 @@ void renderer_flush(struct renderer* r, void* drawable)
 
     MTL::RenderCommandEncoder* pRenderEncoder = r->m_pCommandBuffer->renderCommandEncoder(renderPassDescriptor);
 
-    if (r->m_pDrawPSO != nullptr && r->m_pBinningPSO != nullptr)
+    if (r->m_pDrawPSO != nullptr && r->m_pTileBinningPSO != nullptr)
     {
         pRenderEncoder->waitForFence(r->m_pWriteIcbFence, MTL::RenderStageVertex|MTL::RenderStageFragment|MTL::RenderStageMesh|MTL::RenderStageObject);
         pRenderEncoder->setCullMode(MTL::CullModeNone);
@@ -475,15 +564,17 @@ void renderer_debug_interface(struct renderer* r, struct mu_Context* gui_context
     {
         mu_layout_row(gui_context, 2, (int[]) { 150, -1 }, 0);
         mu_text(gui_context, "frame count");
-        mu_text(gui_context, format("%6d", r->m_FrameIndex));
+        mu_text(gui_context, format("%d", r->m_FrameIndex));
         mu_text(gui_context, "draw cmd");
-        mu_text(gui_context, format("%6d/%d", r->m_NumDrawCommands, r->m_Commands.GetMaxElements()));
+        mu_text(gui_context, format("%d/%d", r->m_NumDrawCommands, r->m_DrawCommandsBuffer.GetMaxElements()));
         mu_text(gui_context, "peak cmd");
-        mu_text(gui_context, format("%6d", r->m_PeakNumDrawCommands));
-        mu_text(gui_context, "draw data");
-        mu_text(gui_context, format("%6d/%d", r->m_NumDrawData, r->m_DrawData.GetMaxElements()));
+        mu_text(gui_context, format("%d", r->m_PeakNumDrawCommands));
+        mu_text(gui_context, "buffers");
+        size_t total_buffers_usage = (r->m_NumDrawData * sizeof(float)) + (r->m_NumDrawCommands * sizeof(draw_command));
+        size_t total_buffers_capacity = (r->m_DrawDataBuffer.GetMaxElements()  * sizeof(float)) + (r->m_DrawCommandsBuffer.GetLength());
+        mu_text(gui_context, format("%d/%d kb", total_buffers_usage>>10, total_buffers_capacity>>10));
         mu_text(gui_context, "gpu time");
-        mu_text(gui_context, format("%2.2f ms",  psmooth_average(&r->m_AverageGPUTime) * 1000.f));
+        mu_text(gui_context, format("%2.2f ms", r->m_AverageGPUTime * 1000.f));
         mu_text(gui_context, "aa width");
         mu_slider(gui_context, &r->m_AAWidth, 0.f, 4.f);
     }
@@ -497,13 +588,18 @@ void renderer_terminate(struct renderer* r)
     r->m_CommandsAABBBuffer.Terminate();
     r->m_DrawCommandsArg.Terminate();
     r->m_BinOutputArg.Terminate();
+    SAFE_RELEASE(r->m_pWriteIcbFence);
+    SAFE_RELEASE(r->m_pRegionsIndices);
     SAFE_RELEASE(r->m_pDepthStencilState);
     SAFE_RELEASE(r->m_pCountersBuffer);
     SAFE_RELEASE(r->m_pClearBuffersFence);
-    SAFE_RELEASE(r->m_pWriteIcbFence);
-    SAFE_RELEASE(r->m_pBinningPSO);
-    SAFE_RELEASE(r->m_pDrawPSO);
+    SAFE_RELEASE(r->m_pTileBinningPSO);
+    SAFE_RELEASE(r->m_pPredicatePSO);
+    SAFE_RELEASE(r->m_pExclusiveScanPSO);
     SAFE_RELEASE(r->m_pWriteIcbPSO);
+    SAFE_RELEASE(r->m_pPredicate);
+    SAFE_RELEASE(r->m_pScan);
+    SAFE_RELEASE(r->m_pDrawPSO);
     SAFE_RELEASE(r->m_pHead);
     SAFE_RELEASE(r->m_pNodes);
     SAFE_RELEASE(r->m_pTileIndices);
@@ -576,15 +672,15 @@ void renderer_begin_combination(struct renderer* r, float smooth_value)
     assert(r->m_CombinationAABB == nullptr);
     assert(smooth_value >= 0.f);
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->type = pack_type(combination_begin, fill_solid);
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
 
-        float* k = r->m_DrawData.NewElement(); // just one float for the smooth
-        r->m_CombinationAABB = r->m_CommandsAABB.NewElement();
+        float* k = r->m_DrawDataBuffer.NewElement(); // just one float for the smooth
+        r->m_CombinationAABB = r->m_CommandsAABBBuffer.NewElement();
         
         if (r->m_CombinationAABB != nullptr && k != nullptr)
         {
@@ -596,7 +692,7 @@ void renderer_begin_combination(struct renderer* r, float smooth_value)
             *r->m_CombinationAABB = invalid_aabb();
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -606,17 +702,17 @@ void renderer_end_combination(struct renderer* r, bool outline)
 {
     assert(r->m_CombinationAABB != nullptr);
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->type = pack_type(combination_end, outline ? fill_outline : fill_solid);
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
 
         // we put also the smooth value as we traverse the list in reverse order on the gpu
-        float* k = r->m_DrawData.NewElement(); 
+        float* k = r->m_DrawDataBuffer.NewElement();
 
-        quantized_aabb* aabb = r->m_CommandsAABB.NewElement();
+        quantized_aabb* aabb = r->m_CommandsAABBBuffer.NewElement();
         if (aabb != nullptr && k != nullptr)
         {
             *aabb = *r->m_CombinationAABB;
@@ -625,7 +721,7 @@ void renderer_end_combination(struct renderer* r, bool outline)
             r->m_SmoothValue = 0.f;
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -643,17 +739,17 @@ static inline float draw_cmd_aabb_bump(struct renderer* r, enum sdf_operator op)
 void renderer_draw_disc(struct renderer* r, vec2 center, float radius, float thickness, enum primitive_fillmode fillmode, draw_color color, enum sdf_operator op)
 {
     thickness *= .5f;
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_disc, fillmode);
 
-        float* data = r->m_DrawData.NewMultiple((fillmode == fill_hollow) ? 4 : 3);
-        quantized_aabb* aabb = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple((fillmode == fill_hollow) ? 4 : 3);
+        quantized_aabb* aabb = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabb != nullptr)
         {
             center = ortho_to_screen_space(&r->m_ViewProj, center);
@@ -673,7 +769,7 @@ void renderer_draw_disc(struct renderer* r, vec2 center, float radius, float thi
             merge_aabb(r->m_CombinationAABB, aabb);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -686,17 +782,17 @@ void renderer_draw_orientedbox(struct renderer* r, vec2 p0, vec2 p1, float width
 
     thickness *= .5f;
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_oriented_box, fillmode);
 
-        float* data = r->m_DrawData.NewMultiple(6);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple(6);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             float roundness_thickness = (fillmode == fill_hollow) ? thickness : roundness;
@@ -711,7 +807,7 @@ void renderer_draw_orientedbox(struct renderer* r, vec2 p0, vec2 p1, float width
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -743,7 +839,7 @@ void renderer_draw_arrow_solid(struct renderer* r, vec2 p0, vec2 p1, float width
     vec2 arrow_edge0 = vec2_add(p1, vec2_add(delta, vec2_skew(delta)));
     vec2 arrow_edge1 = vec2_add(p1, vec2_sub(delta, vec2_skew(delta)));
 
-    renderer_draw_line(r, p0, p1, width, color, op_union);
+    renderer_draw_line(r, p0, vec2_add(p1, delta), width, color, op_union);
     renderer_draw_triangle(r, p1, arrow_edge0, arrow_edge1, 0.f, 0.f, fill_solid, color, op_union);
 }
 
@@ -792,17 +888,17 @@ void renderer_draw_ellipse(struct renderer* r, vec2 p0, vec2 p1, float width, fl
     else
     {
         thickness = float_max(thickness * .5f, 0.f);
-        draw_command* cmd = r->m_Commands.NewElement();
+        draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
         if (cmd != nullptr)
         {
             cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
             cmd->color = color;
-            cmd->data_index = r->m_DrawData.GetNumElements();
+            cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
             cmd->op = op;
             cmd->type = pack_type(primitive_ellipse, fillmode);
 
-            float* data = r->m_DrawData.NewMultiple((fillmode == fill_hollow) ? 6 : 5);
-            quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+            float* data = r->m_DrawDataBuffer.NewMultiple((fillmode == fill_hollow) ? 6 : 5);
+            quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
             if (data != nullptr && aabox != nullptr)
             {
                 p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
@@ -819,7 +915,7 @@ void renderer_draw_ellipse(struct renderer* r, vec2 p0, vec2 p1, float width, fl
                 merge_aabb(r->m_CombinationAABB, aabox);
                 return;
             }
-            r->m_Commands.RemoveLast();
+            r->m_DrawCommandsBuffer.RemoveLast();
         }
         log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
     }
@@ -834,17 +930,17 @@ void renderer_draw_triangle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float
 
     thickness *= .5f;
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_triangle, fillmode);
 
-        float* data = r->m_DrawData.NewMultiple(7);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple(7);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
@@ -861,7 +957,7 @@ void renderer_draw_triangle(struct renderer* r, vec2 p0, vec2 p1, vec2 p2, float
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -878,17 +974,17 @@ void renderer_draw_pie(struct renderer* r, vec2 center, vec2 point, float apertu
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness * .5f, 0.f);
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_pie, fillmode);
 
-        float* data = r->m_DrawData.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             center = ortho_to_screen_space(&r->m_ViewProj, center);
@@ -910,7 +1006,7 @@ void renderer_draw_pie(struct renderer* r, vec2 center, vec2 point, float apertu
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -942,17 +1038,17 @@ void renderer_draw_arc(struct renderer* r, vec2 center, vec2 direction, float ap
     aperture = float_clamp(aperture, 0.f, VEC2_PI);
     thickness = float_max(thickness, 0.f);
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op;
-        cmd->type = pack_type(primitive_ring, fillmode);
+        cmd->type = pack_type(primitive_arc, fillmode);
 
-        float* data = r->m_DrawData.NewMultiple(8);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple(8);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             center = ortho_to_screen_space(&r->m_ViewProj, center);
@@ -966,7 +1062,7 @@ void renderer_draw_arc(struct renderer* r, vec2 center, vec2 direction, float ap
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -989,17 +1085,17 @@ void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float rad
     }
 
     thickness = float_max(thickness * .5f, 0.f);
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_uneven_capsule, fillmode);
 
-        float* data = r->m_DrawData.NewMultiple((fillmode != fill_hollow) ? 6 : 7);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple((fillmode != fill_hollow) ? 6 : 7);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
@@ -1018,7 +1114,7 @@ void renderer_draw_unevencapsule(struct renderer* r, vec2 p0, vec2 p1, float rad
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -1033,17 +1129,17 @@ void renderer_draw_trapezoid(struct renderer* r, vec2 p0, vec2 p1, float radius0
     if (radius0 < small_float && radius1 < small_float)
         return;
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op;
         cmd->type = pack_type(primitive_trapezoid, fillmode);
 
-        float* data = r->m_DrawData.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple((fillmode != fill_hollow) ? 7 : 8);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             float roundness_thickness = (fillmode == fill_hollow) ? thickness : roundness;
@@ -1060,7 +1156,7 @@ void renderer_draw_trapezoid(struct renderer* r, vec2 p0, vec2 p1, float radius0
 
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -1074,17 +1170,17 @@ void renderer_draw_box(struct renderer* r, float x0, float y0, float x1, float y
     vec2 p0 = vec2_set(x0, y0);
     vec2 p1 = vec2_set(x1, y1);
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op_add;
         cmd->type = pack_type(primitive_aabox, fill_solid);
 
-        float* data = r->m_DrawData.NewMultiple(4);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple(4);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             p0 = ortho_to_screen_space(&r->m_ViewProj, p0);
@@ -1094,7 +1190,7 @@ void renderer_draw_box(struct renderer* r, float x0, float y0, float x1, float y
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }
@@ -1111,18 +1207,18 @@ void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color
     if (c < FONT_CHAR_FIRST || c > FONT_CHAR_LAST)
         return;
 
-    draw_command* cmd = r->m_Commands.NewElement();
+    draw_command* cmd = r->m_DrawCommandsBuffer.NewElement();
     if (cmd != nullptr)
     {
         cmd->clip_index = (uint8_t) r->m_ClipsCount-1;
         cmd->color = color;
-        cmd->data_index = r->m_DrawData.GetNumElements();
+        cmd->data_index = (uint32_t)r->m_DrawDataBuffer.GetNumElements();
         cmd->op = op_union;
         cmd->type = primitive_char;
         cmd->custom_data = (uint8_t) (c - FONT_CHAR_FIRST);
 
-        float* data = r->m_DrawData.NewMultiple(2);
-        quantized_aabb* aabox = r->m_CommandsAABB.NewElement();
+        float* data = r->m_DrawDataBuffer.NewMultiple(2);
+        quantized_aabb* aabox = r->m_CommandsAABBBuffer.NewElement();
         if (data != nullptr && aabox != nullptr)
         {
             write_float(data, x, y);
@@ -1130,7 +1226,7 @@ void renderer_draw_char(struct renderer* r, float x, float y, char c, draw_color
             merge_aabb(r->m_CombinationAABB, aabox);
             return;
         }
-        r->m_Commands.RemoveLast();
+        r->m_DrawCommandsBuffer.RemoveLast();
     }
     log_warn("out of draw commands/draw data buffer, expect graphical artefacts");
 }

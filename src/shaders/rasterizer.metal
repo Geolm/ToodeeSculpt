@@ -4,6 +4,8 @@
 #include "sdf.h"
 #include "operators.h"
 
+#define LARGE_DISTANCE (100000000.f)
+
 
 struct vs_out
 {
@@ -167,7 +169,7 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                         distance = abs(distance) - data[7];
                     break;
                 }
-                case primitive_ring:
+                case primitive_arc:
                 {
                     float2 center = float2(data[0], data[1]);
                     float radius = data[2];
@@ -275,10 +277,8 @@ fragment half4 tile_fs(vs_out in [[stage_in]],
                 }
             }
         }
-
         node = tiles.nodes[node.next];
     }
-
     return output;
 }
 

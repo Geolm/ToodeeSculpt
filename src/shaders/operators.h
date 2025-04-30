@@ -1,4 +1,5 @@
-// based on https://iquilezles.org/articles/smin/
+#ifndef __OPERATORS_H__
+#define __OPERATORS_H__
 
 
 // ---------------------------------------------------------------------------------------------------------------------------
@@ -54,3 +55,5 @@ float smooth_intersection(float d1, float d2, float k )
         return max(d1, d2);
     }
 }
+
+#endif

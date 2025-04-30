@@ -1,3 +1,6 @@
+#ifndef __FONT_H__
+#define __FONT_H__
+
 // font constants
 #define FONT_TEXTURE_WIDTH 256
 #define FONT_TEXTURE_HEIGHT 256
@@ -8,3 +11,6 @@
 #define FONT_CHAR_HEIGHT 31
 #define FONT_WIDTH 10
 #define FONT_HEIGHT 15
+
+
+#endif

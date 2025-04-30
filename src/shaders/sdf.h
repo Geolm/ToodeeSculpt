@@ -1,3 +1,6 @@
+#ifndef __SDF_H__
+#define __SDF_H__
+
 float cross2(float2 a, float2 b ) {return a.x*b.y - a.y*b.x;}
 
 //-----------------------------------------------------------------------------
@@ -144,3 +147,5 @@ float sd_trapezoid(float2 p, float2 a, float2 b, float ra, float rb)
     float cby = paba - f;
     return sign(max(cbx,cay)) * sqrt(min(cax*cax + cay * cay*baba, cbx*cbx + cby * cby*baba));
 }
+
+#endif

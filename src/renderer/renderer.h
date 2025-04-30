@@ -19,7 +19,7 @@ extern "C" {
 struct renderer* renderer_init(void* device, uint32_t width, uint32_t height);
 void renderer_resize(struct renderer* r, uint32_t width, uint32_t height);
 void renderer_reload_shaders(struct renderer* r);
-void renderer_begin_frame(struct renderer* r);
+void renderer_begin_frame(struct renderer* r, float time);
 void renderer_flush(struct renderer* r, void* drawable);
 void renderer_debug_interface(struct renderer* r, struct mu_Context* gui_context);
 void renderer_end_frame(struct renderer* r);

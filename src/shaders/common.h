@@ -1,11 +1,18 @@
+#ifndef __COMMON_H__
+#define __COMMON_H__
+
 // ---------------------------------------------------------------------------------------------------------------------------
 // renderer constants
 #define TILE_SIZE (16)
+#define REGION_SIZE (8)
 #define MAX_NODES_COUNT (1<<20)
 #define INVALID_INDEX (0xffffffff)
-#define MAX_CLIPS (256)
+#define MAX_CLIPS (128)
 #define MAX_COMMANDS (1<<16)
 #define MAX_DRAWDATA (MAX_COMMANDS * 4)
+#define SIMD_GROUP_SIZE (32)
+#define LAST_COMMAND (MAX_COMMANDS-1)
+#define MAX_THREADS_PER_THREADGROUP (1024)
 
 // ---------------------------------------------------------------------------------------------------------------------------
 // cpp compatibility
@@ -38,7 +45,7 @@ enum command_type
     primitive_triangle = 4,
     primitive_ellipse = 5,
     primitive_pie = 6,
-    primitive_ring = 7,
+    primitive_arc = 7,
     primitive_uneven_capsule = 8,
     primitive_trapezoid = 9,
     
@@ -118,6 +125,7 @@ typedef struct draw_command
     uint32_t data_index;
 } draw_command;
 
+#if !defined(__METAL_VERSION__)
 static inline uint8_t pack_type(enum command_type type,  enum primitive_fillmode fillmode)
 {
     uint8_t result = ((uint8_t)fillmode) << PRIMITIVE_FILLMODE_SHIFT;
@@ -129,6 +137,7 @@ static inline bool primitive_is_filled(uint8_t type)
 {
     return (type>>PRIMITIVE_FILLMODE_SHIFT) == fill_solid;
 }
+#endif
 
 static inline enum command_type primitive_get_type(uint8_t type)
 {
@@ -175,11 +184,16 @@ typedef struct draw_cmd_arguments
     uint32_t max_nodes;
     uint16_t num_tile_width;
     uint16_t num_tile_height;
+    uint16_t num_region_width;
+    uint16_t num_region_height;
+    uint32_t num_groups;
     float aa_width;
     float2 screen_div;
     float2 font_size;
     draw_color outline_color;
     float outline_width;
+    float time;
+    uint16_t num_elements_per_thread;
     bool culling_debug;
 } draw_cmd_arguments;
 
@@ -212,4 +226,7 @@ T linearstep(T edge0, T edge1, T x)
 #undef atomic_uint
 #undef device
 #undef command_buffer
+#endif
+
+
 #endif

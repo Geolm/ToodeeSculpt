@@ -205,7 +205,7 @@ void App::Update(CA::MetalDrawable* drawable)
         m_AnimationTime -= 60.f;
 
     mu_begin(m_pGuiContext);
-    renderer_begin_frame(m_pRenderer);
+    renderer_begin_frame(m_pRenderer, m_Time);
     m_pEditor->Draw(m_pRenderer);
     m_pEditor->UserInterface(m_pGuiContext);
 
