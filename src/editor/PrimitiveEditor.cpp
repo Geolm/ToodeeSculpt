@@ -593,6 +593,7 @@ void PrimitiveEditor::GlobalControl(struct mu_Context* gui_context)
 //----------------------------------------------------------------------------------------------------------------------------
 void PrimitiveEditor::UserInterface(struct mu_Context* gui_context)
 {
+    UNUSED_VARIABLE(gui_context);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------

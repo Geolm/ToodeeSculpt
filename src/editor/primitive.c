@@ -18,7 +18,6 @@ static int g_SDFFillmodeComboBox = 0;
 static const char* g_sdf_op_names[op_last] = {"add", "blend", "sub", "overlap"};
 static const char* g_sdf_fillmode_names[fill_last] = {"solid", "outline", "hollow"};
 static draw_color point_color = (draw_color){.packed_data = 0x7f10e010};
-static draw_color radius_color = (draw_color){.packed_data = 0x7fe01010};
 
 #define UNUSED_VARIABLE(a) (void)(a)
 
