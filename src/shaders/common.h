@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------------------------------------------------------
 // renderer constants
 #define TILE_SIZE (16)
-#define REGION_SIZE (8)
+#define REGION_SIZE (16)
 #define MAX_NODES_COUNT (1<<20)
 #define INVALID_INDEX (0xffffffff)
 #define MAX_CLIPS (128)
