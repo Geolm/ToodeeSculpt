@@ -36,7 +36,7 @@ void MetalLayerHelper::InitWindow(const char* windowName, unsigned int window_wi
     if (x_scale > 1.f || y_scale > 1.f)
     {
         glfwDestroyWindow(m_Window);
-        m_Window = glfwCreateWindow((window_width*3)/4, (window_height*3)/4, windowName, NULL, NULL);
+        m_Window = glfwCreateWindow(window_width/x_scale, window_height/y_scale, windowName, NULL, NULL);
     }
     
     int width, height;
